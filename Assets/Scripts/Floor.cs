@@ -22,15 +22,11 @@ public class Floor : MonoBehaviour
 
     private void OnMouseDown()
     {
-        Vector3 mousePosition = (Vector3)Input.mousePosition;
-      //  _mouseInput.x = mousePosition.x;
-      //  _mouseInput.y = Camera.main.nearClipPlane + 16;
-      //  _mouseInput.z = mousePosition.y;
 
-        print(mousePosition);
+    }
 
-        mouseWorldCoordinates = _mainCamera.ScreenToWorldPoint(_mouseInput);
-        mouseWorldCoordinates.y = 0;
-     //   print(mouseWorldCoordinates);
+    public void OnTriggerEnter(Collider other)
+    {
+    
     }
 }
