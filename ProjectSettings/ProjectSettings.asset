@@ -642,7 +642,8 @@ PlayerSettings:
   webGLMemoryGeometricGrowthStep: 0.2
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    Standalone: DEDICATED_SERVER
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -756,11 +757,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: 1c2eceae-a044-4557-a008-373c007dbc36
+  cloudProjectId: cc3dbc1c-2473-48a1-8132-1cd14edf2ab4
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Test
-  organizationId: librajosupermega
+  projectName: TfgVid
+  organizationId: zzetta
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
