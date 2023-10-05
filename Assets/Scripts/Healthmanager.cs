@@ -37,9 +37,6 @@ public class Healthmanager : NetworkBehaviour
         healthAmount = maxLife;
         //CUANDO UN CLIENTE SE CONECTA, NO ESTÁ COGIENDO LOS MAX LIFES DE LOS CLIENTES YA CONECTADOS,
         //DADO QUE NO SE HA EJECUTADO ESTE MÉTODO DESDE DICHOS CLIENTES, SE EJECUTÓ ANTERIORMENTE
-
-        Debug.Log("INICIALIZANDO DE VERAS");
-        Debug.Log(maxLife);
     }
   
 

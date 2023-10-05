@@ -18,8 +18,8 @@ public class ConnectionApproval : MonoBehaviour
     {
         response.Approved = true;
 
-        response.CreatePlayerObject = true;
-        response.PlayerPrefabHash = null;
+        response.CreatePlayerObject = false;
+        //response.PlayerPrefabHash = null;
 
 
         if(NetworkManager.Singleton.ConnectedClients.Count >= MaxPlayers)

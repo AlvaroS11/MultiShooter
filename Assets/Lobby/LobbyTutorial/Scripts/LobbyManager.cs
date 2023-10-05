@@ -12,6 +12,7 @@ using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
+using static LobbyManager;
 
 public class LobbyManager : MonoBehaviour {
 
@@ -61,6 +62,15 @@ public class LobbyManager : MonoBehaviour {
     private float refreshLobbyListTimer = 5f;
     private Lobby joinedLobby;
     private string playerName;
+    private int maxPlayers;
+
+
+    public GameObject LobbyCanvas;
+
+    // public OnlineManager onlineManager;
+
+    public PlayerCharacter playerSelected;
+
 
 
     private void Awake() {
@@ -151,7 +161,9 @@ public class LobbyManager : MonoBehaviour {
                 }
                 else
                 {
-                    Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
+                   // Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
+                   // Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
+
                     Debug.Log("Host has not started yet");
                 }
 
@@ -180,7 +192,24 @@ public class LobbyManager : MonoBehaviour {
         return false;
     }
 
-    private Player GetPlayer() {
+    public Player GetPlayerOrCreate()
+    {
+        if (joinedLobby != null && joinedLobby.Players != null)
+        {
+            foreach (Player player in joinedLobby.Players)
+            {
+                if (player.Id == AuthenticationService.Instance.PlayerId)
+                {
+                    // This player is in this lobby
+                    return player;
+                }
+            }
+        }
+        return CreatePlayer(); ;
+    }
+
+
+        private Player CreatePlayer() {
         return new Player(AuthenticationService.Instance.PlayerId, null, new Dictionary<string, PlayerDataObject> {
             { KEY_PLAYER_NAME, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, playerName) },
             { KEY_PLAYER_CHARACTER, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) }
@@ -206,6 +235,7 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
+
     private async Task<Allocation> AllocateRelay(int maxPlayers)
     {
         try
@@ -225,25 +255,27 @@ public class LobbyManager : MonoBehaviour {
     {
         try
         {
-            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(3); //pass players
+            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxPlayers); //pass players
 
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-
-            Debug.Log(joinCode);
 
             RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
 
             Debug.Log("HOST STARTING GAME!!");
+
             NetworkManager.Singleton.StartHost();
 
-            //StartGame
+            LobbyCanvas.SetActive(false);
+
 
             return joinCode;
         }
         catch(RelayServiceException e)
         {
             Debug.Log(e);
+            LobbyCanvas.SetActive(true);
+
             return null;
         }
     }
@@ -253,41 +285,47 @@ public class LobbyManager : MonoBehaviour {
         try
         {
             Debug.Log("joining Relay " + code);
-
+     
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(code);
-
 
             RelayServerData relayData = new RelayServerData(joinAllocation, "dtls");
 
-
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayData);
 
+
             NetworkManager.Singleton.StartClient();
+
+            Debug.Log("STARTING CLIENT");
+
+            LobbyCanvas.SetActive(false);
             return joinAllocation;
         }
         catch (RelayServiceException e)
         {
             Debug.Log(e);
+            LobbyCanvas.SetActive(true);
             return default;
         }
     }
 
     public async void CreateLobby(string lobbyName, int maxPlayers, bool isPrivate, GameMode gameMode) {
-        Player player = GetPlayer();
+        Player player = CreatePlayer();
+
+        this.maxPlayers = maxPlayers;
 
         CreateLobbyOptions options = new CreateLobbyOptions {
             Player = player,
             IsPrivate = isPrivate,
             Data = new Dictionary<string, DataObject> {
                 { KEY_GAME_MODE, new DataObject(DataObject.VisibilityOptions.Public, gameMode.ToString()) },
-                { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") }
+                { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") },
+           //     { KEY_PLAYER_CHARACTER, new DataObject(DataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) } // ESTA BIEN?? O DEBERÍA SER PLAYERDATAOBJECT
             }
         };
 
         Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
 
         joinedLobby = lobby;
-        Debug.Log(maxPlayers);
 
         Allocation allocation = await AllocateRelay(maxPlayers);
 
@@ -339,7 +377,7 @@ public class LobbyManager : MonoBehaviour {
   */
 
     public async void JoinLobby(Lobby lobby) {
-        Player player = GetPlayer();
+        Player player = CreatePlayer();
 
         joinedLobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id, new JoinLobbyByIdOptions {
             Player = player
@@ -392,6 +430,11 @@ public class LobbyManager : MonoBehaviour {
 
                 Lobby lobby = await LobbyService.Instance.UpdatePlayerAsync(joinedLobby.Id, playerId, options);
                 joinedLobby = lobby;
+
+                Debug.Log("*******");
+                Debug.Log(playerCharacter.ToString());
+              //  Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
+            //  Debug.Log(LobbyService.Instance.Play
 
                 OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
             } catch (LobbyServiceException e) {

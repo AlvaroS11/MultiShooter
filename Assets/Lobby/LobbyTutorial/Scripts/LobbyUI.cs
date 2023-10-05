@@ -5,6 +5,7 @@ using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
+using static LobbyManager;
 
 public class LobbyUI : MonoBehaviour {
 
@@ -92,6 +93,7 @@ public class LobbyUI : MonoBehaviour {
             );
 
             lobbyPlayerSingleUI.UpdatePlayer(player);
+           // OnlineManager.Instance.playerPrefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
         }
 
         changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());

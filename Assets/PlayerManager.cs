@@ -26,6 +26,7 @@ public class PlayerManager : NetworkBehaviour
 
     public Healthmanager healthUI;
 
+    [SerializeField] private Transform playerPrefab;
 
 
 
@@ -68,6 +69,32 @@ void Update()
         }
 
     }
+
+
+  /*  public override void OnNetworkSpawn()
+    {
+        if (IsServer)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
+            NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompleted;
+        }
+    }
+
+    private void OnLoadEventCompleted(string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+    {
+        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+        {
+            Transform playerTransform = Instantiate(playerPrefab);
+            playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+        }
+    }
+
+    private void OnClientDisconnectCallback(ulong clientId)
+    {
+        //autoTestGamePausedState = true;
+    }
+
+    */
 
     private void MoveCamera()
     {
