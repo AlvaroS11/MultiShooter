@@ -24,6 +24,7 @@ public class LobbyManager : MonoBehaviour {
     public const string KEY_PLAYER_CHARACTER = "Character";
     public const string KEY_GAME_MODE = "GameMode";
     public const string KEY_START_GAME = "StartGame_RelayCode";
+    public const string KEY_PLAYER_TEAM = "0";
 
 
 
@@ -212,7 +213,8 @@ public class LobbyManager : MonoBehaviour {
         private Player CreatePlayer() {
         return new Player(AuthenticationService.Instance.PlayerId, null, new Dictionary<string, PlayerDataObject> {
             { KEY_PLAYER_NAME, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, playerName) },
-            { KEY_PLAYER_CHARACTER, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) }
+            { KEY_PLAYER_CHARACTER, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) },
+            { KEY_PLAYER_TEAM, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, "1") }
         });
     }
 
@@ -507,6 +509,43 @@ public class LobbyManager : MonoBehaviour {
             try {
                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, playerId);
             } catch (LobbyServiceException e) {
+                Debug.Log(e);
+            }
+        }
+    }
+
+    public async void ChangeTeam(string playerId, string team)
+    {
+        if(playerId == AuthenticationService.Instance.PlayerId)
+        {
+            try
+            {
+                UpdatePlayerOptions options = new UpdatePlayerOptions();
+
+                options.Data = new Dictionary<string, PlayerDataObject>() {
+                    {
+                        KEY_PLAYER_TEAM, new PlayerDataObject(
+                            visibility: PlayerDataObject.VisibilityOptions.Public,
+                            value: team)
+                    }
+                };
+
+                //string playerId = AuthenticationService.Instance.PlayerId;
+
+                Lobby lobby = await LobbyService.Instance.UpdatePlayerAsync(joinedLobby.Id, playerId, options);
+                joinedLobby = lobby;
+
+                Debug.Log("*******");
+                Debug.Log(GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+                //  Debug.Log(playerCharacter.ToString());
+                //  Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
+                //  Debug.Log(LobbyService.Instance.Play
+
+                OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+
+            }
+            catch (LobbyServiceException e)
+            {
                 Debug.Log(e);
             }
         }

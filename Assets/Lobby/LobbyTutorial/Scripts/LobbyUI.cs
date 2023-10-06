@@ -25,6 +25,9 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private Button changeGameModeButton;
     [SerializeField] private Button startGameButton;
 
+    public bool dropDownExpanded;
+
+
 
 
     private void Awake() {
@@ -92,6 +95,8 @@ public class LobbyUI : MonoBehaviour {
                 player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
             );
 
+            lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
+
             lobbyPlayerSingleUI.UpdatePlayer(player);
            // OnlineManager.Instance.playerPrefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
         }
@@ -113,6 +118,8 @@ public class LobbyUI : MonoBehaviour {
     private void ClearLobby() {
         foreach (Transform child in container) {
             if (child == playerSingleTemplate) continue;
+
+            //if(child.name == "Team") continue;
             Destroy(child.gameObject);
         }
     }
