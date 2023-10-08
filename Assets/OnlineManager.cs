@@ -100,7 +100,7 @@ public class OnlineManager : NetworkBehaviour
     }
 
 
-    //Se tiene que llamar en el OnNetworkSpawn
+    //Se tiene que llamar en el OnNetworkSpawn, se esta llamando antes que se prepare el playerTeamDictionary
     [ServerRpc(RequireOwnership = false)]
     public void SetUpPlayerServerRpc(ServerRpcParams serverRpcParams = default)
     {
