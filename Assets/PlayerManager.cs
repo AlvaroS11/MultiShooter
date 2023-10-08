@@ -77,12 +77,16 @@ void Update()
     {
         Player player = LobbyManager.Instance.GetPlayerOrCreate();
 
-        Debug.Log("NEW PLAYER::");
-        Debug.Log(player.Data);
-        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
-        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
-        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_NAME].Value);
-        Debug.Log(LobbyManager.Instance.GetTeam(player.Id));
+        /*  Debug.Log("NEW PLAYER::");
+          Debug.Log(player.Data);
+          Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+          Debug.Log(player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+          Debug.Log(player.Data[LobbyManager.KEY_PLAYER_NAME].Value);
+          Debug.Log(LobbyManager.Instance.GetTeam(player.Id));
+        */
+      //  LobbyManager.Instance.logPlayer();
+
+
     }
 
 

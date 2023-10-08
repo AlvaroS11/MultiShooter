@@ -26,49 +26,45 @@ public class OnlineManager : NetworkBehaviour
     //   public Dictionary<string, LobbyManager.PlayerCharacter> playerCharacterMap = new Dictionary<string, LobbyManager.PlayerCharacter>();
 
     public GameObject playerPrefab;
+    public string PlayerLobbyId;
+    public string PlayerName;
+    public string PlayerTeam;
+    public string playerCharacterr;
+
+
 
 
     private void Start()
     {
-        
     }
 
     public override void OnNetworkSpawn()
     {
-     //   Debug.Log("##########");
+        //   Debug.Log("##########");
+        PlayerLobbyId = AuthenticationService.Instance.PlayerId;
+
+        //PlayerName = 
+
         if (IsServer)
         {
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
         }
 
-        Player player = LobbyManager.Instance.GetPlayerOrCreate();
-
-        /*Debug.Log("NEW PLAYER::");
-        Debug.Log(player.Data);
-        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
-        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
-        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_NAME].Value);
-        Debug.Log(LobbyManager.Instance.GetTeam(player.Id));
-        */
-
+        Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
 
         PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
 
+        Debug.Log("ÑÑÑÑ");
+        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+        Debug.Log(playerCharacter);
+
+        LobbyManager.Instance.logPlayer();
+
         SpawnPlayerServerRpc(NetworkManager.Singleton.LocalClientId, playerCharacter);
 
-     //   Debug.Log(NetworkManager.Singleton.LocalClientId);
     }
 
     private void OnLoadEventCompleted(string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
-    {
-        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
-        {
-            Transform playerTransform = Instantiate(playerPrefab.transform);
-            playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-        }
-    }
-
-    private void OnLoadEventCompleted2()
     {
         foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
         {
@@ -85,14 +81,17 @@ public class OnlineManager : NetworkBehaviour
     public void SpawnPlayerServerRpc(ulong clientId, LobbyManager.PlayerCharacter playerCharacter)
     {
      //   ulong clientId = NetworkManager.Singleton.LocalClientId;
-        Debug.Log("SPAWNING PLAYER!!");
-        Debug.Log(clientId);
+     //   Debug.Log("SPAWNING PLAYER!!");
+       // Debug.Log(clientId);
 
         GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
         GameObject newPlayer = (GameObject)Instantiate(prefab);
 
 
-        Player lobbyPlayer = LobbyManager.Instance.GetPlayerOrCreate();
+        Player lobbyPlayer = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+
+
+
 
         newPlayer.GetComponent<PlayerManager>().team = int.Parse(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
 
@@ -102,6 +101,10 @@ public class OnlineManager : NetworkBehaviour
 
         newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
         newPlayer.SetActive(true);
+
+
+        LobbyManager.Instance.logPlayer();
+
     }
 
     [ClientRpc]

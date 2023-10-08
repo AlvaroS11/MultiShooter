@@ -63,6 +63,7 @@ public class LobbyManager : MonoBehaviour {
     private float refreshLobbyListTimer = 5f;
     private Lobby joinedLobby;
     private string playerName;
+
     private int maxPlayers;
 
 
@@ -192,11 +193,33 @@ public class LobbyManager : MonoBehaviour {
         return false;
     }
 
+    public void logPlayer()
+    {
+        //BIEN SOLO EN SERVIDOR
+        Player player = GetPlayerOrCreate();
+            Debug.Log("THIS ARE THE PLAYERS! :");
+            Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+            Debug.Log(player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+            Debug.Log(player.Data[LobbyManager.KEY_PLAYER_NAME].Value);
+        
+    }
+
+    public void logPlayerS()
+    {
+        //BIEN SOLO EN SERVIDOR
+        foreach (Player player in GetJoinedLobby().Players)
+        {
+            Debug.Log("THIS ARE THE PLAYERS! :");
+            Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+            Debug.Log(player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+            Debug.Log(player.Data[LobbyManager.KEY_PLAYER_NAME].Value);
+        }
+    }
+
     public Player GetPlayerOrCreate()
     {
         if (joinedLobby != null && joinedLobby.Players != null)
         {
-            Debug.Log(joinedLobby.Players.Count);
             foreach (Player player in joinedLobby.Players)
             {
                 if (player.Id == AuthenticationService.Instance.PlayerId)
@@ -210,7 +233,23 @@ public class LobbyManager : MonoBehaviour {
     }
 
 
-        private Player CreatePlayer() {
+    public Player GetPlayerById(string playerId)
+    {
+        if (joinedLobby != null && joinedLobby.Players != null)
+        {
+            foreach (Player player in joinedLobby.Players)
+            {
+                if (player.Id == playerId)
+                {
+                    // This player is in this lobby
+                    return player;
+                }
+            }
+        }
+        return CreatePlayer(); ;
+    }
+
+    private Player CreatePlayer() {
         return new Player(AuthenticationService.Instance.PlayerId, null, new Dictionary<string, PlayerDataObject> {
             { KEY_PLAYER_NAME, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, playerName) },
             { KEY_PLAYER_CHARACTER, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) },
@@ -257,6 +296,11 @@ public class LobbyManager : MonoBehaviour {
     {
         try
         {
+            Debug.Log(AuthenticationService.Instance.PlayerId);
+          //  OnlineManager.Instance.PlayerLobbyId = "ddd";
+            //OnlineManager.Instance.PlayerLobbyId = AuthenticationService.Instance.PlayerId;
+
+
             Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxPlayers); //pass players
 
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
@@ -286,6 +330,8 @@ public class LobbyManager : MonoBehaviour {
     {
         try
         {
+            Debug.Log(AuthenticationService.Instance.PlayerId);
+
             Debug.Log("joining Relay " + code);
      
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(code);
@@ -293,7 +339,6 @@ public class LobbyManager : MonoBehaviour {
             RelayServerData relayData = new RelayServerData(joinAllocation, "dtls");
 
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayData);
-
 
             NetworkManager.Singleton.StartClient();
 
