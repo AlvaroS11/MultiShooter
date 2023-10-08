@@ -310,11 +310,12 @@ public class LobbyManager : MonoBehaviour {
 
             Debug.Log("HOST STARTING GAME!!");
 
-            OnlineManager.Instance.SetUpLocalVariables(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
-
             NetworkManager.Singleton.StartHost();
 
-          //  LobbyCanvas.SetActive(false);
+            OnlineManager.Instance.SetUpVariablesServerRpc(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
+
+
+            //  LobbyCanvas.SetActive(false);
 
 
             return joinCode;
@@ -346,9 +347,12 @@ public class LobbyManager : MonoBehaviour {
 
             // OnlineManager.Instance.PlayerTeam = GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value;
 
-            OnlineManager.Instance.SetUpLocalVariables(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
+            //OnlineManager.Instance.SetPlayerReadyServerRpc();
 
             NetworkManager.Singleton.StartClient();
+
+            OnlineManager.Instance.SetUpVariablesServerRpc(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
+
 
             Debug.Log("STARTING CLIENT");
 
