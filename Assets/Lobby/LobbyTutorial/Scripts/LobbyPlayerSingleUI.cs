@@ -5,6 +5,7 @@ using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEngine.UI;
 using Unity.VisualScripting;
+using Unity.Services.Authentication;
 
 public class LobbyPlayerSingleUI : MonoBehaviour {
 
@@ -24,10 +25,12 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         //LobbyUI.Instance.dropDownExpanded = false;
         Debug.Log("awake");
         kickPlayerButton.onClick.AddListener(KickPlayer);
-        selectTeamDropdown.onValueChanged.AddListener(delegate
+       // selectTeamDropdown.on
+       selectTeamDropdown.onValueChanged.AddListener(delegate
         {
             SelectTeam(selectTeamDropdown);
         });
+      
 
         selectTeamDropdown.gameObject.SetActive(true);
     }
@@ -56,17 +59,15 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     {
         //If not owner, disable Team selector
         selectTeamDropdown.enabled = visible;
-        Debug.Log("ccccccccccc");
         //If owner, was it expanded?
-        if (visible)
+
+      /*  if (visible)
         {
-            // selectTeamDropdown.Show();
-            Debug.Log(LobbyUI.Instance.dropDownExpanded);
-            if(LobbyUI.Instance.dropDownExpanded)
-                //selectTeamDropdown.s
+            if(LobbyUI.Instance.dropDownExpanded && isSelf())
                 selectTeamDropdown.Show();
 
         }
+      */
     }
 
     public void UpdatePlayer(Player player) {
@@ -76,7 +77,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
             System.Enum.Parse<LobbyManager.PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
         characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
 
-        Debug.Log(",,,,," + player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+       // Debug.Log(",,,,," + player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
         selected = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
 
         selectTeamDropdown.value = int.Parse(selected);
@@ -90,14 +91,33 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         }
     }
 
-    private void SelectTeam(TMP_Dropdown change)
+    public bool isSelf()
     {
+        return player.Id == AuthenticationService.Instance.PlayerId;
+    }
+
+    public void SelectTeam(TMP_Dropdown change)
+    {
+        if (!isSelf())
+            return;
         selectTeamDropdown.value = change.value;
-        //selectTeamDropdown.itemText.text = " " + change.value;
 
-        LobbyManager.Instance.ChangeTeam(player.Id, change.value.ToString());
+        int prevTeam = int.Parse(LobbyManager.Instance.GetTeam(player.Id));
 
-        Debug.Log("CHANGE TO TEAM: " + change.value);
+        if(prevTeam != change.value)
+        {
+            selectTeamDropdown.itemText.text = " " + change.value;
+            LobbyManager.Instance.ChangeTeam(player.Id, change.value.ToString());
+            Debug.Log("CHANGE TO TEAM: " + change.value);
+
+        };
+
+        //  if()
+
+
+        //LobbyManager.Instance.ChangeTeam(player.Id, change.value.ToString());
+
+     //   Debug.Log("CHANGE TO TEAM: " + change.value);
     }
 
 

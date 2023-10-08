@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using Unity.VisualScripting;
+using Unity.Services.Lobbies.Models;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -28,7 +29,8 @@ public class PlayerManager : NetworkBehaviour
 
     [SerializeField] private Transform playerPrefab;
 
-
+    // public NetworkVariable<int> team = new NetworkVariable<int>();
+    public int team;
 
 
     void Start()
@@ -47,8 +49,9 @@ public class PlayerManager : NetworkBehaviour
         if(!IsOwner)return;
         _mainCamera = Camera.main;
         life = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+      //  team = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-}
+    }
 
 // Update is called once per frame
 void Update()
@@ -68,6 +71,18 @@ void Update()
             PlayerFireServerRpc();
         }
 
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        Player player = LobbyManager.Instance.GetPlayerOrCreate();
+
+        Debug.Log("NEW PLAYER::");
+        Debug.Log(player.Data);
+        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_NAME].Value);
+        Debug.Log(LobbyManager.Instance.GetTeam(player.Id));
     }
 
 
@@ -96,7 +111,7 @@ void Update()
 
     */
 
-    private void MoveCamera()
+        private void MoveCamera()
     {
 
         //PREDICCIÓN SE PODRÍA HACER AQUÍ??

@@ -6,6 +6,7 @@ using UnityEngine;
 using static LobbyManager;
 using Unity.Services.Lobbies.Models;
 using System;
+using Unity.Services.Authentication;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -38,12 +39,18 @@ public class OnlineManager : NetworkBehaviour
         if (IsServer)
         {
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
-          //  NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompleted;
-             // NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += SpawnPlayerServerRpc;
         }
-       // OnLoadEventCompleted2();
 
-         Player player = LobbyManager.Instance.GetPlayerOrCreate();
+        Player player = LobbyManager.Instance.GetPlayerOrCreate();
+
+        /*Debug.Log("NEW PLAYER::");
+        Debug.Log(player.Data);
+        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_NAME].Value);
+        Debug.Log(LobbyManager.Instance.GetTeam(player.Id));
+        */
+
 
         PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
 
@@ -84,8 +91,23 @@ public class OnlineManager : NetworkBehaviour
         GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
         GameObject newPlayer = (GameObject)Instantiate(prefab);
 
+
+        Player lobbyPlayer = LobbyManager.Instance.GetPlayerOrCreate();
+
+        newPlayer.GetComponent<PlayerManager>().team = int.Parse(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+
+        Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_NAME].Value);
+
+        Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+
         newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
         newPlayer.SetActive(true);
+    }
+
+    [ClientRpc]
+    public void SetTeamsClientRpc()
+    {
+
     }
 
 

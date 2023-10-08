@@ -165,7 +165,6 @@ public class LobbyManager : MonoBehaviour {
                    // Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
                    // Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
 
-                    Debug.Log("Host has not started yet");
                 }
 
 
@@ -197,6 +196,7 @@ public class LobbyManager : MonoBehaviour {
     {
         if (joinedLobby != null && joinedLobby.Players != null)
         {
+            Debug.Log(joinedLobby.Players.Count);
             foreach (Player player in joinedLobby.Players)
             {
                 if (player.Id == AuthenticationService.Instance.PlayerId)
@@ -214,7 +214,7 @@ public class LobbyManager : MonoBehaviour {
         return new Player(AuthenticationService.Instance.PlayerId, null, new Dictionary<string, PlayerDataObject> {
             { KEY_PLAYER_NAME, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, playerName) },
             { KEY_PLAYER_CHARACTER, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) },
-            { KEY_PLAYER_TEAM, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, "1") }
+            { KEY_PLAYER_TEAM, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, "-1") }
         });
     }
 
@@ -537,9 +537,6 @@ public class LobbyManager : MonoBehaviour {
 
                 Debug.Log("*******");
                 Debug.Log(GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value);
-                //  Debug.Log(playerCharacter.ToString());
-                //  Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
-                //  Debug.Log(LobbyService.Instance.Play
 
                 OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
 
@@ -549,6 +546,15 @@ public class LobbyManager : MonoBehaviour {
                 Debug.Log(e);
             }
         }
+    }
+
+    public string GetTeam(string playerId)
+    {
+        if (playerId == AuthenticationService.Instance.PlayerId)
+        {
+            return  GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value;
+        }
+        return "-1";
     }
 
     public async void UpdateLobbyGameMode(GameMode gameMode) {

@@ -27,6 +27,8 @@ public class LobbyUI : MonoBehaviour {
 
     public bool dropDownExpanded;
 
+    [SerializeField] private Dictionary<string, LobbyPlayerSingleUI> LobbyPlayers;
+
 
 
 
@@ -57,6 +59,8 @@ public class LobbyUI : MonoBehaviour {
         {
             LobbyManager.Instance.StartGame();
         });
+
+        LobbyPlayers = new Dictionary<string, LobbyPlayerSingleUI>();
     }
 
     private void Start() {
@@ -83,10 +87,49 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void UpdateLobby(Lobby lobby) {
-        ClearLobby();
+        //ClearLobby();
 
+
+        //meter en for it
         foreach (Player player in lobby.Players) {
-            Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
+
+            LobbyPlayerSingleUI lobbyPlayerSingleUI = null;
+
+            if (LobbyPlayers.ContainsKey(player.Id))
+            {
+                //update
+                lobbyPlayerSingleUI = LobbyPlayers[player.Id];
+
+            }
+            else
+            {
+                Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
+                playerSingleTransform.gameObject.SetActive(true);
+
+                
+                lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
+
+                lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
+                    LobbyManager.Instance.IsLobbyHost() &&
+                    player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
+                );
+
+                lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
+
+
+                LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
+
+                Debug.Log("CREATED!");
+
+               //
+               //OnlineManager.Instance.playerPrefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
+
+                //create player
+            }
+            /*
+            playerSingleTransform = Instantiate(playerSingleTemplate, container);
+
+
             playerSingleTransform.gameObject.SetActive(true);
             LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
 
@@ -94,10 +137,11 @@ public class LobbyUI : MonoBehaviour {
                 LobbyManager.Instance.IsLobbyHost() &&
                 player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
             );
-
-            lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
+            */
 
             lobbyPlayerSingleUI.UpdatePlayer(player);
+
+           // lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
            // OnlineManager.Instance.playerPrefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
         }
 
