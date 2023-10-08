@@ -30,8 +30,13 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField] private Transform playerPrefab;
 
     // public NetworkVariable<int> team = new NetworkVariable<int>();
-    public int team;
+    // public int team;
 
+
+    public string PlayerLobbyId;
+    public string PlayerName;
+    public string PlayerTeam;
+    public string playerCharacterr;
 
     void Start()
     {

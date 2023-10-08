@@ -310,9 +310,11 @@ public class LobbyManager : MonoBehaviour {
 
             Debug.Log("HOST STARTING GAME!!");
 
+            OnlineManager.Instance.SetUpLocalVariables(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
+
             NetworkManager.Singleton.StartHost();
 
-            LobbyCanvas.SetActive(false);
+          //  LobbyCanvas.SetActive(false);
 
 
             return joinCode;
@@ -340,11 +342,17 @@ public class LobbyManager : MonoBehaviour {
 
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayData);
 
+
+
+            // OnlineManager.Instance.PlayerTeam = GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value;
+
+            OnlineManager.Instance.SetUpLocalVariables(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
+
             NetworkManager.Singleton.StartClient();
 
             Debug.Log("STARTING CLIENT");
 
-            LobbyCanvas.SetActive(false);
+           // LobbyCanvas.SetActive(false);
             return joinAllocation;
         }
         catch (RelayServiceException e)
@@ -374,9 +382,9 @@ public class LobbyManager : MonoBehaviour {
 
         joinedLobby = lobby;
 
-        Allocation allocation = await AllocateRelay(maxPlayers);
+      /*  Allocation allocation = await AllocateRelay(maxPlayers);
 
-        NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "dtls"));
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "dtls"));*/
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
 
         Debug.Log("Created Lobby " + lobby.Name);
@@ -618,6 +626,11 @@ public class LobbyManager : MonoBehaviour {
         } catch (LobbyServiceException e) {
             Debug.Log(e);
         }
+    }
+
+    public void TestLogUserData()
+    {
+        Debug.Log(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value);
     }
 
 }

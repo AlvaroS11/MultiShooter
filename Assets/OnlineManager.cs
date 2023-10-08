@@ -32,7 +32,9 @@ public class OnlineManager : NetworkBehaviour
     public string playerCharacterr;
 
 
-
+    private void Awake() {
+        Instance = this;
+    }
 
     private void Start()
     {
@@ -50,21 +52,76 @@ public class OnlineManager : NetworkBehaviour
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
         }
 
-        Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+        /*  Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
 
-        PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+          PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
 
-        Debug.Log("ÑÑÑÑ");
-        Debug.Log(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
-        Debug.Log(playerCharacter);
+          Debug.Log("ÑÑÑÑ");
+          Debug.Log(player.Data[KEY_PLAYER_CHARACTER].Value);
+          Debug.Log(playerCharacter);
 
-        LobbyManager.Instance.logPlayer();
+          LobbyManager.Instance.logPlayer();
 
-        SpawnPlayerServerRpc(NetworkManager.Singleton.LocalClientId, playerCharacter);
+          SpawnPlayerServerRpc(NetworkManager.Singleton.LocalClientId, playerCharacter);
+        */
+        SetUpPlayerServerRpc(NetworkManager.Singleton.LocalClientId);
+    }
+
+    public void SetUpLocalVariables(string team, string name)
+    {
+        Debug.Log("SETUP LOCAL!");
+        //Localmente funciona aquí
+        PlayerTeam = team;
+        PlayerName = name;
+    }
+
+
+    //Se tiene que llamar en el OnNetworkSpawn
+    [ServerRpc(RequireOwnership = false)]
+    public void SetUpPlayerServerRpc(ulong clientId)
+    {
+        try
+        {
+            Debug.Log("SETUP SERVER!");
+            Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+            PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
+            GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
+            GameObject newPlayer = (GameObject)Instantiate(prefab);
+
+            newPlayer.GetComponent<PlayerManager>().PlayerTeam = PlayerTeam;
+            newPlayer.GetComponent<PlayerManager>().name = PlayerName;
+
+
+            newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+
+            Debug.Log("INSTANTIATED");
+        }
+        catch(Exception e)
+        {
+            Debug.Log(e);
+        }
+
+        /* Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+         PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
+
+         GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
+
+         GameObject newPlayer = (GameObject)Instantiate(prefab);
+
+         prefab.GetComponent<PlayerManager>().PlayerTeam = player.Data[KEY_PLAYER_TEAM].Value;
+         Debug.Log(player.Data[KEY_PLAYER_TEAM].Value);
+
+         newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+        */
+    }
+
+    [ClientRpc]
+    private void SetUpPlayerClientRpc()
+    {
 
     }
 
-    private void OnLoadEventCompleted(string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+  /*  private void OnLoadEventCompleted(string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
     {
         foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
         {
@@ -73,11 +130,16 @@ public class OnlineManager : NetworkBehaviour
         }
     }
 
+    */
+
 
     //     Transform playerTransform = Instantiate(playerPrefab, transform.position, transform.rotation);
     //   playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(NetworkManager.LocalClientId, true);
 
-    [ServerRpc(RequireOwnership = false)]
+   
+    
+    
+   /* [ServerRpc(RequireOwnership = false)]
     public void SpawnPlayerServerRpc(ulong clientId, LobbyManager.PlayerCharacter playerCharacter)
     {
      //   ulong clientId = NetworkManager.Singleton.LocalClientId;
@@ -106,6 +168,7 @@ public class OnlineManager : NetworkBehaviour
         LobbyManager.Instance.logPlayer();
 
     }
+   */
 
     [ClientRpc]
     public void SetTeamsClientRpc()
@@ -120,7 +183,7 @@ public class OnlineManager : NetworkBehaviour
         if (IsServer)
         {
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
-            NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnLoadEventCompleted;
+        //    NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnLoadEventCompleted;
           //  NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= SpawnPlayerServerRpc;
 
         }
