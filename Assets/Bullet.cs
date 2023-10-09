@@ -15,7 +15,7 @@ public class Bullet : MonoBehaviour {
     private GameObject parent;
     private int bulletDmg;
 
-
+    private PlayerManager playerManager;
 
 
     private void Start()
@@ -25,6 +25,8 @@ public class Bullet : MonoBehaviour {
         obstacleLayer = LayerMask.NameToLayer("Obstacle");
         playerLayer = LayerMask.NameToLayer("Player");
         bulletDmg = 20;
+
+        playerManager = parent.GetComponent<PlayerManager>();
 
     }
 
@@ -61,7 +63,7 @@ public class Bullet : MonoBehaviour {
     private void OnTriggerEnterServerRpc(Collider other)
     {
         GameObject hitObject = other.gameObject;
-        if (hitObject.layer == obstacleLayer || (hitObject.layer == playerLayer && hitObject != parent))
+        if (hitObject.layer == obstacleLayer || (hitObject.layer == playerLayer && hitObject != parent && IsEnemy(hitObject)) )
         {
             Destroy(gameObject);
             if (hitObject.layer == playerLayer)
@@ -71,6 +73,13 @@ public class Bullet : MonoBehaviour {
                 //QUITAR VIDA AL JUGADOR
             }
         }
+    }
+
+    private bool IsEnemy(GameObject hitPlayer)
+    {
+        //  if(hitPlayer.layer == playerLayer)
+        //     if(hitPlayer.GetComponent<PlayerManager>().PlayerTeam != this.playerTeam)
+        return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam; 
     }
 
 
