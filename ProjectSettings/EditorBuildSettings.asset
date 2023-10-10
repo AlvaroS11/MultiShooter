@@ -9,6 +9,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Test2.unity
     guid: 8ceee6565a2f7014ba6ddd9a838f155c
   - enabled: 1
-    path: Assets/Scenes/Game.unity
+    path: Assets/Scenes/Game_Deprecated.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/LobbyP2P.unity
+    guid: be8200a558cfff84b8ce074fa6e33558
+  - enabled: 1
+    path: Assets/Scenes/CharacterSelectScene.unity
+    guid: 17f9c138c84884845ba753cb6e1ac952
   m_configObjects: {}

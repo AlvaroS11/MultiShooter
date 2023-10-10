@@ -23,7 +23,10 @@ public class LobbyManager : MonoBehaviour {
     public const string KEY_PLAYER_NAME = "PlayerName";
     public const string KEY_PLAYER_CHARACTER = "Character";
     public const string KEY_GAME_MODE = "GameMode";
-    public const string KEY_START_GAME = "StartGame_RelayCode";
+    public const string KEY_START_GAME = "StartGame";
+
+    public const string KEY_RELAY_CODE = "RelayCode";
+
     public const string KEY_PLAYER_TEAM = "0";
 
 
@@ -154,7 +157,9 @@ public class LobbyManager : MonoBehaviour {
                     //Unirnos al p2p y empezar
                     if (!IsLobbyHost()) //Host automatically joins relay
                     {
-                        await JoinRelay(joinedLobby.Data[KEY_START_GAME].Value);
+                        // await JoinRelay(joinedLobby.Data[KEY_START_GAME].Value);
+                        SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
+
                     }
 
                     joinedLobby = null;
@@ -297,9 +302,10 @@ public class LobbyManager : MonoBehaviour {
         try
         {
             Debug.Log(AuthenticationService.Instance.PlayerId);
-          //  OnlineManager.Instance.PlayerLobbyId = "ddd";
+            //  OnlineManager.Instance.PlayerLobbyId = "ddd";
             //OnlineManager.Instance.PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
+            Debug.Log(maxPlayers);
 
             Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxPlayers); //pass players
 
@@ -310,9 +316,10 @@ public class LobbyManager : MonoBehaviour {
 
             Debug.Log("HOST STARTING GAME!!");
 
-            NetworkManager.Singleton.StartHost();
 
-            OnlineManager.Instance.SetUpVariablesServerRpc(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
+      //      SceneLoader.LoadNetwork(SceneLoader.Scene.CharacterSelectScene);
+
+       //     OnlineManager.Instance.SetUpVariablesServerRpc(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
 
 
             //  LobbyCanvas.SetActive(false);
@@ -351,7 +358,7 @@ public class LobbyManager : MonoBehaviour {
 
             NetworkManager.Singleton.StartClient();
 
-            OnlineManager.Instance.SetUpVariablesServerRpc(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
+//            OnlineManager.Instance.SetUpVariablesServerRpc(GetPlayerOrCreate().Data[KEY_PLAYER_TEAM].Value, GetPlayerOrCreate().Data[KEY_PLAYER_NAME].Value);
 
 
             Debug.Log("STARTING CLIENT");
@@ -368,16 +375,29 @@ public class LobbyManager : MonoBehaviour {
     }
 
     public async void CreateLobby(string lobbyName, int maxPlayers, bool isPrivate, GameMode gameMode) {
-        Player player = CreatePlayer();
+
+
+        /*  Allocation allocation = await AllocateRelay(maxPlayers);
+
+          NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "dtls"));*/
 
         this.maxPlayers = maxPlayers;
 
-        CreateLobbyOptions options = new CreateLobbyOptions {
+        string code = await CreateRelay();
+        NetworkManager.Singleton.StartHost();
+
+
+        Player player = CreatePlayer();
+
+
+        CreateLobbyOptions options = new CreateLobbyOptions
+        {
             Player = player,
             IsPrivate = isPrivate,
             Data = new Dictionary<string, DataObject> {
                 { KEY_GAME_MODE, new DataObject(DataObject.VisibilityOptions.Public, gameMode.ToString()) },
                 { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") },
+                { KEY_RELAY_CODE, new DataObject(DataObject.VisibilityOptions.Member, code)  },
            //     { KEY_PLAYER_CHARACTER, new DataObject(DataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) } // ESTA BIEN?? O DEBERÍA SER PLAYERDATAOBJECT
             }
         };
@@ -386,9 +406,9 @@ public class LobbyManager : MonoBehaviour {
 
         joinedLobby = lobby;
 
-      /*  Allocation allocation = await AllocateRelay(maxPlayers);
 
-        NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(new RelayServerData(allocation, "dtls"));*/
+        //  SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
+
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
 
         Debug.Log("Created Lobby " + lobby.Name);
@@ -441,6 +461,8 @@ public class LobbyManager : MonoBehaviour {
         joinedLobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id, new JoinLobbyByIdOptions {
             Player = player
         });
+
+        await JoinRelay(joinedLobby.Data[KEY_START_GAME].Value);
 
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
     }
@@ -512,20 +534,22 @@ public class LobbyManager : MonoBehaviour {
             try
             {
                 Debug.Log("StartGame");
+                SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
 
-                string relayCode = await CreateRelay();
-
+                //Enviar mensaje para decir que hemos empezado
                 Lobby lobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
                 {
                     Data = new Dictionary<string, DataObject>
                     {
-                        { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, relayCode) }
+                        { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
                     }
                 });
+                
                 //Initialize Lobby Start Game Key-Value to 0, then to Relay code
                 joinedLobby = lobby;
 
                 Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
+                
             }
             catch (LobbyServiceException e)
             {
@@ -629,6 +653,21 @@ public class LobbyManager : MonoBehaviour {
             OnLobbyGameModeChanged?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
         } catch (LobbyServiceException e) {
             Debug.Log(e);
+        }
+    }
+
+    private async Task<string> GetRelayJoinCode(Allocation allocation)
+    {
+        try
+        {
+            string relayJoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+
+            return relayJoinCode;
+        }
+        catch (RelayServiceException e)
+        {
+            Debug.Log(e);
+            return default;
         }
     }
 

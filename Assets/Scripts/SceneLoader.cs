@@ -9,9 +9,7 @@ public static class SceneLoader
 
     public enum Scene
     {
-        MainMenuScene,
         GameScene,
-        LoadingScene,
         LobbyScene,
         CharacterSelectScene,
     }
@@ -25,7 +23,7 @@ public static class SceneLoader
     {
         SceneLoader.targetScene = targetScene;
 
-        SceneManager.LoadScene(Scene.LoadingScene.ToString());
+   //     SceneManager.LoadScene(Scene.LoadingScene.ToString());
     }
 
     public static void LoadNetwork(Scene targetScene)
