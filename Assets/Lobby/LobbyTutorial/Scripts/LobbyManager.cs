@@ -158,7 +158,7 @@ public class LobbyManager : MonoBehaviour {
                     if (!IsLobbyHost()) //Host automatically joins relay
                     {
                         // await JoinRelay(joinedLobby.Data[KEY_START_GAME].Value);
-                        SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
+                     //   SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
 
                     }
 
@@ -462,7 +462,7 @@ public class LobbyManager : MonoBehaviour {
             Player = player
         });
 
-        await JoinRelay(joinedLobby.Data[KEY_START_GAME].Value);
+        await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
 
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
     }

@@ -28,6 +28,10 @@ public static class SceneLoader
 
     public static void LoadNetwork(Scene targetScene)
     {
+        Debug.Log("LOAD NETWORK!" + targetScene + " " + LoadSceneMode.Single);
+        Debug.Log(NetworkManager.Singleton.SceneManager);
+        // NetworkSceneManager.Sing ActiveSceneSynchronizationEnabled;
+        NetworkManager.Singleton.SceneManager.ActiveSceneSynchronizationEnabled = true;
         NetworkManager.Singleton.SceneManager.LoadScene(targetScene.ToString(), LoadSceneMode.Single);
     }
 

@@ -79,7 +79,9 @@ public class Bullet : MonoBehaviour {
     {
         //  if(hitPlayer.layer == playerLayer)
         //     if(hitPlayer.GetComponent<PlayerManager>().PlayerTeam != this.playerTeam)
-        return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam; 
+        //return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam; 
+        Debug.Log(playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam);
+        return true;
     }
 
 
