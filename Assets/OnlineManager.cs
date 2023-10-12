@@ -39,16 +39,25 @@ public class OnlineManager : NetworkBehaviour
 
     private Dictionary<ulong, bool> playerReadyDictionary;
 
-    private Dictionary<ulong, int> playerTeamDictionary;
+    private Dictionary<string, int> playerTeamDictionary;
+
+    private Dictionary<string, PlayerCharacter> playerCharacterDictionary;
+
+
+    //  private Dictionary<ulong, GameObject> playerManagerDictionary;
 
 
 
 
 
-    private void Awake() {
+    private void Awake()
+    {
         Instance = this;
         playerReadyDictionary = new Dictionary<ulong, bool>();
-        playerTeamDictionary = new Dictionary<ulong, int>();
+        playerTeamDictionary = new Dictionary<string, int>();
+        playerCharacterDictionary = new Dictionary<string, PlayerCharacter>();
+
+        DontDestroyOnLoad(gameObject);
 
 
     }
@@ -59,92 +68,187 @@ public class OnlineManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        //   Debug.Log("##########");
         PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
         //PlayerName = 
 
         if (IsServer)
         {
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
+            //     NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
         }
-
-        /*  Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-
-          PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
-
-          Debug.Log("ÑÑÑÑ");
-          Debug.Log(player.Data[KEY_PLAYER_CHARACTER].Value);
-          Debug.Log(playerCharacter);
-
-          LobbyManager.Instance.logPlayer();
-
-          SpawnPlayerServerRpc(NetworkManager.Singleton.LocalClientId, playerCharacter);
-        */
-        SetUpPlayerServerRpc();
-    }
-
-    [ServerRpc]
-    public void SetUpVariablesServerRpc(string team, string name, ServerRpcParams serverRpcParams = default)
-    {
-        Debug.Log("AAAAAAAAAAAA");
-        //NO ESTÁ LLEGANDO
-
-        //Localmente funciona aquí
-        /* PlayerTeam = team;
-         PlayerName = name;
-        */
-        playerTeamDictionary[serverRpcParams.Receive.SenderClientId] = int.Parse(team);
-
-        SetPlayerReadyServerRpc();
     }
 
 
-    //Se tiene que llamar en el OnNetworkSpawn, se esta llamando antes que se prepare el playerTeamDictionary
     [ServerRpc(RequireOwnership = false)]
-    public void SetUpPlayerServerRpc(ServerRpcParams serverRpcParams = default)
+    public void ChangeCharacterServerRpc(string playerId, PlayerCharacter playerCharacter)
     {
-        try
-        {
-            ulong clientId = serverRpcParams.Receive.SenderClientId;
-            Debug.Log("SETUP SERVER!");
-            Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-            PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
-            GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
-            GameObject newPlayer = (GameObject)Instantiate(prefab);
-
-            newPlayer.GetComponent<PlayerManager>().PlayerTeam = PlayerTeam;
-            newPlayer.GetComponent<PlayerManager>().name = PlayerName;
-
-
-            newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-
-            Debug.Log("INSTANTIATED");
-
-            Debug.Log(playerTeamDictionary.Count);
-            foreach (KeyValuePair<ulong, int> item in playerTeamDictionary)
-            {
-                Debug.Log(item.Value);
-            }
-        }
-        catch(Exception e)
-        {
-            Debug.Log(e);
-        }
-
-        /* Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-         PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
-
-         GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
-
-         GameObject newPlayer = (GameObject)Instantiate(prefab);
-
-         prefab.GetComponent<PlayerManager>().PlayerTeam = player.Data[KEY_PLAYER_TEAM].Value;
-         Debug.Log(player.Data[KEY_PLAYER_TEAM].Value);
-
-         newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-        */
+        //GetPlayerById(playerId);
+        ChangeCharacterClientRpc(playerId, playerCharacter);
     }
+
+
+    [ClientRpc]
+    public void ChangeCharacterClientRpc(string playerId, PlayerCharacter playerCharacter)
+    {
+        //GetPlayerById(playerId);
+        //Debug.Log(playerId);
+
+        if (playerCharacterDictionary.ContainsKey(playerId))
+        {
+            playerCharacterDictionary[playerId] = playerCharacter;
+        }
+        else
+        {
+            playerCharacterDictionary.Add(playerId, playerCharacter);
+        }
+
+        foreach (KeyValuePair<string, int> item in playerTeamDictionary)
+        {
+            //Debug.Log("AAAAAAAAAAAAAAAAAAAA" +  item.Value);
+        }
+
+        if (LobbyUI.Instance != null)
+        {
+            LobbyUI.Instance.LobbyPlayers[playerId].UpdateCharacterUI(playerCharacter);
+        }
+    }
+
+
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ChangeTeamServerRpc(string playerId, int team)
+    {
+        //GetPlayerById(playerId);
+        ChangeTeamClientRpc(playerId, team);
+    }
+
+
+    [ClientRpc]
+    public void ChangeTeamClientRpc(string playerId, int team)
+    {
+        //GetPlayerById(playerId);
+        //Debug.Log(playerId);
+
+        if (playerTeamDictionary.ContainsKey(playerId))
+        {
+            playerTeamDictionary[playerId] = team;
+        }
+        else
+        {
+            playerTeamDictionary.Add(playerId, team);
+        }
+
+        foreach (KeyValuePair<string, int> item in playerTeamDictionary)
+        {
+            //Debug.Log("AAAAAAAAAAAAAAAAAAAA" +  item.Value);
+        }
+
+        if (LobbyUI.Instance != null)
+        {
+            LobbyUI.Instance.LobbyPlayers[playerId].UpdateTeamUi(team);
+        }
+    }
+
+
+    public int GetTeam(string playerId)
+    {
+        if (playerTeamDictionary.ContainsKey(playerId))
+            return playerTeamDictionary[playerId];
+        playerTeamDictionary.Add(playerId, 0);
+        return playerTeamDictionary[playerId];
+
+    }
+}
+
+
+    /*
+
+   
+
+
+    }
+
+
+
+
+
+    */
+
+/*
+[ServerRpc]
+public void SetUpVariablesServerRpc(string team, string name, ServerRpcParams serverRpcParams = default)
+{
+    Debug.Log("AAAAAAAAAAAA");
+    //NO ESTÁ LLEGANDO
+
+    //Localmente funciona aquí
+    /* PlayerTeam = team;
+     PlayerName = name;
+    */
+//  playerTeamDictionary[serverRpcParams.Receive.SenderClientId] = int.Parse(team);
+/*
+  SetPlayerReadyServerRpc();
+}
+
+
+//Se tiene que llamar en el OnNetworkSpawn, se esta llamando antes que se prepare el playerTeamDictionary
+[ServerRpc(RequireOwnership = false)]
+public void SetUpPlayerServerRpc(ServerRpcParams serverRpcParams = default)
+{
+  try
+  {
+      /*  ulong clientId = serverRpcParams.Receive.SenderClientId;
+        Debug.Log("SETUP SERVER!");
+        Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+        PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
+        GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
+        GameObject newPlayer = (GameObject)Instantiate(prefab);
+
+        newPlayer.GetComponent<PlayerManager>().PlayerTeam = PlayerTeam;
+        newPlayer.GetComponent<PlayerManager>().name = PlayerName;
+
+
+        newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+
+        Debug.Log("INSTANTIATED");
+
+        Debug.Log(playerTeamDictionary.Count);
+        foreach (KeyValuePair<ulong, int> item in playerTeamDictionary)
+        {
+            Debug.Log(item.Value);
+        }
+      */
+/*
+      ulong clientId = serverRpcParams.Receive.SenderClientId;
+
+      Debug.Log("SETUP SERVER!");
+      Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+      PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
+      GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
+      GameObject newPlayer = (GameObject)Instantiate(prefab);
+      newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+      Debug.Log("SETED UP SERVER!!");
+
+  }
+  catch (Exception e)
+  {
+      Debug.Log(e);
+  }
+
+  /* Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+   PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
+
+   GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
+
+   GameObject newPlayer = (GameObject)Instantiate(prefab);
+
+   prefab.GetComponent<PlayerManager>().PlayerTeam = player.Data[KEY_PLAYER_TEAM].Value;
+   Debug.Log(player.Data[KEY_PLAYER_TEAM].Value);
+
+   newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+  */
+//}
+/*
 
     [ClientRpc]
     private void SetUpPlayerClientRpc()
@@ -164,42 +268,44 @@ public class OnlineManager : NetworkBehaviour
     */
 
 
-    //     Transform playerTransform = Instantiate(playerPrefab, transform.position, transform.rotation);
-    //   playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(NetworkManager.LocalClientId, true);
-
-   
-    
-    
-   /* [ServerRpc(RequireOwnership = false)]
-    public void SpawnPlayerServerRpc(ulong clientId, LobbyManager.PlayerCharacter playerCharacter)
-    {
-     //   ulong clientId = NetworkManager.Singleton.LocalClientId;
-     //   Debug.Log("SPAWNING PLAYER!!");
-       // Debug.Log(clientId);
-
-        GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
-        GameObject newPlayer = (GameObject)Instantiate(prefab);
-
-
-        Player lobbyPlayer = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+//     Transform playerTransform = Instantiate(playerPrefab, transform.position, transform.rotation);
+//   playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(NetworkManager.LocalClientId, true);
 
 
 
 
-        newPlayer.GetComponent<PlayerManager>().team = int.Parse(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+/* [ServerRpc(RequireOwnership = false)]
+ public void SpawnPlayerServerRpc(ulong clientId, LobbyManager.PlayerCharacter playerCharacter)
+ {
+  //   ulong clientId = NetworkManager.Singleton.LocalClientId;
+  //   Debug.Log("SPAWNING PLAYER!!");
+    // Debug.Log(clientId);
 
-        Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_NAME].Value);
-
-        Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
-
-        newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-        newPlayer.SetActive(true);
+     GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
+     GameObject newPlayer = (GameObject)Instantiate(prefab);
 
 
-        LobbyManager.Instance.logPlayer();
+     Player lobbyPlayer = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
 
-    }
-   */
+
+
+
+     newPlayer.GetComponent<PlayerManager>().team = int.Parse(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+
+     Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_NAME].Value);
+
+     Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+
+     newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+     newPlayer.SetActive(true);
+
+
+     LobbyManager.Instance.logPlayer();
+
+ }
+*/
+
+/*
 
     [ClientRpc]
     public void SetTeamsClientRpc()
@@ -251,7 +357,7 @@ public class OnlineManager : NetworkBehaviour
                 break;
         
         }*/
-    }
+/*    }
 
 
     private void GameInput_OnInteractAction(object sender, EventArgs e)
@@ -263,10 +369,10 @@ public class OnlineManager : NetworkBehaviour
 
             SetPlayerReadyServerRpc();
         }
-  */
+  
     }
 
-
+/*
     [ServerRpc(RequireOwnership = false)]
     private void SetPlayerReadyServerRpc(ServerRpcParams serverRpcParams = default)
     {
@@ -305,6 +411,8 @@ public class OnlineManager : NetworkBehaviour
         // All players are unpaused
         isGamePaused.Value = false;
       */
-    }
 
-}
+//}
+
+
+//}

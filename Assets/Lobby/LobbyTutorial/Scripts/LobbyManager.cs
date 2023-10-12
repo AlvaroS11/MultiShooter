@@ -384,6 +384,9 @@ public class LobbyManager : MonoBehaviour {
         this.maxPlayers = maxPlayers;
 
         string code = await CreateRelay();
+
+        Debug.Log("creating Relay " + code);
+
         NetworkManager.Singleton.StartHost();
 
 
@@ -497,7 +500,7 @@ public class LobbyManager : MonoBehaviour {
     public async void UpdatePlayerCharacter(PlayerCharacter playerCharacter) {
         if (joinedLobby != null) {
             try {
-                UpdatePlayerOptions options = new UpdatePlayerOptions();
+           /*     UpdatePlayerOptions options = new UpdatePlayerOptions();
 
                 options.Data = new Dictionary<string, PlayerDataObject>() {
                     {
@@ -516,8 +519,14 @@ public class LobbyManager : MonoBehaviour {
                 Debug.Log(playerCharacter.ToString());
               //  Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
             //  Debug.Log(LobbyService.Instance.Play
+           
+
+
 
                 OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+           */
+
+
             } catch (LobbyServiceException e) {
                 Debug.Log(e);
             }
@@ -595,47 +604,65 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
-    public async void ChangeTeam(string playerId, string team)
+    public void ChangeTeam(string playerId, string team)
     {
-        if(playerId == AuthenticationService.Instance.PlayerId)
-        {
-            try
-            {
-                UpdatePlayerOptions options = new UpdatePlayerOptions();
+        /* if(playerId == AuthenticationService.Instance.PlayerId)
+         {
+             try
+             {
+                 UpdatePlayerOptions options = new UpdatePlayerOptions();
 
-                options.Data = new Dictionary<string, PlayerDataObject>() {
-                    {
-                        KEY_PLAYER_TEAM, new PlayerDataObject(
-                            visibility: PlayerDataObject.VisibilityOptions.Public,
-                            value: team)
-                    }
-                };
+                 options.Data = new Dictionary<string, PlayerDataObject>() {
+                     {
+                         KEY_PLAYER_TEAM, new PlayerDataObject(
+                             visibility: PlayerDataObject.VisibilityOptions.Public,
+                             value: team)
+                     }
+                 };
 
-                //string playerId = AuthenticationService.Instance.PlayerId;
+                 //string playerId = AuthenticationService.Instance.PlayerId;
 
-                Lobby lobby = await LobbyService.Instance.UpdatePlayerAsync(joinedLobby.Id, playerId, options);
-                joinedLobby = lobby;
+                 Lobby lobby = await LobbyService.Instance.UpdatePlayerAsync(joinedLobby.Id, playerId, options);
+                 joinedLobby = lobby;
 
-                Debug.Log("*******");
-                Debug.Log(GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value);
+                 Debug.Log("*******");
+                 Debug.Log(GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value);
 
-                OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+                 OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
 
-            }
-            catch (LobbyServiceException e)
-            {
-                Debug.Log(e);
-            }
-        }
+             }
+             catch (LobbyServiceException e)
+             {
+                 Debug.Log(e);
+             }
+         }
+        */
+      //  OnlineManager.Instance.ChangeTeamServerRpc(playerId, int.Parse(team));
     }
 
-    public string GetTeam(string playerId)
+    /*   [ServerRpc(RequireOwnership = false)]
+       public void ChangeTeamServerRpc(ServerRpcParams serverRpcParams = default)
+       {
+
+           //Crear una lista de los jugadores (mirar La lista de templates por ej)
+           try {
+               ulong clientId = serverRpcParams.Receive.SenderClientId;
+
+           }
+       }
+    */
+
+
+
+    public int GetTeam(string playerId)
     {
         if (playerId == AuthenticationService.Instance.PlayerId)
         {
-            return  GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value;
+            // return  GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value;
+            int team = OnlineManager.Instance.GetTeam(playerId);
+            return team;
         }
-        return "-1";
+        return -1;
     }
 
     public async void UpdateLobbyGameMode(GameMode gameMode) {

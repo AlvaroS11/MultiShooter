@@ -17,27 +17,30 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     [SerializeField] private TMP_Dropdown selectTeamDropdown;
 
     public string selected;
-    private Player player;
+    [SerializeField]
+    public Player player;
 
+    public string playerId;
 
 
     private void Awake() {
-        //LobbyUI.Instance.dropDownExpanded = false;
-        Debug.Log("awake");
         kickPlayerButton.onClick.AddListener(KickPlayer);
-       // selectTeamDropdown.on
+
+
+
        selectTeamDropdown.onValueChanged.AddListener(delegate
         {
             SelectTeam(selectTeamDropdown);
         });
       
 
-        selectTeamDropdown.gameObject.SetActive(true);
+        //selectTeamDropdown.gameObject.SetActive(true);
     }
 
     private void Start()
     {
-        
+      
+
     }
 
     private void Update()
@@ -45,7 +48,6 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         if (selectTeamDropdown.IsExpanded)
         {
             LobbyUI.Instance.dropDownExpanded = true;
-         //   Debug.Log("aaaaaaaaa");
         }
         else
             LobbyUI.Instance.dropDownExpanded = false;
@@ -59,17 +61,9 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     {
         //If not owner, disable Team selector
         selectTeamDropdown.enabled = visible;
-        //If owner, was it expanded?
-
-      /*  if (visible)
-        {
-            if(LobbyUI.Instance.dropDownExpanded && isSelf())
-                selectTeamDropdown.Show();
-
-        }
-      */
     }
 
+    //HACER CON NETCODE
     public void UpdatePlayer(Player player) {
         this.player = player;
         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
@@ -77,11 +71,25 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
             System.Enum.Parse<LobbyManager.PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
         characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
 
-       // Debug.Log(",,,,," + player.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
         selected = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
 
         selectTeamDropdown.value = int.Parse(selected);
         //selectTeamDropdown.itemText.text = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
+
+    }
+
+
+    public void UpdateTeamUi(int team)
+    {
+        selectTeamDropdown.value = team - 1;
+    }
+
+    public void UpdateCharacterUI(LobbyManager.PlayerCharacter playerCharacter)
+    {
+
+        //PARA EL NOMBRE:         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
+
+        characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
 
     }
 
@@ -93,31 +101,15 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     public bool isSelf()
     {
-        return player.Id == AuthenticationService.Instance.PlayerId;
+        Debug.Log(playerId);
+        return playerId == AuthenticationService.Instance.PlayerId;
     }
 
     public void SelectTeam(TMP_Dropdown change)
     {
-        if (!isSelf())
-            return;
         selectTeamDropdown.value = change.value;
-
-        int prevTeam = int.Parse(LobbyManager.Instance.GetTeam(player.Id));
-
-        if(prevTeam != change.value)
-        {
-            selectTeamDropdown.itemText.text = " " + change.value;
-            LobbyManager.Instance.ChangeTeam(player.Id, change.value.ToString());
-            Debug.Log("CHANGE TO TEAM: " + change.value);
-
-        };
-
-        //  if()
-
-
-        //LobbyManager.Instance.ChangeTeam(player.Id, change.value.ToString());
-
-     //   Debug.Log("CHANGE TO TEAM: " + change.value);
+        int prevTeam = LobbyManager.Instance.GetTeam(playerId);
+        OnlineManager.Instance.ChangeTeamServerRpc(playerId, change.value + 1);
     }
 
 
