@@ -7,6 +7,7 @@ using static LobbyManager;
 using Unity.Services.Lobbies.Models;
 using System;
 using Unity.Services.Authentication;
+using Unity.Networking.Transport;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -43,6 +44,9 @@ public class OnlineManager : NetworkBehaviour
 
     private Dictionary<string, PlayerCharacter> playerCharacterDictionary;
 
+    private Dictionary<string, string> playerNameDictionary;
+
+
 
     //  private Dictionary<ulong, GameObject> playerManagerDictionary;
 
@@ -56,6 +60,7 @@ public class OnlineManager : NetworkBehaviour
         playerReadyDictionary = new Dictionary<ulong, bool>();
         playerTeamDictionary = new Dictionary<string, int>();
         playerCharacterDictionary = new Dictionary<string, PlayerCharacter>();
+        playerNameDictionary = new Dictionary<string, string>();
 
         DontDestroyOnLoad(gameObject);
 
@@ -70,11 +75,58 @@ public class OnlineManager : NetworkBehaviour
     {
         PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
+        Debug.Log("NETWORK SPAWN!! ");
+
+
+        //  SetUpClient();
+
+
+
         //PlayerName = 
 
         if (IsServer)
         {
             //     NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
+        }
+    }
+
+    
+    private void SetUpClient()
+    {
+   //     foreach
+    }
+
+
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ChangeNameServerRpc(string playerId, string name)
+    {
+        //GetPlayerById(playerId);
+        ChangeNameClientRpc(playerId, name);
+    }
+
+
+    [ClientRpc]
+    public void ChangeNameClientRpc(string playerId, string name)
+    {
+        //GetPlayerById(playerId);
+        //Debug.Log(playerId);
+
+        if (playerNameDictionary.ContainsKey(playerId))
+        {
+            playerNameDictionary[playerId] = name;
+            Debug.Log("NAME :  " + name);
+        }
+        else
+        {
+            playerNameDictionary.Add(playerId, name);
+            Debug.Log("UPDATED NAME :  " + name);
+
+        }
+
+        if (LobbyUI.Instance != null)
+        {
+            LobbyUI.Instance.LobbyPlayers[playerId].UpdateNameUI(name);
         }
     }
 
@@ -138,11 +190,6 @@ public class OnlineManager : NetworkBehaviour
             playerTeamDictionary.Add(playerId, team);
         }
 
-        foreach (KeyValuePair<string, int> item in playerTeamDictionary)
-        {
-            //Debug.Log("AAAAAAAAAAAAAAAAAAAA" +  item.Value);
-        }
-
         if (LobbyUI.Instance != null)
         {
             LobbyUI.Instance.LobbyPlayers[playerId].UpdateTeamUi(team);
@@ -158,6 +205,36 @@ public class OnlineManager : NetworkBehaviour
         return playerTeamDictionary[playerId];
 
     }
+
+
+    [ServerRpc]
+    public void GetServerValuesServerRpc(string playerId)
+    {
+        try
+        {
+            GetServerValuesClientRpc(GetTeam(playerId), playerNameDictionary[playerId], playerCharacterDictionary[playerId], playerId);
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+        }
+        //HAY QUE INICIALIZAR PRIMERO LOS VALORES DE LOS DICCIONARIOS
+
+
+      //  return Tuple.Create(GetTeam(playerId), playerNameDictionary[playerId], playerCharacterDictionary[playerId]);
+
+
+    }
+
+
+    [ClientRpc]
+    public void GetServerValuesClientRpc(int team, string name, PlayerCharacter playerCharacter, string playerId) //
+    {
+        //Se está llamando en cliente?
+        Debug.Log("VALUES::  " + team + name + playerCharacter.ToString());
+        LobbyUI.Instance.LobbyPlayers[playerId].SetUpTemplate(team, name, playerCharacter);
+    }
+
 }
 
 

@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
@@ -131,6 +133,7 @@ public class LobbyUI : MonoBehaviour {
                 //update
                 //lobbyPlayerSingleUI = LobbyPlayers[player.Id];
 
+
             }
             else
             {
@@ -151,14 +154,26 @@ public class LobbyUI : MonoBehaviour {
 
                 lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
 
-                //lobbyPlayerSingleUI.GetComponent<LobbyPlayerSingleUI>().player = player;
-
-
                 LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
 
-                Debug.Log(playerSingleTemplate.GetComponent<LobbyPlayerSingleUI>().playerId);
+                //    int team;
+                //  string name;
+                ///PlayerCharacter playerCharacter;
+                ///
 
-                Debug.Log("CREATED!");
+                OnlineManager.Instance.ChangeTeamServerRpc(player.Id, 1);
+                OnlineManager.Instance.ChangeCharacterClientRpc(player.Id, PlayerCharacter.Marine);
+                OnlineManager.Instance.ChangeNameClientRpc(player.Id, "dd");
+                //El nombre debería de cogerse desde EditPlayerName antes
+
+
+                OnlineManager.Instance.GetServerValuesServerRpc(player.Id);
+             //   (team, name, playerCharacter) = OnlineManager.Instance.GetServerValuesServerRpc(player.Id);
+
+                // lobbyPlayerSingleUI.SetUpTemplate(team, name, playerCharacter);
+
+
+
             }
         }
 
@@ -176,7 +191,7 @@ public class LobbyUI : MonoBehaviour {
         Show();
     }
 
-    
+
 
 
     public void UpdateUITeam()

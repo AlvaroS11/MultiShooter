@@ -42,10 +42,12 @@ public class EditPlayerName : MonoBehaviour {
 
     private void Start() {
         OnNameChanged += EditPlayerName_OnNameChanged;
+        EditPlayerName_OnNameChanged(gameObject, EventArgs.Empty);
     }
 
     private void EditPlayerName_OnNameChanged(object sender, EventArgs e) {
-        LobbyManager.Instance.UpdatePlayerName(GetPlayerName());
+        // LobbyManager.Instance.UpdatePlayerName(GetPlayerName());
+        OnlineManager.Instance.ChangeNameServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, GetPlayerName());
     }
 
     public string GetPlayerName() {

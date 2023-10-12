@@ -57,6 +57,13 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         kickPlayerButton.gameObject.SetActive(visible);
     }
 
+    public void SetUpTemplate(int team, string name, LobbyManager.PlayerCharacter playerCharacter)
+    {
+        UpdateTeamUi(team);
+        UpdateCharacterUI(playerCharacter);
+        UpdateNameUI(name);
+    }
+
     public void SetTeamClickable(bool visible)
     {
         //If not owner, disable Team selector
@@ -90,6 +97,15 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         //PARA EL NOMBRE:         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
 
         characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
+
+    }
+
+    public void UpdateNameUI(string name)
+    {
+
+        //PARA EL NOMBRE:         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
+
+        playerNameText.text = name;
 
     }
 

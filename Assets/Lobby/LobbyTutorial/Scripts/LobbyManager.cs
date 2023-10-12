@@ -134,7 +134,7 @@ public class LobbyManager : MonoBehaviour {
         if (joinedLobby != null) {
             lobbyPollTimer -= Time.deltaTime;
             if (lobbyPollTimer < 0f) {
-                float lobbyPollTimerMax = 1.1f;
+                float lobbyPollTimerMax = 4f;
                 lobbyPollTimer = lobbyPollTimerMax;
 
                 joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
