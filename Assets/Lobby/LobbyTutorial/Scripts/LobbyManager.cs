@@ -84,6 +84,7 @@ public class LobbyManager : MonoBehaviour {
 
     private void Update() {
         //HandleRefreshLobbyList(); // Disabled Auto Refresh for testing with multiple builds
+        //PERIODIC TASKS (5seconds)
         HandleLobbyHeartbeat();
         HandleLobbyPolling();
     }
@@ -124,7 +125,7 @@ public class LobbyManager : MonoBehaviour {
                 float heartbeatTimerMax = 15f;
                 heartbeatTimer = heartbeatTimerMax;
 
-                Debug.Log("Heartbeat");
+                //Debug.Log("Heartbeat");
                 await LobbyService.Instance.SendHeartbeatPingAsync(joinedLobby.Id);
             }
         }
@@ -460,14 +461,15 @@ public class LobbyManager : MonoBehaviour {
 
     public async void JoinLobby(Lobby lobby) {
         Player player = CreatePlayer();
+        Debug.Log("JOINING LOBBY!!");
 
         joinedLobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id, new JoinLobbyByIdOptions {
             Player = player
         });
 
-        await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
-
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
+
+        await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
     }
 
     public async void UpdatePlayerName(string playerName) {

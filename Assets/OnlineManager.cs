@@ -40,11 +40,11 @@ public class OnlineManager : NetworkBehaviour
 
     private Dictionary<ulong, bool> playerReadyDictionary;
 
-    private Dictionary<string, int> playerTeamDictionary;
+    public Dictionary<string, int> playerTeamDictionary;
 
-    private Dictionary<string, PlayerCharacter> playerCharacterDictionary;
+    public Dictionary<string, PlayerCharacter> playerCharacterDictionary;
 
-    private Dictionary<string, string> playerNameDictionary;
+    public Dictionary<string, string> playerNameDictionary;
 
 
 
@@ -77,12 +77,12 @@ public class OnlineManager : NetworkBehaviour
 
         Debug.Log("NETWORK SPAWN!! ");
 
+       // playerNameDictionary.Add(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName());
 
-        //  SetUpClient();
+        //ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName());
+        //GetPlayerNamesServerRpc(PlayerLobbyId);
 
 
-
-        //PlayerName = 
 
         if (IsServer)
         {
@@ -94,6 +94,85 @@ public class OnlineManager : NetworkBehaviour
     private void SetUpClient()
     {
    //     foreach
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void GetPlayerNamesServerRpc(string playerId)
+    {
+        foreach(KeyValuePair<string, string> name in playerNameDictionary)
+        {
+            if(name.Key != playerId)
+            {
+                Debug.Log("Servidor, diccionario sin key : " + name.Key);
+            }
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void GetDefNameServerRpc(string playerId)
+    {
+        //GetPlayerById(playerId);
+        GetDefNameClientRpc(playerId);
+    }
+
+
+    [ClientRpc]
+    public void GetDefNameClientRpc(string playerId)
+    {
+        //GetPlayerById(playerId);
+        //Debug.Log(playerId);
+
+        ChangeNameServerRpc(playerId, EditPlayerName.Instance.GetPlayerName());
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void GetTeamCharacterServerRpc(string playerId, ServerRpcParams serverRpcParams = default)
+    {
+        var clientId = serverRpcParams.Receive.SenderClientId;
+        Debug.Log("nnnn" + playerTeamDictionary.Count);
+        foreach (KeyValuePair<string, int> name in playerTeamDictionary)
+        {
+            Debug.Log(name.Value);
+            if (name.Key != playerId)
+            {
+                //Estoy hay que buscarlo en el cliente no en el servidor
+                ClientRpcParams clientRpcParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new ulong[] { clientId }
+                    }
+                };
+
+                ChangeTeamClientRpc(name.Key, name.Value, clientRpcParams);
+                Debug.Log("Servidor, diccionario sin key : " + name.Key);
+            }
+        }
+       
+
+        foreach (KeyValuePair<string, PlayerCharacter> character in playerCharacterDictionary)
+        {
+            if (character.Key != playerId)
+            {
+                ClientRpcParams clientRpcParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new ulong[] { clientId }
+                    }
+                };
+                ChangeCharacterClientRpc(character.Key, character.Value, clientRpcParams);
+            }
+        }
+
+       // if (!playerTeamDictionary.ContainsKey(playerId))
+         //   playerTeamDictionary.Add(playerId, 1);
+
+
+        foreach (KeyValuePair<string, int> name in playerTeamDictionary)
+        {
+            Debug.Log("team dict: " + name.Key + " " + name.Value);
+        }
     }
 
 
@@ -140,7 +219,7 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ClientRpc]
-    public void ChangeCharacterClientRpc(string playerId, PlayerCharacter playerCharacter)
+    public void ChangeCharacterClientRpc(string playerId, PlayerCharacter playerCharacter, ClientRpcParams clientRpcParams = default)
     {
         //GetPlayerById(playerId);
         //Debug.Log(playerId);
@@ -176,10 +255,10 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ClientRpc]
-    public void ChangeTeamClientRpc(string playerId, int team)
+    public void ChangeTeamClientRpc(string playerId, int team, ClientRpcParams clientRpcParams = default)
     {
         //GetPlayerById(playerId);
-        //Debug.Log(playerId);
+        Debug.Log("EXECUTED HERE!!");
 
         if (playerTeamDictionary.ContainsKey(playerId))
         {
@@ -206,34 +285,49 @@ public class OnlineManager : NetworkBehaviour
 
     }
 
+    public string GetName(string playerId)
+    {
+        if (playerNameDictionary.ContainsKey(playerId))
+            return playerNameDictionary[playerId];
+        playerNameDictionary.Add(playerId,EditPlayerName.Instance.GetPlayerName());
+        return playerNameDictionary[playerId];
+    }
 
+
+    /*
     [ServerRpc]
-    public void GetServerValuesServerRpc(string playerId)
+    public void GetServerValuesServerRpc(string playerId,ulong clientId)
     {
         try
         {
-            GetServerValuesClientRpc(GetTeam(playerId), playerNameDictionary[playerId], playerCharacterDictionary[playerId], playerId);
+            ClientRpcParams clientRpcParams = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { clientId }
+                }
+            };
+            GetServerValuesClientRpc(GetTeam(playerId), playerId, clientRpcParams);
         }
         catch (Exception e)
         {
             Debug.Log(e);
         }
         //HAY QUE INICIALIZAR PRIMERO LOS VALORES DE LOS DICCIONARIOS
-
-
       //  return Tuple.Create(GetTeam(playerId), playerNameDictionary[playerId], playerCharacterDictionary[playerId]);
-
-
     }
 
 
     [ClientRpc]
-    public void GetServerValuesClientRpc(int team, string name, PlayerCharacter playerCharacter, string playerId) //
+    public void GetServerValuesClientRpc(int team, string playerId, ClientRpcParams clientRpcParams = default) //
     {
-        //Se está llamando en cliente?
-        Debug.Log("VALUES::  " + team + name + playerCharacter.ToString());
-        LobbyUI.Instance.LobbyPlayers[playerId].SetUpTemplate(team, name, playerCharacter);
+        //Se está llamando en cliente?playerNameDictionary[playerId], playerCharacterDictionary[playerId]
+        //   
+        Debug.Log("CHANGING VALUES FOR : 0" + playerId);
+        Debug.Log("VALUES::  " + team + " " + EditPlayerName.Instance.GetPlayerName() + playerCharacterDictionary[playerId].ToString());
+        LobbyUI.Instance.LobbyPlayers[playerId].SetUpTemplate(team, EditPlayerName.Instance.GetPlayerName(), playerCharacterDictionary[playerId]);
     }
+    */
 
 }
 

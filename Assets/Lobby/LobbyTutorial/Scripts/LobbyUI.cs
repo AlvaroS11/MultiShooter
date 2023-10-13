@@ -73,7 +73,7 @@ public class LobbyUI : MonoBehaviour {
     private void Start() {
         LobbyManager.Instance.OnJoinedLobby += SetUpLobby_Event;
         LobbyManager.Instance.OnJoinedLobbyUpdate += UpdateLobby_Event;
-        LobbyManager.Instance.OnLobbyGameModeChanged += UpdateLobby_Event;
+        LobbyManager.Instance.OnLobbyGameModeChanged += UpdateLobby_Event2;
         LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby;
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnLeftLobby;
 
@@ -86,15 +86,38 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
-        UpdateLobby();
+        Debug.Log("OnJoinedLobbyUpdate");
+
+        //  UpdateLobby();
+        string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
+
+        CreatePlayersUI();
+        OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName());
+        OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
+
+  //      OnlineManager.Instance.GetPlayerNamesServerRpc(PlayerLobbyId);
+
+    }
+
+   /* private void InitializeUIParams(string)
+    {
+
+    }
+*/
+    private void UpdateLobby_Event2(object sender, LobbyManager.LobbyEventArgs e)
+    {
+      //  Debug.Log("LOLLOBY GAME MODE CHANGE");
+       // UpdateLobby();
     }
 
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)
     {
-        UpdateLobby();
+      //  Debug.Log("SET UP EVENT");
+
+     //   UpdateLobby();
     }
 
-    private void UpdateLobby() {
+    public void UpdateLobby() {
         UpdateLobby(LobbyManager.Instance.GetJoinedLobby());
     }
 
@@ -124,6 +147,7 @@ public class LobbyUI : MonoBehaviour {
 
 
         //METER EN ONCLIENT SPAWN O ALGOS ASI
+        int i = 0;
         foreach (Player player in lobby.Players) {
 
             LobbyPlayerSingleUI lobbyPlayerSingleUI = null;
@@ -132,11 +156,10 @@ public class LobbyUI : MonoBehaviour {
             {
                 //update
                 //lobbyPlayerSingleUI = LobbyPlayers[player.Id];
-
-
             }
             else
             {
+                Debug.Log("creating... ");
                 Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
                 playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>().playerId = player.Id;
 
@@ -156,23 +179,16 @@ public class LobbyUI : MonoBehaviour {
 
                 LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
 
-                //    int team;
-                //  string name;
-                ///PlayerCharacter playerCharacter;
-                ///
 
-                OnlineManager.Instance.ChangeTeamServerRpc(player.Id, 1);
-                OnlineManager.Instance.ChangeCharacterClientRpc(player.Id, PlayerCharacter.Marine);
-                OnlineManager.Instance.ChangeNameClientRpc(player.Id, "dd");
-                //El nombre debería de cogerse desde EditPlayerName antes
-
-
-                OnlineManager.Instance.GetServerValuesServerRpc(player.Id);
-             //   (team, name, playerCharacter) = OnlineManager.Instance.GetServerValuesServerRpc(player.Id);
+//                OnlineManager.Instance.GetServerValuesServerRpc(player.Id, clientId: NetworkManager.Singleton.ConnectedClientsIds[i]);
+                //   (team, name, playerCharacter) = OnlineManager.Instance.GetServerValuesServerRpc(player.Id);
 
                 // lobbyPlayerSingleUI.SetUpTemplate(team, name, playerCharacter);
 
 
+                i++;
+                Debug.Log(i);
+                Debug.Log(NetworkManager.Singleton.ConnectedClientsIds.Count);
 
             }
         }
@@ -192,6 +208,43 @@ public class LobbyUI : MonoBehaviour {
     }
 
 
+
+    public void CreatePlayersUI()
+    {
+        Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
+        Debug.Log(lobby);
+        foreach (Player player in lobby.Players)
+        {
+            if (!LobbyPlayers.ContainsKey(player.Id))
+            {
+                Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
+                playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>().playerId = player.Id;
+
+                playerSingleTransform.gameObject.SetActive(true);
+
+
+                LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
+
+                lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
+                    LobbyManager.Instance.IsLobbyHost() &&
+                    player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
+                );
+                lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
+                LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
+                changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
+                lobbyNameText.text = lobby.Name;
+                playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
+                gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
+
+                if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
+                    startGameButton.gameObject.SetActive(true);
+                else
+                    startGameButton.gameObject.SetActive(false);
+
+                Show();
+            }
+        }
+    }
 
 
     public void UpdateUITeam()
