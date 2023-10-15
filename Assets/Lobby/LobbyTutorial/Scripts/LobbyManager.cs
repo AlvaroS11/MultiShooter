@@ -569,6 +569,12 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
+    [ClientRpc]
+    private void CreatePlayers()
+    {
+
+    }
+
     public async void QuickJoinLobby() {
         try {
             QuickJoinLobbyOptions options = new QuickJoinLobbyOptions();
