@@ -8,6 +8,8 @@ using Unity.Services.Lobbies.Models;
 using System;
 using Unity.Services.Authentication;
 using Unity.Networking.Transport;
+using System.Reflection;
+using UnityEngine.TextCore.Text;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -128,7 +130,7 @@ public class OnlineManager : NetworkBehaviour
         //GetPlayerById(playerId);
         //Debug.Log(playerId);
 
-        ChangeNameServerRpc(playerId, EditPlayerName.Instance.GetPlayerName());
+        ChangeNameServerRpc(playerId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -136,7 +138,7 @@ public class OnlineManager : NetworkBehaviour
     {
         var clientId = serverRpcParams.Receive.SenderClientId;
         Debug.Log("nnnn" + playerTeamDictionary.Count);
-        foreach (KeyValuePair<string, int> name in playerTeamDictionary)
+      /*  foreach (KeyValuePair<string, int> name in playerTeamDictionary)
         {
             Debug.Log(name.Value);
             if (name.Key != playerId)
@@ -150,7 +152,7 @@ public class OnlineManager : NetworkBehaviour
                     }
                 };
 
-                ChangeTeamClientRpc(name.Key, name.Value, clientRpcParams);
+                ChangeTeamClientRpc(name.Key, name.Value, clientId, clientRpcParams);
                 Debug.Log("Servidor, diccionario sin key : " + name.Key);
             }
         }
@@ -167,7 +169,23 @@ public class OnlineManager : NetworkBehaviour
                         TargetClientIds = new ulong[] { clientId }
                     }
                 };
-                ChangeCharacterClientRpc(character.Key, character.Value, clientRpcParams);
+                ChangeCharacterClientRpc(character.Key, character.Value, clientId, clientRpcParams);
+            }
+        }*/
+      foreach(PlayerInfo playerInfo in playerList)
+        {
+            if(playerInfo.lobbyPlayerId != playerId)
+            {
+                ClientRpcParams clientRpcParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new ulong[] { clientId }
+                    }
+                };
+                ChangeTeamClientRpc(playerInfo.lobbyPlayerId, playerInfo.team, clientId, clientRpcParams);
+                ChangeCharacterClientRpc(playerInfo.lobbyPlayerId, playerInfo.playerCharacter, clientId, clientRpcParams);
+
             }
         }
 
@@ -184,30 +202,39 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void ChangeNameServerRpc(string playerId, string name)
+    public void ChangeNameServerRpc(string playerId, string name, ulong clientId)
     {
         //GetPlayerById(playerId);
-        ChangeNameClientRpc(playerId, name);
+        ChangeNameClientRpc(playerId, name, clientId);
     }
 
 
     [ClientRpc]
-    public void ChangeNameClientRpc(string playerId, string name)
+    public void ChangeNameClientRpc(string playerId, string name, ulong clientId)
     {
         //GetPlayerById(playerId);
         //Debug.Log(playerId);
 
-        if (playerNameDictionary.ContainsKey(playerId))
+        /*  if (playerNameDictionary.ContainsKey(playerId))
+          {
+              playerNameDictionary[playerId] = name;
+              Debug.Log("NAME :  " + name);
+              int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
+              if(index >= 0)
+              {
+                  var player = playerList[index];
+                  player.name = name;
+                  playerList[index] = player;
+              }
+          }
+        */
+        int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
+        if (index >= 0)
         {
             playerNameDictionary[playerId] = name;
-            Debug.Log("NAME :  " + name);
-            int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
-            if(index >= 0)
-            {
-                var player = playerList[index];
-                player.name = name;
-                playerList[index] = player;
-            }
+            var player = playerList[index];
+            player.name = name;
+            playerList[index] = player;
         }
         else
         {
@@ -215,7 +242,9 @@ public class OnlineManager : NetworkBehaviour
             Debug.Log("UPDATED NAME :  " + name);
             PlayerInfo newPlayer = new PlayerInfo();
             newPlayer.lobbyPlayerId = playerId;
-            newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
+            // newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
+            newPlayer.clientId = clientId;
+            newPlayer.team = 1;
             newPlayer.name = name;
             playerList.Add(newPlayer);
         }
@@ -228,15 +257,15 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void ChangeCharacterServerRpc(string playerId, PlayerCharacter playerCharacter)
+    public void ChangeCharacterServerRpc(string playerId, PlayerCharacter playerCharacter, ulong clientId)
     {
         //GetPlayerById(playerId);
-        ChangeCharacterClientRpc(playerId, playerCharacter);
+        ChangeCharacterClientRpc(playerId, playerCharacter, clientId);
     }
 
 
     [ClientRpc]
-    public void ChangeCharacterClientRpc(string playerId, PlayerCharacter playerCharacter, ClientRpcParams clientRpcParams = default)
+    public void ChangeCharacterClientRpc(string playerId, PlayerCharacter playerCharacter, ulong clientId, ClientRpcParams clientRpcParams = default)
     {
         //GetPlayerById(playerId);
         //Debug.Log(playerId);
@@ -274,7 +303,9 @@ public class OnlineManager : NetworkBehaviour
             playerCharacterDictionary.Add(playerId, playerCharacter);
             PlayerInfo newPlayer = new PlayerInfo();
             newPlayer.lobbyPlayerId = playerId;
-            newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
+            // newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
+            newPlayer.clientId = clientId;
+            newPlayer.team = 1;
             newPlayer.playerCharacter = playerCharacter;
             playerList.Add(newPlayer);
 
@@ -294,38 +325,48 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void ChangeTeamServerRpc(string playerId, int team)
+    public void ChangeTeamServerRpc(string playerId, int team, ulong clientId)
     {
         //GetPlayerById(playerId);
-        ChangeTeamClientRpc(playerId, team);
+        ChangeTeamClientRpc(playerId, team, clientId);
     }
 
 
     [ClientRpc]
-    public void ChangeTeamClientRpc(string playerId, int team, ClientRpcParams clientRpcParams = default)
+    public void ChangeTeamClientRpc(string playerId, int team, ulong clientId, ClientRpcParams clientRpcParams = default)
     {
         //GetPlayerById(playerId);
         Debug.Log("EXECUTED HERE!!");
+        Debug.Log(team);
+        /*  if (playerTeamDictionary.ContainsKey(playerId))
+          {
+              playerTeamDictionary[playerId] = team;
 
-        if (playerTeamDictionary.ContainsKey(playerId))
+              int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
+              if (index >= 0)
+              {
+                  var player = playerList[index];
+                  player.team = team;
+                  playerList[index] = player;
+              }
+
+          }
+        */
+        int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
+        if (index >= 0)
         {
+            var player = playerList[index];
             playerTeamDictionary[playerId] = team;
-
-            int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
-            if (index >= 0)
-            {
-                var player = playerList[index];
-                player.team = team;
-                playerList[index] = player;
-            }
-
+            player.team = team;
+            playerList[index] = player;
         }
         else
         {
             playerTeamDictionary.Add(playerId, team);
             PlayerInfo newPlayer = new PlayerInfo();
             newPlayer.lobbyPlayerId = playerId;
-            newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
+            //  newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
+            newPlayer.clientId = clientId;
             newPlayer.team = team;
             playerList.Add(newPlayer);
         }
@@ -355,22 +396,35 @@ public class OnlineManager : NetworkBehaviour
     }
 
 
-    /*
+
     //Se tiene que llamar en el OnNetworkSpawn, se esta llamando antes que se prepare el playerTeamDictionary
-    [ServerRpc(RequireOwnership = false)]
-    public void CreatePlayers(ServerRpcParams serverRpcParams = default)
+    [ServerRpc]
+    public void CreatePlayersServerRpc(ServerRpcParams serverRpcParams = default)
     {
         try
         {
-            ulong clientId = serverRpcParams.Receive.SenderClientId;
-            Debug.Log("SETUP SERVER!");
-            Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-            PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
-            GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
-            GameObject newPlayer = (GameObject)Instantiate(prefab);
+            foreach (PlayerInfo playerInfo in playerList)
+            {
+                GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerInfo.playerCharacter);
+                GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance);
 
-            newPlayer.GetComponent<PlayerManager>().PlayerTeam = PlayerTeam;
-            newPlayer.GetComponent<PlayerManager>().name = PlayerName;
+                newPlayerGameObject.GetComponent<PlayerManager>().PlayerTeam = playerInfo.team;
+                newPlayerGameObject.GetComponent<PlayerManager>().PlayerName = playerInfo.name;
+                newPlayerGameObject.GetComponent<PlayerManager>().playerCharacterr = playerInfo.playerCharacter;
+                newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
+
+            }
+
+
+            /*ulong clientId = serverRpcParams.Receive.SenderClientId;
+            Debug.Log("SETUP SERVER!");
+            Player newPlayerInstance = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
+           // PlayerCharacter playerCharacterInstance = //Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
+            GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerCharacterInstance);
+            GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance);
+
+            newPlayerInstance.GetComponent<PlayerManager>().PlayerTeam = PlayerTeam;
+            newPlayerInstance.GetComponent<PlayerManager>().name = PlayerName;
 
 
             newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
@@ -393,27 +447,14 @@ public class OnlineManager : NetworkBehaviour
             GameObject newPlayer = (GameObject)Instantiate(prefab);
             newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
             Debug.Log("SETED UP SERVER!!");
+            */
 
         }
         catch (Exception e)
         {
             Debug.Log(e);
         }
-
-        /* Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-         PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
-
-         GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
-
-         GameObject newPlayer = (GameObject)Instantiate(prefab);
-
-         prefab.GetComponent<PlayerManager>().PlayerTeam = player.Data[KEY_PLAYER_TEAM].Value;
-         Debug.Log(player.Data[KEY_PLAYER_TEAM].Value);
-
-         newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-        */
-  //  }
-//}
+    }
 
 
             /*

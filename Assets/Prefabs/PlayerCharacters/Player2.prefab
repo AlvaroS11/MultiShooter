@@ -242,6 +242,10 @@ MonoBehaviour:
     m_InternalValue: 100
   healthUI: {fileID: 5204551108285389891}
   playerPrefab: {fileID: 0}
+  PlayerLobbyId: 
+  PlayerName: 
+  PlayerTeam: 0
+  playerCharacterr: 0
 --- !u!114 &6931763090777098956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -344,7 +348,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60019a6a86c241a47a9674451b420d59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bullet: {fileID: 6207266781759429056, guid: ee899dc49e5f5a44d9a9754d8bbcdc3b, type: 3}
+  bullet: {fileID: 6207266781759429056, guid: 6f7b0e754dab7ac4da439e3a19c9370e, type: 3}
   coolDownSeconds: 1
   isReady: 0
 --- !u!1 &7304455519357059760

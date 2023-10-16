@@ -6,6 +6,7 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine.UI;
 using Unity.VisualScripting;
 using Unity.Services.Authentication;
+using Unity.Netcode;
 
 public class LobbyPlayerSingleUI : MonoBehaviour {
 
@@ -125,7 +126,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     {
         selectTeamDropdown.value = change.value;
         int prevTeam = LobbyManager.Instance.GetTeam(playerId);
-        OnlineManager.Instance.ChangeTeamServerRpc(playerId, change.value + 1);
+        OnlineManager.Instance.ChangeTeamServerRpc(playerId, change.value + 1, NetworkManager.Singleton.LocalClientId);
     }
 
 

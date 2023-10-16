@@ -9,13 +9,14 @@ public class Bullet : MonoBehaviour {
     public float speed;
     public Vector3 direction;
     public LayerMask obstacle;
-    int obstacleLayer = 0;
-    int playerLayer = 0;
+    protected int obstacleLayer = 0;
+    protected int playerLayer = 0;
 
-    private GameObject parent;
-    private int bulletDmg;
+    protected GameObject parent;
+    protected int bulletDmg;
 
-    private PlayerManager playerManager;
+    protected PlayerManager playerManager;
+    //public NetworkVariable<int> bulletDmg;
 
 
     private void Start()
@@ -104,7 +105,7 @@ public class Bullet : MonoBehaviour {
 
 
     [ServerRpc]
-    private IEnumerator WaitToDeleteServerRpc()
+    protected IEnumerator WaitToDeleteServerRpc()
     {
         yield return new WaitForSeconds(5);
         Destroy(gameObject);

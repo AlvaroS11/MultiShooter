@@ -35,8 +35,8 @@ public class PlayerManager : NetworkBehaviour
 
     public string PlayerLobbyId;
     public string PlayerName;
-    public string PlayerTeam;
-    public string playerCharacterr;
+    public int PlayerTeam;
+    public LobbyManager.PlayerCharacter playerCharacterr;
 
     void Start()
     {

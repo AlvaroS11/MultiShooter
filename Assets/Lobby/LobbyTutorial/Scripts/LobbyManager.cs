@@ -559,6 +559,7 @@ public class LobbyManager : MonoBehaviour {
                 //Initialize Lobby Start Game Key-Value to 0, then to Relay code
                 joinedLobby = lobby;
 
+                OnlineManager.Instance.CreatePlayersServerRpc();
                 Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
                 
             }

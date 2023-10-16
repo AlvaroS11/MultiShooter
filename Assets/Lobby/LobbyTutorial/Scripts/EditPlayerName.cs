@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Netcode;
 
 public class EditPlayerName : MonoBehaviour {
 
@@ -48,7 +49,7 @@ public class EditPlayerName : MonoBehaviour {
     private void EditPlayerName_OnNameChanged(object sender, EventArgs e) {
         // LobbyManager.Instance.UpdatePlayerName(GetPlayerName());
         Debug.Log("EditPlayer");
-        OnlineManager.Instance.ChangeNameServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, GetPlayerName());
+        OnlineManager.Instance.ChangeNameServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, GetPlayerName(), NetworkManager.Singleton.LocalClientId);
     }
 
     public string GetPlayerName() {

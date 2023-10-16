@@ -40,5 +40,10 @@ public class Weapon : MonoBehaviour
         isReady = false;
         yield return new WaitForSeconds(coolDownSeconds);
         isReady = true;
-    } 
+    }
+
+    public void Awake()
+    {
+        
+    }
 }
