@@ -102,10 +102,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncPositionX: 1
-  SyncPositionY: 0
+  SyncPositionY: 1
   SyncPositionZ: 1
   SyncRotAngleX: 0
-  SyncRotAngleY: 1
+  SyncRotAngleY: 0
   SyncRotAngleZ: 0
   SyncScaleX: 0
   SyncScaleY: 0
@@ -216,3 +216,7 @@ MonoBehaviour:
   obstacle:
     serializedVersion: 2
     m_Bits: 128
+  timeToExplode: 5
+  radius: 5
+  ExplosionParticleSystem: {fileID: 6145516831170175880, guid: a02ec7227384aa8408236690c7eb9cb2, type: 3}
+  effectTime: 0

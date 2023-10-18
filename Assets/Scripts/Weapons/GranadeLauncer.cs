@@ -59,13 +59,14 @@ public class GranadeLauncer : Weapon
         if (!isReady) return;
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
-        bulletGameObject.transform.Rotate(90, 0, 0);
+        //bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
         Debug.Log("SPAWNED GRANADE!");
 
-     //   StartCoroutine(CoolDownServerRpc());
-        ReleaseGrenade();
+        //   StartCoroutine(CoolDownServerRpc());
+        bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
+     //   ReleaseGrenade();
     }
 
     [ServerRpc]
@@ -90,7 +91,6 @@ public class GranadeLauncer : Weapon
         lineRenderer.positionCount = Mathf.CeilToInt(LinePoints / timeBetweenPoint) + 1;
         Vector3 startPos = transform.position;
         Vector3 startVel = grenadeForce * -GetComponentInParent<Transform>().forward / bullet.GetComponent<Granade>().GetComponent<Rigidbody>().mass;
-        Debug.Log(startVel);
         startVel.y += granadeInclination;
         int i = 0;
 

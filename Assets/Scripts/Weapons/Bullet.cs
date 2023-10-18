@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
+using System;
 
 public class Bullet : MonoBehaviour {
     public float speed;
@@ -16,6 +18,9 @@ public class Bullet : MonoBehaviour {
     protected int bulletDmg;
 
     protected PlayerManager playerManager;
+
+
+    protected int timeToDestroy = 5;
     //public NetworkVariable<int> bulletDmg;
 
 
@@ -76,11 +81,23 @@ public class Bullet : MonoBehaviour {
         }
     }
 
-    private bool IsEnemy(GameObject hitPlayer)
+    protected virtual bool IsEnemy(GameObject hitPlayer)
     {
         //  if(hitPlayer.layer == playerLayer)
         //     if(hitPlayer.GetComponent<PlayerManager>().PlayerTeam != this.playerTeam)
         //return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam; 
+        try
+        {
+            return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam;
+        }
+        catch(Exception e)
+        {
+            Debug.Log("PlayerManager not found, error: " + e);
+            return false;
+        }
+
+
+
         Debug.Log(playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam);
         return true;
     }
@@ -105,9 +122,9 @@ public class Bullet : MonoBehaviour {
 
 
     [ServerRpc]
-    protected IEnumerator WaitToDeleteServerRpc()
+    public virtual IEnumerator WaitToDeleteServerRpc()
     {
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(timeToDestroy);
         Destroy(gameObject);
     }
 }
