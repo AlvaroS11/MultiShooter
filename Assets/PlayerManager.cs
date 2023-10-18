@@ -19,7 +19,7 @@ public class PlayerManager : NetworkBehaviour
 
     //  public GameObject Bullet;
 
-    public Gun gun;
+    public Weapon gun;
 
     public int MaxLife = 100;
 
@@ -75,6 +75,15 @@ void Update()
         {
             PlayerFireServerRpc();
         }
+
+        if (Input.GetMouseButton(1))
+        {
+            gun.AimWeapon();
+        }
+        else
+            gun.StopAim();
+
+      //  gun.StopAim();
 
     }
 

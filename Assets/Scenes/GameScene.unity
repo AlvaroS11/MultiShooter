@@ -204,6 +204,7 @@ MonoBehaviour:
   PlayerTeam: 
   playerCharacterr: 
   waiting: 1
+  playerList: []
 --- !u!4 &375191133
 Transform:
   m_ObjectHideFlags: 0

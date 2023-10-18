@@ -61,7 +61,7 @@ public class Bullet : MonoBehaviour {
     }
 
     [ServerRpc]
-    private void OnTriggerEnterServerRpc(Collider other)
+    public virtual void OnTriggerEnterServerRpc(Collider other)
     {
         GameObject hitObject = other.gameObject;
         if (hitObject.layer == obstacleLayer || (hitObject.layer == playerLayer && hitObject != parent && IsEnemy(hitObject)) )

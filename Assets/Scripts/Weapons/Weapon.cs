@@ -5,12 +5,16 @@ using UnityEngine;
 
 public class Weapon : MonoBehaviour
 {
-
-    public GameObject bullet;
-    public float coolDownSeconds;
+    [SerializeField]
+    protected GameObject bullet;
+    [SerializeField]
+    protected float coolDownSeconds;
 
     [SerializeField]
-    private bool isReady;
+    protected bool isReady;
+
+
+    public GameObject bulletGameObject;
     protected virtual void Start()
     {
         isReady = true;
@@ -24,10 +28,10 @@ public class Weapon : MonoBehaviour
     }
 
     [ServerRpc]
-    public void PlayerFireServerRpc()
+    public virtual void PlayerFireServerRpc()
     {
         if (!isReady) return;
-        GameObject bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
+        bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
@@ -35,7 +39,7 @@ public class Weapon : MonoBehaviour
     }
 
     [ServerRpc]
-    private IEnumerator CoolDownServerRpc()
+    public virtual IEnumerator CoolDownServerRpc()
     {
         isReady = false;
         yield return new WaitForSeconds(coolDownSeconds);
@@ -45,5 +49,15 @@ public class Weapon : MonoBehaviour
     public void Awake()
     {
         
+    }
+
+    public virtual void AimWeapon()
+    {
+
+    }
+
+    public virtual void StopAim()
+    {
+
     }
 }
