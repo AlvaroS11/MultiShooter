@@ -79,7 +79,7 @@ public class Bullet : MonoBehaviour {
             Destroy(gameObject);
             if (hitObject.layer == playerLayer)
             {
-                hitObject.GetComponent<PlayerManager>().DamageTakenServerRpc(bulletDmg);
+                hitObject.GetComponent<PlayerManager>().DamageTakenServerRpc(bulletDmg, playerManager.PlayerInfoIndex);
                 
                 //QUITAR VIDA AL JUGADOR
             }

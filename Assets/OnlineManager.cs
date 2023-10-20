@@ -10,6 +10,7 @@ using Unity.Services.Authentication;
 using Unity.Networking.Transport;
 using System.Reflection;
 using UnityEngine.TextCore.Text;
+using TMPro;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -54,8 +55,20 @@ public class OnlineManager : NetworkBehaviour
 
 
     [SerializeField]
-    public List<int> teamScore = new List<int>(3);
+    public NetworkList<int> teamScore = new NetworkList<int>();
 
+
+    [SerializeField]
+    private NetworkList<int> teamSpawn = new NetworkList<int>();
+
+    [SerializeField]
+    private GameObject spawnParent;
+
+    private List<Transform> spawnPoints;
+
+
+    [SerializeField] private TextMeshProUGUI team1;
+    [SerializeField] private TextMeshProUGUI team2;
 
 
 
@@ -91,11 +104,6 @@ public class OnlineManager : NetworkBehaviour
         PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
         Debug.Log("NETWORK SPAWN!! ");
-
-        // playerNameDictionary.Add(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName());
-
-        //ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName());
-        //GetPlayerNamesServerRpc(PlayerLobbyId);
 
 
 
@@ -410,6 +418,9 @@ public class OnlineManager : NetworkBehaviour
     {
         try
         {
+            spawnParent = GameObject.Find("SpawnPoints");
+                //Add spawn parent point here
+
             foreach (PlayerInfo playerInfo in playerList)
             {
                 GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerInfo.playerCharacter);
@@ -421,7 +432,13 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerGameObject.GetComponent<PlayerManager>().PlayerInfoIndex = playerList.IndexOf(playerInfo);
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
 
+                if (teamScore.Contains(playerInfo.team))
+                    continue;
+                teamScore.Add(0);
+
+                SetPlayerSpawns(teamScore.Count);
             }
+            StartTeamScoreClientRpc(teamScore.Count);
 
         }
         catch (Exception e)
@@ -430,11 +447,49 @@ public class OnlineManager : NetworkBehaviour
         }
     }
 
+    private void SetPlayerSpawns(int teamIndex)
+    {
+        for(int i = 0; i < 3; i++)
+        {
+            //spawnPoints.Add(spawnParent.children)   GET CHILDREN
+        }
+    }
+
+
+    [ClientRpc]
+    private void StartTeamScoreClientRpc(int nTeams)
+    {
+        //PONER AL CAMBIAR DE ESCENA!
+        team1 = GameObject.Find("Team1").GetComponent<TextMeshProUGUI>();
+        team2 = GameObject.Find("Team2").GetComponent<TextMeshProUGUI>();
+    }
+
+
     [ServerRpc]
     public void ChangeScoreServerRpc(int team)
     {
         //TO DO ADD INITIALIZE NUMBER OF TEAMS
         teamScore[team]++;
+
+        Debug.Log("::::" + team + "  " + teamScore[team]);
+
+        ChangeScoreClientRpc(team, teamScore[team]);
+
+    }
+
+    [ClientRpc]
+    public void ChangeScoreClientRpc(int team, int score)
+    {
+        switch (team) {
+            case 0:
+                team1.text = "Team 1: " + score.ToString();
+                break;
+            case 1:
+                team2.text = "Team 2: " + score.ToString();
+                break;
+
+
+        }
     }
 }
 
