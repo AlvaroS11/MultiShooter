@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using Unity.Services.Lobbies.Models;
+using System;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -38,6 +39,8 @@ public class PlayerManager : NetworkBehaviour
     public int PlayerTeam;
     public LobbyManager.PlayerCharacter playerCharacterr;
 
+    public int PlayerInfoIndex;
+
     void Start()
     {
         Initialized();
@@ -48,6 +51,7 @@ public class PlayerManager : NetworkBehaviour
         base.OnNetworkDespawn();
         //Initialized();
     }
+
 
     private void Initialized()
     {
@@ -67,6 +71,14 @@ void Update()
 
         Ray ray = _mainCamera.ScreenPointToRay(screenPosition);
 
+
+        if (Input.GetMouseButton(1))
+        {
+            gun.AimWeapon();
+        }
+        else
+            gun.StopAim();
+
         MovePlayerServerRpc(ray);
 
         MoveCamera();
@@ -75,13 +87,6 @@ void Update()
         {
             PlayerFireServerRpc();
         }
-
-        if (Input.GetMouseButton(1))
-        {
-            gun.AimWeapon();
-        }
-        else
-            gun.StopAim();
 
       //  gun.StopAim();
 
@@ -135,8 +140,10 @@ void Update()
         //PREDICCIÓN SE PODRÍA HACER AQUÍ??
         // if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
 
+        Initialized();
 
-        _mainCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 10 , transform.position.z - 5);
+
+        _mainCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 15 , transform.position.z - 5);
        
      }
 
@@ -179,10 +186,11 @@ void Update()
     {
         life.Value -= dmg;
 
-      //  Debug.Log(life.Value);
         healthUI.TakeDamageClientRpc(life.Value);
-       // Debug.Log("OUCHH" + OwnerClientId + "life:" + life.Value);
+        if (life.Value <= 0)
+            OnlineManager.Instance.ChangeScoreServerRpc(PlayerInfoIndex);
     }
+
 
     private void OnMouseEnter()
     {

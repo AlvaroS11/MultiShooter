@@ -53,6 +53,12 @@ public class OnlineManager : NetworkBehaviour
     public List<PlayerInfo> playerList;
 
 
+    [SerializeField]
+    public List<int> teamScore = new List<int>(3);
+
+
+
+
 
     //  private Dictionary<ulong, GameObject> playerManagerDictionary;
 
@@ -71,6 +77,7 @@ public class OnlineManager : NetworkBehaviour
         playerList = new List<PlayerInfo> { };
 
         DontDestroyOnLoad(gameObject);
+
 
 
     }
@@ -138,43 +145,43 @@ public class OnlineManager : NetworkBehaviour
     {
         var clientId = serverRpcParams.Receive.SenderClientId;
         Debug.Log("nnnn" + playerTeamDictionary.Count);
-      /*  foreach (KeyValuePair<string, int> name in playerTeamDictionary)
-        {
-            Debug.Log(name.Value);
-            if (name.Key != playerId)
-            {
-                //Estoy hay que buscarlo en el cliente no en el servidor
-                ClientRpcParams clientRpcParams = new ClientRpcParams
-                {
-                    Send = new ClientRpcSendParams
-                    {
-                        TargetClientIds = new ulong[] { clientId }
-                    }
-                };
+        /*  foreach (KeyValuePair<string, int> name in playerTeamDictionary)
+          {
+              Debug.Log(name.Value);
+              if (name.Key != playerId)
+              {
+                  //Estoy hay que buscarlo en el cliente no en el servidor
+                  ClientRpcParams clientRpcParams = new ClientRpcParams
+                  {
+                      Send = new ClientRpcSendParams
+                      {
+                          TargetClientIds = new ulong[] { clientId }
+                      }
+                  };
 
-                ChangeTeamClientRpc(name.Key, name.Value, clientId, clientRpcParams);
-                Debug.Log("Servidor, diccionario sin key : " + name.Key);
-            }
-        }
+                  ChangeTeamClientRpc(name.Key, name.Value, clientId, clientRpcParams);
+                  Debug.Log("Servidor, diccionario sin key : " + name.Key);
+              }
+          }
 
 
-        foreach (KeyValuePair<string, PlayerCharacter> character in playerCharacterDictionary)
+          foreach (KeyValuePair<string, PlayerCharacter> character in playerCharacterDictionary)
+          {
+              if (character.Key != playerId)
+              {
+                  ClientRpcParams clientRpcParams = new ClientRpcParams
+                  {
+                      Send = new ClientRpcSendParams
+                      {
+                          TargetClientIds = new ulong[] { clientId }
+                      }
+                  };
+                  ChangeCharacterClientRpc(character.Key, character.Value, clientId, clientRpcParams);
+              }
+          }*/
+        foreach (PlayerInfo playerInfo in playerList)
         {
-            if (character.Key != playerId)
-            {
-                ClientRpcParams clientRpcParams = new ClientRpcParams
-                {
-                    Send = new ClientRpcSendParams
-                    {
-                        TargetClientIds = new ulong[] { clientId }
-                    }
-                };
-                ChangeCharacterClientRpc(character.Key, character.Value, clientId, clientRpcParams);
-            }
-        }*/
-      foreach(PlayerInfo playerInfo in playerList)
-        {
-            if(playerInfo.lobbyPlayerId != playerId)
+            if (playerInfo.lobbyPlayerId != playerId)
             {
                 ClientRpcParams clientRpcParams = new ClientRpcParams
                 {
@@ -272,7 +279,7 @@ public class OnlineManager : NetworkBehaviour
 
         foreach (KeyValuePair<string, PlayerCharacter> item in playerCharacterDictionary)
         {
-            Debug.Log("AAAAAAAAAAAAAAAAAAAA" +  item.Value.ToString());
+            Debug.Log("AAAAAAAAAAAAAAAAAAAA" + item.Value.ToString());
         }
 
         /* if (playerCharacterDictionary.ContainsKey(playerId))
@@ -411,43 +418,10 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerGameObject.GetComponent<PlayerManager>().PlayerTeam = playerInfo.team;
                 newPlayerGameObject.GetComponent<PlayerManager>().PlayerName = playerInfo.name;
                 newPlayerGameObject.GetComponent<PlayerManager>().playerCharacterr = playerInfo.playerCharacter;
+                newPlayerGameObject.GetComponent<PlayerManager>().PlayerInfoIndex = playerList.IndexOf(playerInfo);
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
 
             }
-
-
-            /*ulong clientId = serverRpcParams.Receive.SenderClientId;
-            Debug.Log("SETUP SERVER!");
-            Player newPlayerInstance = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-           // PlayerCharacter playerCharacterInstance = //Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
-            GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerCharacterInstance);
-            GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance);
-
-            newPlayerInstance.GetComponent<PlayerManager>().PlayerTeam = PlayerTeam;
-            newPlayerInstance.GetComponent<PlayerManager>().name = PlayerName;
-
-
-            newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-
-            Debug.Log("INSTANTIATED");
-
-            Debug.Log(playerTeamDictionary.Count);
-            foreach (KeyValuePair<ulong, int> item in playerTeamDictionary)
-            {
-                Debug.Log(item.Value);
-            }
-
-
-            ulong clientId = serverRpcParams.Receive.SenderClientId;
-
-            Debug.Log("SETUP SERVER!");
-            Player player = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-            PlayerCharacter playerCharacter = Enum.Parse<PlayerCharacter>(player.Data[KEY_PLAYER_CHARACTER].Value);
-            GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
-            GameObject newPlayer = (GameObject)Instantiate(prefab);
-            newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-            Debug.Log("SETED UP SERVER!!");
-            */
 
         }
         catch (Exception e)
@@ -455,6 +429,14 @@ public class OnlineManager : NetworkBehaviour
             Debug.Log(e);
         }
     }
+
+    [ServerRpc]
+    public void ChangeScoreServerRpc(int team)
+    {
+        //TO DO ADD INITIALIZE NUMBER OF TEAMS
+        teamScore[team]++;
+    }
+}
 
 
             /*
@@ -492,7 +474,7 @@ public class OnlineManager : NetworkBehaviour
             }
             */
 
-        }
+        
 
 
     /*

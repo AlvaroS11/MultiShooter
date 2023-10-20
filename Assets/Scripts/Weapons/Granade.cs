@@ -44,7 +44,7 @@ public class Granade : Bullet
         Grenade.freezeRotation = false;
         Grenade.transform.SetParent(null, true);
 
-        Vector3 dir = grenadeForce * GetComponentInParent<Transform>().forward;
+        Vector3 dir = grenadeForce * -GetComponentInParent<Transform>().forward;
         dir.y = granadeInclination;
 
         Debug.Log(dir);

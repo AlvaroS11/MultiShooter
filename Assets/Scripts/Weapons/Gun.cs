@@ -16,4 +16,19 @@ public class Gun : Weapon
         
     }
 
+    public override void AimWeapon()
+    {
+        base.AimWeapon();
+    }
+
+    public override void StopAim()
+    {
+        base.StopAim();
+     }
+
+    private void DrawProjection()
+    {
+        lineRenderer.enabled = true;
+    }
+
 }

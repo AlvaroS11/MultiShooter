@@ -5,6 +5,10 @@ using UnityEngine;
 
 public class Weapon : MonoBehaviour
 {
+
+    [SerializeField]
+    protected LineRenderer lineRenderer;
+
     [SerializeField]
     protected GameObject bullet;
     [SerializeField]
@@ -14,11 +18,27 @@ public class Weapon : MonoBehaviour
     protected bool isReady;
 
 
-    public GameObject bulletGameObject;
+    protected GameObject bulletGameObject;
+
+    [SerializeField]
+    protected Vector3 straightAim;
+
+
+
+    private float bulletSpeed;
+    private float bulletTime;
+
+
+    private Vector3 bulletAimPos;
     protected virtual void Start()
     {
         isReady = true;
         Debug.Log(isReady);
+
+        // float bulletSpeed = bullet.GetComponent<Bullet>().speed;
+
+        bulletTime = bullet.GetComponent<Bullet>().timeToDestroy;
+
     }
 
     // Update is called once per frame
@@ -53,11 +73,26 @@ public class Weapon : MonoBehaviour
 
     public virtual void AimWeapon()
     {
+        Debug.Log("Aiming Gun!!");
+        lineRenderer.positionCount = 2;
+
+
+        Vector3 startVel = -gameObject.transform.forward * bullet.GetComponent<Bullet>().speed;
+        bulletAimPos = startVel * bulletTime;
+
+        Vector3 point = transform.position + bulletAimPos;
+
+        lineRenderer.enabled = true;
+        lineRenderer.SetPosition(0, transform.position);
+        lineRenderer.SetPosition(1, point);
+
+        Debug.Log("****");
+        Debug.Log(lineRenderer.positionCount);
 
     }
 
     public virtual void StopAim()
     {
-
+        lineRenderer.enabled = false;
     }
 }

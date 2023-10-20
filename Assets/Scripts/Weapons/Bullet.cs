@@ -15,12 +15,15 @@ public class Bullet : MonoBehaviour {
     protected int playerLayer = 0;
 
     protected GameObject parent;
-    protected int bulletDmg;
+
+    [SerializeField]
+    protected int bulletDmg = 20;
 
     protected PlayerManager playerManager;
 
 
-    protected int timeToDestroy = 5;
+    [SerializeField]
+    public int timeToDestroy = 5;
     //public NetworkVariable<int> bulletDmg;
 
 
@@ -30,9 +33,11 @@ public class Bullet : MonoBehaviour {
         StartCoroutine(WaitToDeleteServerRpc());
         obstacleLayer = LayerMask.NameToLayer("Obstacle");
         playerLayer = LayerMask.NameToLayer("Player");
-        bulletDmg = 20;
 
         playerManager = parent.GetComponent<PlayerManager>();
+
+
+        //Calculate range with speed and timeToDestroy
 
     }
 

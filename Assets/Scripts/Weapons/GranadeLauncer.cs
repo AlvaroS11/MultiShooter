@@ -5,7 +5,6 @@ using Unity.Netcode;
 
 public class GranadeLauncer : Weapon
 {
-    public LineRenderer lineRenderer;
 
     public Transform releasePosition;
 
