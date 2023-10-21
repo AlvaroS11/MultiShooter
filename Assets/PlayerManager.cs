@@ -5,6 +5,7 @@ using Unity.Netcode;
 using Unity.VisualScripting;
 using Unity.Services.Lobbies.Models;
 using System;
+using TMPro;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -26,7 +27,7 @@ public class PlayerManager : NetworkBehaviour
 
     public NetworkVariable<int> life = new NetworkVariable<int>();
 
-    public Healthmanager healthUI;
+    public UIPlayer healthUI;
 
     [SerializeField] private Transform playerPrefab;
 
@@ -43,6 +44,10 @@ public class PlayerManager : NetworkBehaviour
 
     [SerializeField]
     private Joystick joystick;
+
+
+    [SerializeField]
+    private TextMeshProUGUI nameText;
 
 
     void Start()
@@ -220,12 +225,18 @@ public class PlayerManager : NetworkBehaviour
         {
             OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex);
 
-            Debug.Log("3333 " + PlayerInfoIndex);
-
             life.Value = MaxLife;
         }
         healthUI.TakeDamageClientRpc(life.Value);
 
+    }
+
+
+    //ClientRpc, set the names to all players!
+    public void SetUIName()
+    {
+        nameText.text = PlayerName;
+        Debug.LogFormat("ppp" + PlayerName, nameText.text);
     }
 
 

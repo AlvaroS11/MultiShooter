@@ -1211,7 +1211,10 @@ MonoBehaviour:
   playerCharacterr: 
   waiting: 1
   playerList: []
-  teamScore: 
+  spawnParent: {fileID: 0}
+  spawnPoints: []
+  team1: {fileID: 0}
+  team2: {fileID: 0}
 --- !u!4 &293443825
 Transform:
   m_ObjectHideFlags: 0

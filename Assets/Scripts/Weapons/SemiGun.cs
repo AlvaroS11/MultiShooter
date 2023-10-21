@@ -44,6 +44,7 @@ public class SemiGun : Weapon
         if (!isReady) return;
 
         StartCoroutine(WaitBullets());
+        StartCoroutine(CoolDownServerRpc());
         
 
         //3 times

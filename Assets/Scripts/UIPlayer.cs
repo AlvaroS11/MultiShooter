@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Healthmanager : NetworkBehaviour
+public class UIPlayer : NetworkBehaviour
 {
 
     public float healthAmount;

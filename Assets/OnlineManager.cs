@@ -55,16 +55,17 @@ public class OnlineManager : NetworkBehaviour
 
 
     [SerializeField]
-    public NetworkList<int> teamScore = new NetworkList<int>();
+    public NetworkList<int> teamScore;
 
 
-    [SerializeField]
-    private NetworkList<int> teamSpawn = new NetworkList<int>();
+   // [SerializeField]
+    //private NetworkList<int> teamSpawn = new NetworkList<int>();
 
     [SerializeField]
     private GameObject spawnParent;
 
-    private List<Transform> spawnPoints;
+    [SerializeField]
+    public List<Transform> spawnPoints;
 
 
     [SerializeField] private TextMeshProUGUI team1;
@@ -97,6 +98,7 @@ public class OnlineManager : NetworkBehaviour
 
     private void Start()
     {
+        teamScore = new NetworkList<int>();
     }
 
     public override void OnNetworkSpawn()
@@ -153,40 +155,6 @@ public class OnlineManager : NetworkBehaviour
     {
         var clientId = serverRpcParams.Receive.SenderClientId;
         Debug.Log("nnnn" + playerTeamDictionary.Count);
-        /*  foreach (KeyValuePair<string, int> name in playerTeamDictionary)
-          {
-              Debug.Log(name.Value);
-              if (name.Key != playerId)
-              {
-                  //Estoy hay que buscarlo en el cliente no en el servidor
-                  ClientRpcParams clientRpcParams = new ClientRpcParams
-                  {
-                      Send = new ClientRpcSendParams
-                      {
-                          TargetClientIds = new ulong[] { clientId }
-                      }
-                  };
-
-                  ChangeTeamClientRpc(name.Key, name.Value, clientId, clientRpcParams);
-                  Debug.Log("Servidor, diccionario sin key : " + name.Key);
-              }
-          }
-
-
-          foreach (KeyValuePair<string, PlayerCharacter> character in playerCharacterDictionary)
-          {
-              if (character.Key != playerId)
-              {
-                  ClientRpcParams clientRpcParams = new ClientRpcParams
-                  {
-                      Send = new ClientRpcSendParams
-                      {
-                          TargetClientIds = new ulong[] { clientId }
-                      }
-                  };
-                  ChangeCharacterClientRpc(character.Key, character.Value, clientId, clientRpcParams);
-              }
-          }*/
         foreach (PlayerInfo playerInfo in playerList)
         {
             if (playerInfo.lobbyPlayerId != playerId)
@@ -350,34 +318,17 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     public void ChangeTeamClientRpc(string playerId, int team, ulong clientId, ClientRpcParams clientRpcParams = default)
     {
-        //GetPlayerById(playerId);
-        Debug.Log("EXECUTED HERE!!");
-        Debug.Log(team);
-        /*  if (playerTeamDictionary.ContainsKey(playerId))
-          {
-              playerTeamDictionary[playerId] = team;
-
-              int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
-              if (index >= 0)
-              {
-                  var player = playerList[index];
-                  player.team = team;
-                  playerList[index] = player;
-              }
-
-          }
-        */
         int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
         if (index >= 0)
         {
             var player = playerList[index];
-            playerTeamDictionary[playerId] = team;
+           // playerTeamDictionary[playerId] = team;
             player.team = team;
             playerList[index] = player;
         }
         else
         {
-            playerTeamDictionary.Add(playerId, team);
+          //  playerTeamDictionary.Add(playerId, team);
             PlayerInfo newPlayer = new PlayerInfo();
             newPlayer.lobbyPlayerId = playerId;
             //  newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
@@ -395,10 +346,14 @@ public class OnlineManager : NetworkBehaviour
 
     public int GetTeam(string playerId)
     {
-        if (playerTeamDictionary.ContainsKey(playerId))
+     /*   if (playerTeamDictionary.ContainsKey(playerId))
             return playerTeamDictionary[playerId];
         playerTeamDictionary.Add(playerId, 0);
         return playerTeamDictionary[playerId];
+     */
+
+
+        return playerList.Find(player => player.lobbyPlayerId == playerId).team;
 
     }
 
@@ -419,24 +374,31 @@ public class OnlineManager : NetworkBehaviour
         try
         {
             spawnParent = GameObject.Find("SpawnPoints");
-                //Add spawn parent point here
-
+            //Add spawn parent point here
+            System.Random rand = new System.Random();
             foreach (PlayerInfo playerInfo in playerList)
             {
+                if (!teamScore.Contains(playerInfo.team))
+                {
+                    teamScore.Add(0);
+                    SetPlayerSpawns(teamScore.Count - 1);
+                }
+                    
                 GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerInfo.playerCharacter);
-                GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance);
 
-                newPlayerGameObject.GetComponent<PlayerManager>().PlayerTeam = playerInfo.team;
-                newPlayerGameObject.GetComponent<PlayerManager>().PlayerName = playerInfo.name;
-                newPlayerGameObject.GetComponent<PlayerManager>().playerCharacterr = playerInfo.playerCharacter;
-                newPlayerGameObject.GetComponent<PlayerManager>().PlayerInfoIndex = playerList.IndexOf(playerInfo);
+                int randomIndex = rand.Next(playerInfo.team, (playerInfo.team + 2));
+
+                Transform randomSpawn = spawnPoints[randomIndex];
+                GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance, randomSpawn);
+
+                PlayerManager newPlayerManager = newPlayerGameObject.GetComponent<PlayerManager>();
+
+                newPlayerManager.PlayerTeam = playerInfo.team;
+                newPlayerManager.PlayerName = playerInfo.name;
+                newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
+                newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
+                newPlayerManager.SetUIName();
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
-
-                if (teamScore.Contains(playerInfo.team))
-                    continue;
-                teamScore.Add(0);
-
-                SetPlayerSpawns(teamScore.Count);
             }
             StartTeamScoreClientRpc(teamScore.Count);
 
@@ -449,9 +411,10 @@ public class OnlineManager : NetworkBehaviour
 
     private void SetPlayerSpawns(int teamIndex)
     {
-        for(int i = 0; i < 3; i++)
+        GameObject spawnTeam = spawnParent.transform.GetChild(teamIndex).gameObject;
+        for (int i = 0; i < 3; i++)
         {
-            //spawnPoints.Add(spawnParent.children)   GET CHILDREN
+            spawnPoints.Add(spawnTeam.transform.GetChild(i));//  GET CHILDREN
         }
     }
 
