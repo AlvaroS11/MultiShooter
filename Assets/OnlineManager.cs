@@ -397,8 +397,10 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerManager.PlayerName = playerInfo.name;
                 newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
+                //
                 newPlayerManager.SetUIName();
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
+                //newPlayerManager.moveDestination = randomSpawn.transform.position; NO FUNCIONA PORQUE ESTO ES SERVER, EL DESTINO SE CALCULA EN LOCAL
             }
             StartTeamScoreClientRpc(teamScore.Count);
 

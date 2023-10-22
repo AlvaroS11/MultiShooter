@@ -6,6 +6,7 @@ using Unity.VisualScripting;
 using Unity.Services.Lobbies.Models;
 using System;
 using TMPro;
+using UnityEngine.AI;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -50,6 +51,12 @@ public class PlayerManager : NetworkBehaviour
     private TextMeshProUGUI nameText;
 
 
+
+    public NavMeshAgent playerNavMesh;
+
+    public bool firing; //Server only
+
+
     void Start()
     {
         Initialized();
@@ -75,27 +82,98 @@ public class PlayerManager : NetworkBehaviour
     {
         if (!IsOwner || !Application.isFocused) return;
         //Movement for pc
-        screenPosition = Input.mousePosition;
 
 #if UNITY_STANDALONE_WIN
 
         //CAMBIAR PARA QUE NO ESTÉ SIEMPRE MOVIENDOSE, HACER COMO EN EL LOL
-        Ray ray = _mainCamera.ScreenPointToRay(screenPosition);
+
+        /* if (Input.GetMouseButtonDown(1))
+         {
+             // MovePlayerServerRpc(ray);
+                Debug.Log("ddd");
+                Vector3 dest = Input.mousePosition;
+
+                Ray ray = _mainCamera.ScreenPointToRay(dest);
+
+                if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+                {
+                    moveDestination = hitData.point;
+                    moveDestination.y = 0.5f;
+                }
+            }
+
+            if (transform.position != moveDestination)
+            {
+                //  screenPosition = Input.mousePosition;
+
+
+                    MovePlayerServerRpc(moveDestination);
+                    MoveCamera();   
+            }
+
+
+             Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
+             MovePlayerPcServerRpc(ray);
+         }
+        */
+
+        Vector3 receivedInput = Vector3.zero;
+        if (Input.GetKey("d"))
+        {
+            receivedInput += Vector3.right;
+        }
+        if (Input.GetKey("a"))
+        {
+            receivedInput += Vector3.left;
+        }
+        if (Input.GetKey("w"))
+        {
+            receivedInput += Vector3.forward;
+        }
+        if (Input.GetKey("s"))
+        {
+            receivedInput += Vector3.back;
+        }
+
+        if (receivedInput != Vector3.zero)
+            MovePlayerPcServerRpc(receivedInput);
+        MoveCamera();
+
 
         if (Input.GetMouseButton(1))
         {
-            gun.AimWeapon();
+            Vector3 dest = Input.mousePosition;
+
+            Ray ray = _mainCamera.ScreenPointToRay(dest);
+
+            if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+            {
+                Vector3 moveDestination = hitData.point;
+                moveDestination.y = 0.5f;
+
+                Quaternion newRotation = Quaternion.LookRotation(moveDestination);
+                transform.rotation = newRotation;
+                gun.AimWeapon(moveDestination);
+
+            }
         }
         else
             gun.StopAim();
 
-        MovePlayerServerRpc(ray);
-
-        MoveCamera();
 
         if (Input.GetMouseButtonDown(0))
         {
-            PlayerFireServerRpc();
+            Vector3 dest = Input.mousePosition;
+
+            Ray ray = _mainCamera.ScreenPointToRay(dest);
+
+            if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+            {
+                Vector3 moveDestination = hitData.point;
+                moveDestination.y = 0.5f;
+                gun.PlayerFireServerRpc(moveDestination);
+            }
+
         }
 
 
@@ -128,10 +206,50 @@ public class PlayerManager : NetworkBehaviour
 
     }
 
+    [ServerRpc]
+    private void MovePlayerPcServerRpc(Vector3 input)
+    {
+        transform.position +=  input * Time.deltaTime * speed;
+        // Vector3 targetDirection = input - transform.position;
+
+
+        if (!firing)
+        {
+            Quaternion newRotation = Quaternion.LookRotation(input);
+            transform.rotation = newRotation;
+        }
+        
+      
+
+    }
+
+
+   /* [ServerRpc]
+    private void MovePlayerPcServerRpc(Ray ray)
+    {
+        if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+        {
+            playerNavMesh.destination = hitData.point;
+
+           /* if (playerNavMesh.destination != transform.position)
+            {
+                Vector3 targetDirection = playerNavMesh.destination - transform.position;
+                transform.forward = -targetDirection;
+            }
+           
+           
+        }
+
+
+    }
+   */
+
     public override void OnNetworkSpawn()
     {
         Player player = LobbyManager.Instance.GetPlayerOrCreate();
         Initialized();
+
+//        moveDestination = transform.position;
 
 
     }
@@ -178,19 +296,31 @@ public class PlayerManager : NetworkBehaviour
 
 
     [ServerRpc]
-    private void MovePlayerServerRpc(Ray ray)
+    private void MovePlayerServerRpc(Vector3 mouseWorldCoordinates)
     {
-        if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-        {
-            mouseWorldCoordinates = hitData.point;
-            mouseWorldCoordinates.y = 0.5f;
-            transform.position = Vector3.MoveTowards(transform.position, mouseWorldCoordinates, Time.deltaTime * speed);
+        /* if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+         {
+                mouseWorldCoordinates = hitData.point;
+                mouseWorldCoordinates.y = 0.5f;
 
-            if (mouseWorldCoordinates != transform.position)
-            {
-                Vector3 targetDirection = mouseWorldCoordinates - transform.position;
-                transform.forward = -targetDirection;
-            }
+
+                transform.position = Vector3.MoveTowards(transform.position, mouseWorldCoordinates, Time.deltaTime * speed);
+
+                if (mouseWorldCoordinates != transform.position)
+                {
+                    Vector3 targetDirection = mouseWorldCoordinates - transform.position;
+                    transform.forward = -targetDirection;
+                }
+        */
+
+        //            playerNavMesh.SetDestination(hitData.point);
+
+        transform.position = Vector3.MoveTowards(transform.position, mouseWorldCoordinates, Time.deltaTime * speed);
+
+        if (mouseWorldCoordinates != transform.position)
+        {
+            Vector3 targetDirection = mouseWorldCoordinates - transform.position;
+            transform.forward = -targetDirection;
         }
     }
 
@@ -202,7 +332,7 @@ public class PlayerManager : NetworkBehaviour
         transform.position = Vector3.MoveTowards(transform.position, transform.position + input, Time.deltaTime * speed);
     }
 
-    [ServerRpc]
+  /*  [ServerRpc]
     private void PlayerFireServerRpc()
     {
         // Vector3 spawnPoint = transform.position + new Vector3(0.0f, 0.0f, -0.5f);
@@ -215,7 +345,8 @@ public class PlayerManager : NetworkBehaviour
            bulletGameObject.GetComponent<NetworkObject>().Spawn();
         */
         //NetworkManager.Singleton.AddNetworkPrefab(bulletGameObject);
-    }
+//    }
+
 
     [ServerRpc(RequireOwnership = false)]
     public void DamageTakenServerRpc(int dmg, int shooterIndex)

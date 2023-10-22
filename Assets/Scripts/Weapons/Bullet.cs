@@ -52,7 +52,7 @@ public class Bullet : MonoBehaviour {
     void Update()
     {
 
-        transform.Translate(Vector3.down * speed * Time.deltaTime);
+        transform.Translate(Vector3.up * speed * Time.deltaTime);
      //   if(direction == Vector3.zero)
         //    Debug.Log(direction);
       //  else
