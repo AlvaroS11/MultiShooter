@@ -11,6 +11,8 @@ using Unity.Networking.Transport;
 using System.Reflection;
 using UnityEngine.TextCore.Text;
 using TMPro;
+using UnityEngine.SceneManagement;
+
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -373,6 +375,8 @@ public class OnlineManager : NetworkBehaviour
     {
         try
         {
+            //Assure we are in Game Scene first!
+            Debug.Log(SceneManager.GetActiveScene().name);
             spawnParent = GameObject.Find("SpawnPoints");
             //Add spawn parent point here
             System.Random rand = new System.Random();

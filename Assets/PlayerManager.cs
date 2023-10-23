@@ -136,7 +136,10 @@ public class PlayerManager : NetworkBehaviour
         }
 
         if (receivedInput != Vector3.zero)
+        {
+            receivedInput.Normalize();
             MovePlayerPcServerRpc(receivedInput);
+        }
         MoveCamera();
 
 
