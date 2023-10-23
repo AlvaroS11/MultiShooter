@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Windows;
 
-public class Weapon : MonoBehaviour
+public class Weapon : NetworkBehaviour
 {
 
     [SerializeField]
@@ -56,12 +56,14 @@ public class Weapon : MonoBehaviour
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
-        StartCoroutine(CoolDownServerRpc());
+        StartCoolDownServerRpc();
     }
 
     [ServerRpc]
     public virtual void PlayerFireServerRpc(Vector3 dir)
     {
+
+        Debug.Log("EJECUTANDO AQUIIIIII");
         if (!isReady) return;
 
 
@@ -78,19 +80,30 @@ public class Weapon : MonoBehaviour
 
         GetComponent<PlayerManager>().firing = true;
         StartCoroutine(FiringAnimation());
-        StartCoroutine(CoolDownServerRpc());
+        // StartCoroutine(CoolDownServerRpc());
+        StartCoolDownServerRpc();
     }
 
     [ServerRpc]
-    public virtual IEnumerator CoolDownServerRpc()
+    public virtual void StartCoolDownServerRpc()
+    {
+        StartCoroutine(CoolDown());
+    }
+
+
+    public virtual IEnumerator CoolDown()
     {
         isReady = false;
         yield return new WaitForSeconds(coolDownSeconds);
         isReady = true;
     }
 
-
     [ServerRpc]
+    private void StartFiringAnimationServerRpc()
+    {
+        StartCoroutine(FiringAnimation());
+    }
+
     public virtual IEnumerator FiringAnimation()
     {
         yield return new WaitForSeconds(2);

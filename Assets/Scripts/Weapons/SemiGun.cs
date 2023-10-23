@@ -43,15 +43,20 @@ public class SemiGun : Weapon
 
         if (!isReady) return;
 
-        StartCoroutine(WaitBullets());
-        StartCoroutine(CoolDownServerRpc());
-        
+        StartWaitBulletsServerRpc();
+        StartCoolDownServerRpc();
 
         //3 times
 
     }
 
+
     [ServerRpc]
+    private void StartWaitBulletsServerRpc()
+    {
+        StartCoroutine(WaitBullets());
+    }
+
     public virtual IEnumerator WaitBullets()
     {
         for (int i = 0; i < nBullets; i++)

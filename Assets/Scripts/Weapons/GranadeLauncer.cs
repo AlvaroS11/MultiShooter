@@ -69,9 +69,9 @@ public class GranadeLauncer : Weapon
     }
 
     [ServerRpc]
-    public override IEnumerator CoolDownServerRpc()
+    public override void StartCoolDownServerRpc()
     {
-       return base.CoolDownServerRpc();
+      base.StartCoolDownServerRpc();
     }
 
     public override void AimWeapon()

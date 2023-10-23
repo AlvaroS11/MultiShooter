@@ -56,6 +56,17 @@ public class PlayerManager : NetworkBehaviour
 
     public bool firing; //Server only
 
+    public bool isHealthing;
+
+
+    [SerializeField]
+    private int healthDamageWait = 3;
+
+    [SerializeField]
+    private int healthInterval = 1;
+
+    public NetworkVariable<int> healthBySecond = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
 
     void Start()
     {
@@ -117,6 +128,8 @@ public class PlayerManager : NetworkBehaviour
          }
         */
 
+
+        //Meter todo esto en una función
         Vector3 receivedInput = Vector3.zero;
         if (Input.GetKey("d"))
         {
@@ -142,7 +155,7 @@ public class PlayerManager : NetworkBehaviour
         }
         MoveCamera();
 
-
+        //Meter en una funcion
         if (Input.GetMouseButton(1))
         {
             Vector3 dest = Input.mousePosition;
@@ -163,7 +176,7 @@ public class PlayerManager : NetworkBehaviour
         else
             gun.StopAim();
 
-
+        //Meter en una funcion
         if (Input.GetMouseButtonDown(0))
         {
             Vector3 dest = Input.mousePosition;
@@ -176,7 +189,14 @@ public class PlayerManager : NetworkBehaviour
                 moveDestination.y = 0.5f;
                 gun.PlayerFireServerRpc(moveDestination);
             }
+        }
 
+        if(IsServer)
+        {
+            if (isHealthing)
+            {
+               // life.Value = 
+            }
         }
 
 
@@ -358,8 +378,16 @@ public class PlayerManager : NetworkBehaviour
         if (life.Value <= 0)
         {
             OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex);
-
             life.Value = MaxLife;
+        }
+        else
+        {
+            //StopCoroutine(WaitToHealth());
+          //  StopCoroutine(HealthByTime());
+            StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
+
+
+            StartCoroutine(WaitToHealth());
         }
         healthUI.TakeDamageClientRpc(life.Value);
 
@@ -374,10 +402,34 @@ public class PlayerManager : NetworkBehaviour
     }
 
 
-    private void OnMouseEnter()
+    private IEnumerator WaitToHealthCounter()
     {
-        // print(mouseWorldCoordinates);
+        yield return new WaitForSeconds(1);
+        Debug.Log("");
+
     }
+
+    private IEnumerator WaitToHealth()
+    {
+        yield return new WaitForSeconds(healthDamageWait);
+        StartCoroutine(HealthByTime());
+    }
+
+    private IEnumerator HealthByTime()
+    {
+        yield return new WaitForSeconds(healthInterval);
+        life.Value += healthBySecond.Value;
+
+        if (life.Value >= MaxLife)
+            life.Value = MaxLife;
+        else if (life.Value < MaxLife)
+            StartCoroutine(HealthByTime());
+
+        healthUI.TakeDamageClientRpc(life.Value);
+        //Add field so if it is positive (health) it shows an animation and if negative it shows other animation
+
+    }
+
 
 
 

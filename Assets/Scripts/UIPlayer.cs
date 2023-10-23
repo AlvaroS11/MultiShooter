@@ -51,17 +51,13 @@ public class UIPlayer : NetworkBehaviour
     [ClientRpc]
     public void TakeDamageClientRpc(float life)
     {
+        //Add field so if it is positive (health) it shows an animation and if negative it shows other animation
+
         healthAmount = (float) life;
         healthBar.fillAmount = healthAmount / maxLife;
-      //  Debug.Log("LIFE BAR CHANGING IN :" + OwnerClientId);
-      //  Debug.Log(healthAmount);
-        Debug.Log(healthBar.fillAmount);
-        Debug.Log(healthAmount / maxLife);
-        Debug.Log(healthAmount);
-        Debug.Log(maxLife);
     }
 
-    [ClientRpc]
+  /*  [ClientRpc]
     public void HealClientRpc(float healingAmount)
     {
         healthAmount = playerController.life.Value;
@@ -69,4 +65,5 @@ public class UIPlayer : NetworkBehaviour
         healthBar.fillAmount = healthAmount / maxLife;
 
     }
+  */
 }

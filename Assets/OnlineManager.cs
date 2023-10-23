@@ -377,6 +377,11 @@ public class OnlineManager : NetworkBehaviour
         {
             //Assure we are in Game Scene first!
             Debug.Log(SceneManager.GetActiveScene().name);
+
+            //REVISAR ESTO!
+            while (SceneManager.GetActiveScene().name != "GameScene") { }
+
+
             spawnParent = GameObject.Find("SpawnPoints");
             //Add spawn parent point here
             System.Random rand = new System.Random();

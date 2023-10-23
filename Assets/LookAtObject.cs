@@ -1,13 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class LookAtObject : MonoBehaviour
+public class LookAtObject : NetworkBehaviour
 {
     private Camera mainCamera;
     public Transform player;
 
     private void Start()
+    {
+        mainCamera = Camera.main;
+    }
+
+    public override void OnNetworkSpawn()
     {
         mainCamera = Camera.main;
     }
