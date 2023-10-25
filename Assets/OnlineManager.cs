@@ -12,6 +12,7 @@ using System.Reflection;
 using UnityEngine.TextCore.Text;
 using TMPro;
 using UnityEngine.SceneManagement;
+using Unity.Collections;
 
 
 public class OnlineManager : NetworkBehaviour
@@ -72,6 +73,8 @@ public class OnlineManager : NetworkBehaviour
 
     [SerializeField] private TextMeshProUGUI team1;
     [SerializeField] private TextMeshProUGUI team2;
+
+    [SerializeField] private int timeToRespawn = 3;
 
 
 
@@ -250,7 +253,7 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ClientRpc]
-    public void ChangeCharacterClientRpc(string playerId, PlayerCharacter playerCharacter, ulong clientId, ClientRpcParams clientRpcParams = default)
+    public void ChangeCharacterClientRpc(FixedString128Bytes playerId, PlayerCharacter playerCharacter, ulong clientId, ClientRpcParams clientRpcParams = default)
     {
         //GetPlayerById(playerId);
         //Debug.Log(playerId);
@@ -277,7 +280,7 @@ public class OnlineManager : NetworkBehaviour
         Debug.Log("AAA " + index);
         if (index >= 0)
         {
-            playerCharacterDictionary[playerId] = playerCharacter;
+            playerCharacterDictionary[playerId.ToString()] = playerCharacter;
 
             var player = playerList[index];
             player.playerCharacter = playerCharacter;
@@ -285,7 +288,7 @@ public class OnlineManager : NetworkBehaviour
         }
         else
         {
-            playerCharacterDictionary.Add(playerId, playerCharacter);
+            playerCharacterDictionary.Add(playerId.ToString(), playerCharacter);
             PlayerInfo newPlayer = new PlayerInfo();
             newPlayer.lobbyPlayerId = playerId;
             // newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
@@ -303,7 +306,7 @@ public class OnlineManager : NetworkBehaviour
 
         if (LobbyUI.Instance != null)
         {
-            LobbyUI.Instance.LobbyPlayers[playerId].UpdateCharacterUI(playerCharacter);
+            LobbyUI.Instance.LobbyPlayers[playerId.ToString()].UpdateCharacterUI(playerCharacter);
         }
     }
 
@@ -318,7 +321,7 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ClientRpc]
-    public void ChangeTeamClientRpc(string playerId, int team, ulong clientId, ClientRpcParams clientRpcParams = default)
+    public void ChangeTeamClientRpc(FixedString128Bytes playerId, int team, ulong clientId, ClientRpcParams clientRpcParams = default)
     {
         int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
         if (index >= 0)
@@ -341,7 +344,7 @@ public class OnlineManager : NetworkBehaviour
 
         if (LobbyUI.Instance != null)
         {
-            LobbyUI.Instance.LobbyPlayers[playerId].UpdateTeamUi(team);
+            LobbyUI.Instance.LobbyPlayers[playerId.ToString()].UpdateTeamUi(team);
         }
     }
 
@@ -402,13 +405,15 @@ public class OnlineManager : NetworkBehaviour
 
                 PlayerManager newPlayerManager = newPlayerGameObject.GetComponent<PlayerManager>();
 
-                newPlayerManager.PlayerTeam = playerInfo.team;
-                newPlayerManager.PlayerName = playerInfo.name;
+                newPlayerManager.PlayerTeam.Value = playerInfo.team;
+                newPlayerManager.PlayerName.Value = playerInfo.name;
                 newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
-                //
-                newPlayerManager.SetUIName();
+                //      newPlayerGameObject = newPlayerGameObject;
+                playerList.Find(x => x.clientId == playerInfo.clientId).playerObject = newPlayerGameObject;
+               
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
+                
                 //newPlayerManager.moveDestination = randomSpawn.transform.position; NO FUNCIONA PORQUE ESTO ES SERVER, EL DESTINO SE CALCULA EN LOCAL
             }
             StartTeamScoreClientRpc(teamScore.Count);
@@ -416,9 +421,10 @@ public class OnlineManager : NetworkBehaviour
         }
         catch (Exception e)
         {
-            Debug.Log(e);
+            Debug.LogException(e);
         }
     }
+
 
     private void SetPlayerSpawns(int teamIndex)
     {
@@ -464,6 +470,35 @@ public class OnlineManager : NetworkBehaviour
 
 
         }
+    }
+
+    //Server only
+    public void PlayerDeath(ulong playerId)
+    {
+        PlayerInfo playerInfo = playerList.Find(x => x.clientId == playerId);
+
+        GameObject playerObj = playerInfo.playerObject;
+        System.Random rand = new System.Random();
+
+
+        int randomIndex = rand.Next(playerInfo.team, (playerInfo.team + 2));
+
+        Transform randomSpawn = spawnPoints[randomIndex];
+
+        playerObj.transform.position = randomSpawn.position;
+
+        playerObj.SetActive(false);
+
+        StartCoroutine(WaitToRespawn(playerObj));
+
+        
+    }
+
+
+    private IEnumerator WaitToRespawn(GameObject player)
+    {
+        yield return new WaitForSeconds(timeToRespawn);
+        player.SetActive(true);
     }
 }
 

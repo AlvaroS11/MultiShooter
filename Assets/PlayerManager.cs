@@ -7,18 +7,13 @@ using Unity.Services.Lobbies.Models;
 using System;
 using TMPro;
 using UnityEngine.AI;
+using Unity.Collections;
 
 public class PlayerManager : NetworkBehaviour
 {
     private float speed = 3f;
-    private float bulletSpeed = 10f;
     private Camera _mainCamera;
-    private Vector3 _mouseInput;
-    Vector3 mouseWorldCoordinates;
-    Vector3 screenPosition;
-
     public LayerMask floor;
-
 
     //  public GameObject Bullet;
 
@@ -36,9 +31,14 @@ public class PlayerManager : NetworkBehaviour
     // public int team;
 
 
-    public string PlayerLobbyId;
+   /* public string PlayerLobbyId;
     public string PlayerName;
     public int PlayerTeam;
+   */
+    public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<FixedString128Bytes> PlayerName = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> PlayerTeam = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+   
     public LobbyManager.PlayerCharacter playerCharacterr;
 
     public int PlayerInfoIndex;
@@ -68,6 +68,11 @@ public class PlayerManager : NetworkBehaviour
     public NetworkVariable<int> healthBySecond = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
 
+
+    [SerializeField]
+    private GameObject CanvasDeath;
+
+
     void Start()
     {
         Initialized();
@@ -83,8 +88,9 @@ public class PlayerManager : NetworkBehaviour
     {
         if (!IsOwner) return;
         _mainCamera = Camera.main;
-        life = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+//        life = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         //  team = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        CanvasDeath.SetActive(false);
 
     }
 
@@ -200,7 +206,7 @@ public class PlayerManager : NetworkBehaviour
         }
 
 
-#elif UNITY_STANDALONE_WIN
+#elif UNITY_STANDALONE_WIN  //ANDROID
     
        Vector3 movPos = new Vector3();
         if (joystick.Horizontal >= .2f)
@@ -272,7 +278,12 @@ public class PlayerManager : NetworkBehaviour
         Player player = LobbyManager.Instance.GetPlayerOrCreate();
         Initialized();
 
-//        moveDestination = transform.position;
+        life = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+
+        nameText.text = PlayerName.Value.ToString();
+
+        //        moveDestination = transform.position;
 
 
     }
@@ -372,13 +383,18 @@ public class PlayerManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void DamageTakenServerRpc(int dmg, int shooterIndex)
+    public void DamageTakenServerRpc(int dmg, int shooterIndex, int playerHittedIndex)
     {
         life.Value -= dmg;
         if (life.Value <= 0)
         {
+            Debug.Log("DAMAGE TO 0" + life.Value);
+            //Manage player
+           // OnlineManager.Instance.PlayerDeath(OnlineManager.Instance.playerList[playerHittedIndex].clientId);
+
             OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex);
             life.Value = MaxLife;
+
         }
         else
         {
@@ -390,24 +406,9 @@ public class PlayerManager : NetworkBehaviour
             StartCoroutine(WaitToHealth());
         }
         healthUI.TakeDamageClientRpc(life.Value);
-
     }
 
 
-    //ClientRpc, set the names to all players!
-    public void SetUIName()
-    {
-        nameText.text = PlayerName;
-        Debug.LogFormat("ppp" + PlayerName, nameText.text);
-    }
-
-
-    private IEnumerator WaitToHealthCounter()
-    {
-        yield return new WaitForSeconds(1);
-        Debug.Log("");
-
-    }
 
     private IEnumerator WaitToHealth()
     {
@@ -417,6 +418,7 @@ public class PlayerManager : NetworkBehaviour
 
     private IEnumerator HealthByTime()
     {
+        Debug.Log("HEALTHING!!");
         yield return new WaitForSeconds(healthInterval);
         life.Value += healthBySecond.Value;
 
