@@ -73,6 +73,12 @@ public class PlayerManager : NetworkBehaviour
     private GameObject CanvasDeath;
 
 
+    public Animation inmuneAnimation;
+    public Animator animator;
+
+    [SerializeField]
+    public NetworkVariable<bool> isInmune = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     void Start()
     {
         Initialized();
@@ -82,6 +88,7 @@ public class PlayerManager : NetworkBehaviour
     {
         base.OnNetworkDespawn();
         //Initialized();
+
     }
 
     private void Initialized()
@@ -206,6 +213,7 @@ public class PlayerManager : NetworkBehaviour
         }
 
 
+
 #elif UNITY_STANDALONE_WIN  //ANDROID
     
        Vector3 movPos = new Vector3();
@@ -283,6 +291,16 @@ public class PlayerManager : NetworkBehaviour
 
         nameText.text = PlayerName.Value.ToString();
 
+
+        if (!IsServer)
+        {
+            PlayerInfo player1 = OnlineManager.Instance.playerList.Find(x => x.name == PlayerName.Value);
+            player1.playerObject = gameObject;
+            player1.clientId = NetworkManager.Singleton.LocalClientId;
+            Debug.Log("ddd" + NetworkManager.Singleton.LocalClientId);
+           // Debug.Log("ddd" + NetworkManager.Singleton.LocalClientId);
+
+        }
         //        moveDestination = transform.position;
 
 
@@ -390,7 +408,7 @@ public class PlayerManager : NetworkBehaviour
         {
             Debug.Log("DAMAGE TO 0" + life.Value);
             //Manage player
-           // OnlineManager.Instance.PlayerDeath(OnlineManager.Instance.playerList[playerHittedIndex].clientId);
+            OnlineManager.Instance.PlayerDeath(OnlineManager.Instance.playerList[playerHittedIndex].clientId);
 
             OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex);
             life.Value = MaxLife;

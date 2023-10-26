@@ -7,7 +7,7 @@ using Unity.Collections;
 [System.Serializable]
 public class PlayerInfo
 {
-    public string name;
+    public FixedString128Bytes name;
     public ulong clientId;
     public FixedString128Bytes lobbyPlayerId;
     public int team;

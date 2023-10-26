@@ -76,6 +76,7 @@ public class OnlineManager : NetworkBehaviour
 
     [SerializeField] private int timeToRespawn = 3;
 
+    private int inmuneTime = 3;
 
 
 
@@ -439,7 +440,7 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     private void StartTeamScoreClientRpc(int nTeams)
     {
-        //PONER AL CAMBIAR DE ESCENA!
+        //PONER AL CAMBIAR DE ESCENA Y DINÁMICO!
         team1 = GameObject.Find("Team1").GetComponent<TextMeshProUGUI>();
         team2 = GameObject.Find("Team2").GetComponent<TextMeshProUGUI>();
     }
@@ -488,71 +489,119 @@ public class OnlineManager : NetworkBehaviour
         playerObj.transform.position = randomSpawn.position;
 
         playerObj.SetActive(false);
+        PlayerDeathClientRpc(playerInfo.name);
 
-        StartCoroutine(WaitToRespawn(playerObj));
+        StartCoroutine(WaitToRespawn(playerObj, playerInfo.name));
+    }
 
-        
+    [ClientRpc]
+    public void PlayerDeathClientRpc(FixedString128Bytes playerName)
+    {
+        PlayerInfo playerInfo = playerList.Find(x => x.name == playerName);
+        GameObject playerObj = playerInfo.playerObject;
+        playerObj.SetActive(false);
+
     }
 
 
-    private IEnumerator WaitToRespawn(GameObject player)
+    [ClientRpc]
+    public void PlayerAliveClientRpc(FixedString128Bytes playerName, bool active = true)
+    {
+        PlayerInfo playerInfo = playerList.Find(x => x.name == playerName);
+        GameObject playerObj = playerInfo.playerObject;
+        playerObj.SetActive(true);
+        PlayerManager pManager = playerObj.GetComponent<PlayerManager>();
+      //  pManager.inmuneAnimation.Play();
+        pManager.animator.SetBool("inmuneBool", true);
+
+
+
+    }
+
+    //Server only
+    private IEnumerator WaitToRespawn(GameObject player, FixedString128Bytes playerName)
     {
         yield return new WaitForSeconds(timeToRespawn);
-        player.SetActive(true);
+
+        PlayerAliveClientRpc(playerName);
+        player.GetComponent<PlayerManager>().isInmune.Value = true;
+        StartCoroutine(InmuneTime(playerName));
     }
+
+    //Server only
+    private IEnumerator InmuneTime(FixedString128Bytes playerName)
+    {
+        PlayerManager p1 = playerList.Find(x => x.name == playerName).playerObject.GetComponent<PlayerManager>();
+
+        yield return new WaitForSeconds(inmuneTime);
+        p1.isInmune.Value = false;
+        p1.animator.SetBool("inmuneBool", false);
+
+
+        PlayerStopInmuneClientRpc(playerName);
+
+    }
+
+    [ClientRpc]
+    public void PlayerStopInmuneClientRpc(FixedString128Bytes playerName)
+    {
+        PlayerManager p1 = playerList.Find(x => x.name == playerName).playerObject.GetComponent<PlayerManager>();
+        p1.animator.SetBool("inmuneBool", false);
+    }
+
 }
 
 
-            /*
-            [ServerRpc]
-            public void GetServerValuesServerRpc(string playerId,ulong clientId)
+/*
+[ServerRpc]
+public void GetServerValuesServerRpc(string playerId,ulong clientId)
+{
+    try
+    {
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
             {
-                try
-                {
-                    ClientRpcParams clientRpcParams = new ClientRpcParams
-                    {
-                        Send = new ClientRpcSendParams
-                        {
-                            TargetClientIds = new ulong[] { clientId }
-                        }
-                    };
-                    GetServerValuesClientRpc(GetTeam(playerId), playerId, clientRpcParams);
-                }
-                catch (Exception e)
-                {
-                    Debug.Log(e);
-                }
-                //HAY QUE INICIALIZAR PRIMERO LOS VALORES DE LOS DICCIONARIOS
-              //  return Tuple.Create(GetTeam(playerId), playerNameDictionary[playerId], playerCharacterDictionary[playerId]);
+                TargetClientIds = new ulong[] { clientId }
             }
-
-
-            [ClientRpc]
-            public void GetServerValuesClientRpc(int team, string playerId, ClientRpcParams clientRpcParams = default) //
-            {
-                //Se está llamando en cliente?playerNameDictionary[playerId], playerCharacterDictionary[playerId]
-                //   
-                Debug.Log("CHANGING VALUES FOR : 0" + playerId);
-                Debug.Log("VALUES::  " + team + " " + EditPlayerName.Instance.GetPlayerName() + playerCharacterDictionary[playerId].ToString());
-                LobbyUI.Instance.LobbyPlayers[playerId].SetUpTemplate(team, EditPlayerName.Instance.GetPlayerName(), playerCharacterDictionary[playerId]);
-            }
-            */
-
-        
-
-
-    /*
-
-   
-
-
+        };
+        GetServerValuesClientRpc(GetTeam(playerId), playerId, clientRpcParams);
     }
+    catch (Exception e)
+    {
+        Debug.Log(e);
+    }
+    //HAY QUE INICIALIZAR PRIMERO LOS VALORES DE LOS DICCIONARIOS
+  //  return Tuple.Create(GetTeam(playerId), playerNameDictionary[playerId], playerCharacterDictionary[playerId]);
+}
+
+
+[ClientRpc]
+public void GetServerValuesClientRpc(int team, string playerId, ClientRpcParams clientRpcParams = default) //
+{
+    //Se está llamando en cliente?playerNameDictionary[playerId], playerCharacterDictionary[playerId]
+    //   
+    Debug.Log("CHANGING VALUES FOR : 0" + playerId);
+    Debug.Log("VALUES::  " + team + " " + EditPlayerName.Instance.GetPlayerName() + playerCharacterDictionary[playerId].ToString());
+    LobbyUI.Instance.LobbyPlayers[playerId].SetUpTemplate(team, EditPlayerName.Instance.GetPlayerName(), playerCharacterDictionary[playerId]);
+}
+*/
+
+
+
+
+/*
+
+
+
+
+}
 
 
 
 
 
-    */
+*/
 
 /*
 [ServerRpc]

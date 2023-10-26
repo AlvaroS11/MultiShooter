@@ -81,7 +81,8 @@ public class Bullet : MonoBehaviour {
             {
                 PlayerManager hitPlayerManager = hitObject.GetComponent<PlayerManager>();
 
-                hitPlayerManager.DamageTakenServerRpc(bulletDmg, playerManager.PlayerInfoIndex, hitPlayerManager.PlayerInfoIndex);
+                if(!hitPlayerManager.isInmune.Value)
+                    hitPlayerManager.DamageTakenServerRpc(bulletDmg, playerManager.PlayerInfoIndex, hitPlayerManager.PlayerInfoIndex);
                 
                 //QUITAR VIDA AL JUGADOR
             }

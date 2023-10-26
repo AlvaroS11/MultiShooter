@@ -51,7 +51,7 @@ public class Weapon : NetworkBehaviour
     [ServerRpc]
     public virtual void PlayerFireServerRpc()
     {
-        if (!isReady) return;
+        if (!isReady || !isActiveAndEnabled) return;
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         bulletGameObject.transform.Rotate(90, 0, 0);

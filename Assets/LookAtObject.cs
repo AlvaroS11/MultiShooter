@@ -20,6 +20,8 @@ public class LookAtObject : NetworkBehaviour
 
     private void LateUpdate()
     {
+        if (mainCamera == null)
+            mainCamera = Camera.main;
         // Obtén la rotación de la cámara
   //      Quaternion cameraRotation = mainCamera.rotation;
 
