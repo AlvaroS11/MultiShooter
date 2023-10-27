@@ -76,7 +76,9 @@ public class OnlineManager : NetworkBehaviour
 
     [SerializeField] private int timeToRespawn = 3;
 
-    private int inmuneTime = 3;
+    [SerializeField]
+    public int inmuneTime = 5;
+
 
 
 
@@ -112,7 +114,6 @@ public class OnlineManager : NetworkBehaviour
         PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
         Debug.Log("NETWORK SPAWN!! ");
-
 
 
         if (IsServer)
@@ -191,7 +192,7 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void ChangeNameServerRpc(string playerId, string name, ulong clientId)
+    public void ChangeNameServerRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
         //GetPlayerById(playerId);
         ChangeNameClientRpc(playerId, name, clientId);
@@ -199,7 +200,7 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ClientRpc]
-    public void ChangeNameClientRpc(string playerId, string name, ulong clientId)
+    public void ChangeNameClientRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
         //GetPlayerById(playerId);
         //Debug.Log(playerId);
@@ -220,14 +221,14 @@ public class OnlineManager : NetworkBehaviour
         int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
         if (index >= 0)
         {
-            playerNameDictionary[playerId] = name;
+            //playerNameDictionary[playerId] = name;
             var player = playerList[index];
             player.name = name;
             playerList[index] = player;
         }
         else
         {
-            playerNameDictionary.Add(playerId, name);
+           // playerNameDictionary.Add(playerId, name);
             Debug.Log("UPDATED NAME :  " + name);
             PlayerInfo newPlayer = new PlayerInfo();
             newPlayer.lobbyPlayerId = playerId;
@@ -500,6 +501,7 @@ public class OnlineManager : NetworkBehaviour
         PlayerInfo playerInfo = playerList.Find(x => x.name == playerName);
         GameObject playerObj = playerInfo.playerObject;
         playerObj.SetActive(false);
+        RespawnMessage(playerObj.GetComponent<PlayerManager>());
 
     }
 
@@ -510,9 +512,40 @@ public class OnlineManager : NetworkBehaviour
         PlayerInfo playerInfo = playerList.Find(x => x.name == playerName);
         GameObject playerObj = playerInfo.playerObject;
         playerObj.SetActive(true);
+        Assets.Instance.respawnMsg.SetActive(false);
         PlayerManager pManager = playerObj.GetComponent<PlayerManager>();
       //  pManager.inmuneAnimation.Play();
         pManager.animator.SetBool("inmuneBool", true);
+
+
+    }
+
+
+    //Client only
+    private void RespawnMessage(PlayerManager pManager)
+    {
+        if (!pManager.isOwnPlayer)
+            return;
+
+        StartCoroutine(UpdateRespawnText());
+        Assets.Instance.respawnMsg.SetActive(true);
+
+
+    }
+
+    //Client only
+    private IEnumerator UpdateRespawnText()
+    {
+        for(int i = 0; i< timeToRespawn; i++)
+        {
+            yield return new WaitForSeconds(1);
+
+            Assets.Instance.respawnText.text = "Respawning in " + (timeToRespawn - i - 1);
+
+            Debug.Log("Respawning in " + (timeToRespawn - i));
+        }
+
+        Assets.Instance.respawnText.text =  "Respawning... ";
 
 
 

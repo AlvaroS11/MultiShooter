@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using Unity.VisualScripting;
 using Unity.Services.Authentication;
 using Unity.Netcode;
+using Unity.Collections;
 
 public class LobbyPlayerSingleUI : MonoBehaviour {
 
@@ -101,12 +102,12 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     }
 
-    public void UpdateNameUI(string name)
+    public void UpdateNameUI(FixedString128Bytes name)
     {
 
         //PARA EL NOMBRE:         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
 
-        playerNameText.text = name;
+        playerNameText.text = name.ToSafeString();
 
     }
 

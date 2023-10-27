@@ -8,7 +8,7 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 using static LobbyManager;
-
+using Unity.Collections;
 public class LobbyUI : MonoBehaviour {
 
 

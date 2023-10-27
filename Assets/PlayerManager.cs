@@ -79,6 +79,8 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     public NetworkVariable<bool> isInmune = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public bool isOwnPlayer = false;
+
     void Start()
     {
         Initialized();
@@ -98,6 +100,7 @@ public class PlayerManager : NetworkBehaviour
 //        life = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         //  team = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         CanvasDeath.SetActive(false);
+        isOwnPlayer = true;
 
     }
 
@@ -449,24 +452,5 @@ public class PlayerManager : NetworkBehaviour
         //Add field so if it is positive (health) it shows an animation and if negative it shows other animation
 
     }
-
-
-
-
-    //Receive player data from other players
-    /* [ClientRpc]
-      private void RequestDataFromClientsClientRpc()
-      {
-          // Buscar el nuevo jugador en la escena utilizando el NetworkObjectId
-          NetworkObject newPlayer = NetworkObject.Find(newPlayerNetworkObjectId);
-
-          if (newPlayer != null)
-          {
-              // Enviar los datos al nuevo cliente
-              int maxLife = GetComponent<PlayerController>().MaxLife;
-              SendMaxLifeDataToClientServerRpc(newPlayer.GetComponent<NetworkObject>().OwnerClientId, maxLife);
-          }
-      }
-    */
 
 }
