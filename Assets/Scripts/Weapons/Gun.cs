@@ -13,7 +13,12 @@ public class Gun : Weapon
     // Update is called once per frame
     void Update()
     {
-        
+        base.Update();   
+    }
+
+    protected override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
     }
 
     public override void AimWeapon()

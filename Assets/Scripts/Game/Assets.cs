@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Assets : MonoBehaviour
 {
@@ -13,6 +14,10 @@ public class Assets : MonoBehaviour
     public GameObject respawnMsg;
 
     public TextMeshProUGUI respawnText;
+
+    public Image reloadBar;
+
+    public Joystick joystick;
     void Start()
     {
         Instance = this;

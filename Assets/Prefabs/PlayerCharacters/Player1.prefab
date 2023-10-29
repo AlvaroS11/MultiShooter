@@ -776,6 +776,7 @@ MonoBehaviour:
   animator: {fileID: 7552235867117956900}
   isInmune:
     m_InternalValue: 0
+  isOwnPlayer: 0
 --- !u!114 &6931763090777098956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -883,6 +884,7 @@ MonoBehaviour:
   coolDownSeconds: 1
   isReady: 0
   straightAim: {x: 0, y: 0, z: 0}
+  reloadBar: {fileID: 0}
 --- !u!120 &1353681362587268395
 LineRenderer:
   serializedVersion: 2

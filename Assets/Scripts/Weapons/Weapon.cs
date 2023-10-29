@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Windows;
+using UnityEngine.UI;
+
 
 public class Weapon : NetworkBehaviour
 {
@@ -14,6 +16,9 @@ public class Weapon : NetworkBehaviour
     protected GameObject bullet;
     [SerializeField]
     protected float coolDownSeconds;
+
+    [SerializeField]
+    protected float currentReload;
 
     [SerializeField]
     protected bool isReady;
@@ -31,6 +36,13 @@ public class Weapon : NetworkBehaviour
 
 
     private Vector3 bulletAimPos;
+
+
+    public Image reloadBar;  //fillamount uiplayer
+
+
+    public bool reloading = false;
+
     protected virtual void Start()
     {
         isReady = true;
@@ -40,12 +52,37 @@ public class Weapon : NetworkBehaviour
 
         bulletTime = bullet.GetComponent<Bullet>().timeToDestroy;
 
+
+        if (IsOwner)
+        {
+            reloadBar = Assets.Instance.reloadBar;
+        }
+    }
+
+    protected virtual void OnNetworkSpawn()
+    {
+        if (IsOwner)
+        {
+            reloadBar = Assets.Instance.reloadBar;
+        }
     }
 
     // Update is called once per frame
-    void Update()
+    public virtual void Update()
     {
-        
+        if (IsOwner)
+        {
+            if (reloading)
+            {
+                currentReload -= Time.deltaTime;
+                //Debug.Log(currentReload);
+                if(currentReload >= 0)
+                    reloadBar.fillAmount += Time.deltaTime;
+                else
+                    reloading = false;
+            }
+        }
+       
     }
 
     [ServerRpc]
@@ -60,10 +97,8 @@ public class Weapon : NetworkBehaviour
     }
 
     [ServerRpc]
-    public virtual void PlayerFireServerRpc(Vector3 dir)
+    public virtual void PlayerFireServerRpc(Vector3 dir, ulong clientId)
     {
-
-        Debug.Log("EJECUTANDO AQUIIIIII");
         if (!isReady) return;
 
 
@@ -80,9 +115,31 @@ public class Weapon : NetworkBehaviour
 
         GetComponent<PlayerManager>().firing = true;
         StartCoroutine(FiringAnimation());
+
         // StartCoroutine(CoolDownServerRpc());
         StartCoolDownServerRpc();
+
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+        StartReloadAnimationClientRpc(clientRpcParams);
     }
+
+
+    [ClientRpc]
+    private void StartReloadAnimationClientRpc(ClientRpcParams clientRpcParams = default)
+    {
+        currentReload = coolDownSeconds;
+        reloading = true;
+        reloadBar.fillAmount = 0;
+
+    }
+
+
 
     [ServerRpc]
     public virtual void StartCoolDownServerRpc()
@@ -123,7 +180,7 @@ public class Weapon : NetworkBehaviour
 
 
         Vector3 startVel = -gameObject.transform.forward * bullet.GetComponent<Bullet>().speed;
-        bulletAimPos = startVel * bulletTime;
+     //   bulletAimPos = startVel * bulletTime;
 
         Vector3 point = transform.position + bulletAimPos;
 

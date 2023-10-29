@@ -203,7 +203,7 @@ public class PlayerManager : NetworkBehaviour
             {
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
-                gun.PlayerFireServerRpc(moveDestination);
+                gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
             }
         }
 
@@ -217,9 +217,9 @@ public class PlayerManager : NetworkBehaviour
 
 
 
-#elif UNITY_STANDALONE_WIN  //ANDROID
-    
-       Vector3 movPos = new Vector3();
+#elif UNITY_ANDROID  //ANDROID
+
+        Vector3 movPos = new Vector3();
         if (joystick.Horizontal >= .2f)
         {
             movPos.x = 1;
@@ -229,15 +229,17 @@ public class PlayerManager : NetworkBehaviour
             movPos.x = -1;
         }
         if (joystick.Vertical >= .2f)
-            movPos.y = 1;
+            movPos.z = 1;
         if (joystick.Vertical <= -.2f)
-            movPos.y = -1;
+            movPos.z = -1;
 
         if (movPos != Vector3.zero)
         {
             MovePlayerPhoneServerRpc(movPos);
         }
-    
+
+        MoveCamera();
+
 
 #endif
 
@@ -258,31 +260,21 @@ public class PlayerManager : NetworkBehaviour
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;
         }
-        
-      
-
     }
 
-
-   /* [ServerRpc]
-    private void MovePlayerPcServerRpc(Ray ray)
+    [ServerRpc]
+    private void MovePlayerPhoneServerRpc(Vector3 input)
     {
-        if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+        //TO DO CHECKs
+        transform.position = Vector3.MoveTowards(transform.position, transform.position + input, Time.deltaTime * speed);
+
+        if (!firing)
         {
-            playerNavMesh.destination = hitData.point;
-
-           /* if (playerNavMesh.destination != transform.position)
-            {
-                Vector3 targetDirection = playerNavMesh.destination - transform.position;
-                transform.forward = -targetDirection;
-            }
-           
-           
+            Quaternion newRotation = Quaternion.LookRotation(input);
+            transform.rotation = newRotation;
         }
-
-
     }
-   */
+
 
     public override void OnNetworkSpawn()
     {
@@ -307,33 +299,15 @@ public class PlayerManager : NetworkBehaviour
         //        moveDestination = transform.position;
 
 
+#if UNITY_ANDROID
+
+        if(IsOwner)
+        joystick = Assets.Instance.joystick;
+
+#endif
+
     }
 
-
-    /*  public override void OnNetworkSpawn()
-      {
-          if (IsServer)
-          {
-              NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
-              NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompleted;
-          }
-      }
-
-      private void OnLoadEventCompleted(string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
-      {
-          foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
-          {
-              Transform playerTransform = Instantiate(playerPrefab);
-              playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-          }
-      }
-
-      private void OnClientDisconnectCallback(ulong clientId)
-      {
-          //autoTestGamePausedState = true;
-      }
-
-      */
 
     private void MoveCamera()
     {
@@ -378,29 +352,6 @@ public class PlayerManager : NetworkBehaviour
             transform.forward = -targetDirection;
         }
     }
-
-
-    [ServerRpc]
-    private void MovePlayerPhoneServerRpc(Vector3 input)
-    {
-        //TO DO CHECKs
-        transform.position = Vector3.MoveTowards(transform.position, transform.position + input, Time.deltaTime * speed);
-    }
-
-  /*  [ServerRpc]
-    private void PlayerFireServerRpc()
-    {
-        // Vector3 spawnPoint = transform.position + new Vector3(0.0f, 0.0f, -0.5f);
-        gun.PlayerFireServerRpc();
-
-
-        /*   GameObject bulletGameObject = Instantiate(Bullet, transform.position, transform.rotation);
-           bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
-           bulletGameObject.transform.Rotate(90, 0, 0);
-           bulletGameObject.GetComponent<NetworkObject>().Spawn();
-        */
-        //NetworkManager.Singleton.AddNetworkPrefab(bulletGameObject);
-//    }
 
 
     [ServerRpc(RequireOwnership = false)]
