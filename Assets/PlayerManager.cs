@@ -46,6 +46,9 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     private Joystick joystick;
 
+    [SerializeField]
+    private Joystick joystickShoot;
+    
 
     [SerializeField]
     private TextMeshProUGUI nameText;
@@ -81,6 +84,16 @@ public class PlayerManager : NetworkBehaviour
 
     public bool isOwnPlayer = false;
 
+
+    [SerializeField]
+    private bool aiming;
+
+    [SerializeField]
+    private Vector3 lastAimedPos;
+
+
+
+    private float previousMov;
     void Start()
     {
         Initialized();
@@ -241,6 +254,46 @@ public class PlayerManager : NetworkBehaviour
         MoveCamera();
 
 
+        //Aim And Shoot
+        Vector3 shootPos = new Vector3();
+
+        shootPos.x += joystickShoot.Horizontal;
+        shootPos.z += joystickShoot.Vertical;
+
+        //Debug.Log(shootPos);
+        if (shootPos != Vector3.zero)
+        {
+      //      Debug.Log("Aiming!! " + shootPos);
+            aiming = true;
+            lastAimedPos = gun.AimWeaponMobile(shootPos);
+            previousMov = shootPos.magnitude;
+        }
+        else
+        {
+            gun.StopAim();
+            if(aiming == true)
+            {
+                Debug.Log(previousMov);
+                if(previousMov >= 0.22)
+                {
+                    //Debug.Log(shootPos);
+                    gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
+                    aiming = false;
+                }
+                
+                    
+            }
+        }
+
+
+        /*  if(joystickShoot.Horizontal<= .2f && joystickShoot.Horizontal >= .2f && joystickShoot.Vertical <= .2f && joystickShoot.Vertical >= .2f)
+          {
+              //Vibrate, cancel and set to 0
+          }
+        */
+
+        //   if (joystickShoot.)
+
 #endif
 
 
@@ -301,8 +354,12 @@ public class PlayerManager : NetworkBehaviour
 
 #if UNITY_ANDROID
 
-        if(IsOwner)
-        joystick = Assets.Instance.joystick;
+        if (IsOwner)
+        {
+            joystickShoot = Assets.Instance.joystickShoot;
+            joystick = Assets.Instance.joystick;
+
+        }
 
 #endif
 

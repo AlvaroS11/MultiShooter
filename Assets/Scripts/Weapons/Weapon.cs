@@ -26,9 +26,9 @@ public class Weapon : NetworkBehaviour
 
     protected GameObject bulletGameObject;
 
-    [SerializeField]
-    protected Vector3 straightAim;
 
+    [SerializeField]
+    protected bool straightAim = true;
 
 
     private float bulletSpeed;
@@ -130,7 +130,47 @@ public class Weapon : NetworkBehaviour
     }
 
 
-    [ClientRpc]
+
+    [ServerRpc]
+    public virtual void PlayerFireServerMobileServerRpc(Vector3 dir, ulong clientId)
+    {
+        if (!isReady) return;
+
+        if (straightAim)
+            dir = dir.normalized;
+
+
+        Vector3 targetDirection = dir + transform.position;
+        transform.forward = targetDirection;
+
+        Debug.Log(targetDirection);
+
+        //Start animation and set player rotation until animation finishes
+
+
+        bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
+        bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
+        bulletGameObject.transform.Rotate(90, 0, 0);
+        bulletGameObject.GetComponent<NetworkObject>().Spawn();
+
+        GetComponent<PlayerManager>().firing = true;
+        StartCoroutine(FiringAnimation());
+
+        // StartCoroutine(CoolDownServerRpc());
+        StartCoolDownServerRpc();
+
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+        StartReloadAnimationClientRpc(clientRpcParams);
+    }
+
+
+        [ClientRpc]
     private void StartReloadAnimationClientRpc(ClientRpcParams clientRpcParams = default)
     {
         currentReload = coolDownSeconds;
@@ -209,7 +249,30 @@ public class Weapon : NetworkBehaviour
         lineRenderer.enabled = true;
         lineRenderer.SetPosition(0, transform.position);
         lineRenderer.SetPosition(1, point);
+    }
 
+    public virtual Vector3 AimWeaponMobile(Vector3 dir)
+    {
+        if (straightAim)
+            dir = dir.normalized;
+
+        Vector3 targetDirection = dir + transform.position;
+
+        transform.forward = targetDirection;
+
+        lineRenderer.positionCount = 2;
+
+
+        Vector3 startVel = dir * bullet.GetComponent<Bullet>().speed;
+        bulletAimPos = startVel * bulletTime;
+
+        Vector3 point = targetDirection + bulletAimPos;
+   
+        lineRenderer.enabled = true;
+        lineRenderer.SetPosition(0, transform.position);
+        lineRenderer.SetPosition(1, point);
+
+        return point;
 
     }
 

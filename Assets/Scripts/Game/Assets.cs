@@ -18,6 +18,9 @@ public class Assets : MonoBehaviour
     public Image reloadBar;
 
     public Joystick joystick;
+
+    public Joystick joystickShoot;
+
     void Start()
     {
         Instance = this;
