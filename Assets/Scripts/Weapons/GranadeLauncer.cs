@@ -41,9 +41,9 @@ public class GranadeLauncer : Weapon
     }
 
     // Update is called once per frame
-    void Update()
+    public override void Update()
     {
-        
+        base.Update();
     }
 
     /*public override void PlayerFireServerRpc()
@@ -61,11 +61,21 @@ public class GranadeLauncer : Weapon
         //bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
-        Debug.Log("SPAWNED GRANADE!");
 
-        //   StartCoroutine(CoolDownServerRpc());
         bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
-     //   ReleaseGrenade();
+    }
+
+    [ServerRpc]
+    public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)
+    {
+        if (!isReady) return;
+        bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
+        bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
+        //bulletGameObject.transform.Rotate(90, 0, 0);
+        bulletGameObject.GetComponent<NetworkObject>().Spawn();
+
+
+        bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
     }
 
     [ServerRpc]
@@ -79,17 +89,90 @@ public class GranadeLauncer : Weapon
         DrawProjection();
     }
 
+    public override void AimWeapon(Vector3 dir)
+    {
+        DrawProjection();
+    }
+
+    public override Vector3 AimWeaponMobile(Vector3 dir)
+    {
+        DrawProjectionMobile(dir);
+        return dir;
+
+
+    }
+
     public override void StopAim()
     {
         lineRenderer.enabled = false;
     }
 
-    private void DrawProjection()
+    [ServerRpc]
+    public override void PlayerFireServerMobileServerRpc(Vector3 dir, ulong clientId)
+    {
+        if (!isReady) return;
+
+        FireMobile(dir);
+
+        base.StartCoolDownServerRpc();
+
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+        StartReloadAnimationClientRpc(clientRpcParams);
+    }
+
+    private void FireMobile(Vector3 dir)
+    {
+        bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
+        bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
+        bulletGameObject.GetComponent<NetworkObject>().Spawn();
+        bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination, dir);
+    }
+
+
+
+
+    private void DrawProjectionMobile(Vector3 dir)
     {
         lineRenderer.enabled = true;
         lineRenderer.positionCount = Mathf.CeilToInt(LinePoints / timeBetweenPoint) + 1;
         Vector3 startPos = transform.position;
-        Vector3 startVel = grenadeForce * -GetComponentInParent<Transform>().forward / bullet.GetComponent<Granade>().GetComponent<Rigidbody>().mass;
+        Vector3 startVel = grenadeForce * dir / bullet.GetComponent<Granade>().GetComponent<Rigidbody>().mass;
+        startVel.y += granadeInclination;
+        int i = 0;
+
+        lineRenderer.SetPosition(i, startPos);
+        for (float time = 0; time < LinePoints; time += timeBetweenPoint)
+        {
+            i++;
+            Vector3 point = startPos + time * startVel;
+            point.y = startPos.y + startVel.y * time + (Physics.gravity.y / 2f * time * time); // y = vi * t +1/2 * a * t2
+
+            lineRenderer.SetPosition(i, point);
+
+            Vector3 lastPos = lineRenderer.GetPosition(i - 1);
+            if (Physics.Raycast(lastPos, (point - lastPos).normalized, out RaycastHit hit, (point - lastPos).magnitude, granadeCollisionMask))
+            {
+                lineRenderer.SetPosition(i, hit.point);
+                lineRenderer.positionCount = i + 1;
+                return;
+            }
+        }
+
+    }
+
+    private void DrawProjection()
+    {
+        Debug.Log("DRAW PROJECTION!");
+        lineRenderer.enabled = true;
+        lineRenderer.positionCount = Mathf.CeilToInt(LinePoints / timeBetweenPoint) + 1;
+        Vector3 startPos = transform.position;
+        Vector3 startVel = grenadeForce * GetComponentInParent<Transform>().forward / bullet.GetComponent<Granade>().GetComponent<Rigidbody>().mass;
         startVel.y += granadeInclination;
         int i = 0;
 
@@ -111,6 +194,8 @@ public class GranadeLauncer : Weapon
             }
         }
     }
+
+
 
 
     private void ReleaseGrenade()

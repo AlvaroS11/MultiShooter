@@ -77,7 +77,7 @@ public class Weapon : NetworkBehaviour
                 currentReload -= Time.deltaTime;
                 //Debug.Log(currentReload);
                 if(currentReload >= 0)
-                    reloadBar.fillAmount += Time.deltaTime;
+                    reloadBar.fillAmount = 1 - (currentReload / coolDownSeconds);
                 else
                     reloading = false;
             }
@@ -136,16 +136,9 @@ public class Weapon : NetworkBehaviour
     {
         if (!isReady) return;
 
-        if (straightAim)
-            dir = dir.normalized;
+        Vector3 targetDirection = dir - transform.position;
 
-
-        Vector3 targetDirection = dir + transform.position;
         transform.forward = targetDirection;
-
-        Debug.Log(targetDirection);
-
-        //Start animation and set player rotation until animation finishes
 
 
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
@@ -170,8 +163,8 @@ public class Weapon : NetworkBehaviour
     }
 
 
-        [ClientRpc]
-    private void StartReloadAnimationClientRpc(ClientRpcParams clientRpcParams = default)
+    [ClientRpc]
+    protected void StartReloadAnimationClientRpc(ClientRpcParams clientRpcParams = default)
     {
         currentReload = coolDownSeconds;
         reloading = true;
@@ -258,7 +251,6 @@ public class Weapon : NetworkBehaviour
 
         Vector3 targetDirection = dir + transform.position;
 
-        transform.forward = targetDirection;
 
         lineRenderer.positionCount = 2;
 

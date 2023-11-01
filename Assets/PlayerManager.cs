@@ -76,7 +76,7 @@ public class PlayerManager : NetworkBehaviour
     private GameObject CanvasDeath;
 
 
-    public Animation inmuneAnimation;
+   // public Animation inmuneAnimation;
     public Animator animator;
 
     [SerializeField]
@@ -351,17 +351,25 @@ public class PlayerManager : NetworkBehaviour
         }
         //        moveDestination = transform.position;
 
-
-#if UNITY_ANDROID
-
         if (IsOwner)
         {
             joystickShoot = Assets.Instance.joystickShoot;
             joystick = Assets.Instance.joystick;
-
         }
 
+
+
+#if UNITY_ANDROID
+
+
+
+#elif UNITY_STANDALONE_WIN
+        joystickShoot.gameObject.SetActive(false);
+        joystick.gameObject.SetActive(false);
+
+
 #endif
+
 
     }
 

@@ -35,7 +35,27 @@ public class Granade : Bullet
         
     }
 
-    public void ReleaseGrenade(float grenadeForce, float granadeInclination)
+    public void ReleaseGrenade(float grenadeForce, float granadeInclination, Vector3? direction = null)
+    {
+        if (direction == null)
+            direction = GetComponentInParent<Transform>().forward;
+
+        Rigidbody Grenade = GetComponent<Rigidbody>();
+        Grenade.velocity = Vector3.zero;
+        Grenade.angularVelocity = Vector3.zero;
+        Grenade.isKinematic = false;
+        Grenade.freezeRotation = false;
+        Grenade.transform.SetParent(null, true);
+
+        Vector3 dir = (Vector3)(grenadeForce * direction);
+        dir.y = granadeInclination;
+
+        Debug.Log(dir);
+        Grenade.AddForce(dir, ForceMode.Impulse);
+    }
+
+
+    public void ReleaseGrenadeMobile(float grenadeForce, float granadeInclination, Vector3 dir)
     {
         Rigidbody Grenade = GetComponent<Rigidbody>();
         Grenade.velocity = Vector3.zero;
@@ -44,12 +64,12 @@ public class Granade : Bullet
         Grenade.freezeRotation = false;
         Grenade.transform.SetParent(null, true);
 
-        Vector3 dir = grenadeForce * -GetComponentInParent<Transform>().forward;
-        dir.y = granadeInclination;
+        Vector3 direction = grenadeForce * dir;
+        direction.y = granadeInclination;
 
-        Debug.Log(dir);
-        Grenade.AddForce(dir, ForceMode.Impulse);
+        Grenade.AddForce(direction, ForceMode.Impulse);
     }
+
 
     [ServerRpc]
     public override IEnumerator WaitToDeleteServerRpc()
