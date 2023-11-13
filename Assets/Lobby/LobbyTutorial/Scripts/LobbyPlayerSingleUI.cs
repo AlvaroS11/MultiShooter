@@ -72,8 +72,8 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         selectTeamDropdown.enabled = visible;
     }
 
-    //HACER CON NETCODE
-    public void UpdatePlayer(Player player) {
+/*    public void UpdatePlayer(Player player) {
+
         this.player = player;
         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
         LobbyManager.PlayerCharacter playerCharacter = 
@@ -86,6 +86,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         //selectTeamDropdown.itemText.text = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
 
     }
+*/
 
 
     public void UpdateTeamUi(int team)
@@ -112,8 +113,8 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     }
 
     private void KickPlayer() {
-        if (player != null) {
-            LobbyManager.Instance.KickPlayer(player.Id);
+        if (playerId != null) {
+            LobbyManager.Instance.KickPlayer(playerId);
         }
     }
 

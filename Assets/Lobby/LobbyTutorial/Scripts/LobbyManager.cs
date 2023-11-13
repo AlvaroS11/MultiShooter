@@ -38,6 +38,8 @@ public class LobbyManager : MonoBehaviour {
     public event EventHandler<LobbyEventArgs> OnJoinedLobbyUpdate;
     public event EventHandler<LobbyEventArgs> OnKickedFromLobby;
     public event EventHandler<LobbyEventArgs> OnLobbyGameModeChanged;
+    public event EventHandler<String> OnKickPlayer;
+
     public class LobbyEventArgs : EventArgs {
         public Lobby lobby;
     }
@@ -594,8 +596,8 @@ public class LobbyManager : MonoBehaviour {
             try {
                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
 
+                Debug.Log(joinedLobby.Players.Count);
                 joinedLobby = null;
-
                 OnLeftLobby?.Invoke(this, EventArgs.Empty);
             } catch (LobbyServiceException e) {
                 Debug.Log(e);
@@ -606,8 +608,21 @@ public class LobbyManager : MonoBehaviour {
     public async void KickPlayer(string playerId) {
         if (IsLobbyHost()) {
             try {
+                Debug.Log("HECHANDO!!");
+                Debug.Log(joinedLobby.Players.Count);
                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, playerId);
-            } catch (LobbyServiceException e) {
+                joinedLobby.Players.Remove(joinedLobby.Players.Find(x => x.Id == playerId));
+                OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(playerId);
+
+                ///await LobbyService.Instance.UpdateLobbyAsync(joinedLobby.Id)
+                
+                Debug.Log(joinedLobby.Players.Count);
+                joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+
+                OnKickPlayer?.Invoke(this, playerId);
+
+            }
+            catch (LobbyServiceException e) {
                 Debug.Log(e);
             }
         }

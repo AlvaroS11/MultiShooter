@@ -35,7 +35,7 @@ public class PlayerManager : NetworkBehaviour
     public string PlayerName;
     public int PlayerTeam;
    */
-    public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+   // public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<FixedString128Bytes> PlayerName = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> PlayerTeam = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
    
@@ -79,7 +79,7 @@ public class PlayerManager : NetworkBehaviour
    // public Animation inmuneAnimation;
     public Animator animator;
 
-    [SerializeField]
+    //[SerializeField]
     public NetworkVariable<bool> isInmune = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public bool isOwnPlayer = false;
@@ -110,8 +110,6 @@ public class PlayerManager : NetworkBehaviour
     {
         if (!IsOwner) return;
         _mainCamera = Camera.main;
-//        life = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-        //  team = new NetworkVariable<int>(MaxLife, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         CanvasDeath.SetActive(false);
         isOwnPlayer = true;
 
@@ -124,38 +122,6 @@ public class PlayerManager : NetworkBehaviour
         //Movement for pc
 
 #if UNITY_STANDALONE_WIN
-
-        //CAMBIAR PARA QUE NO ESTÉ SIEMPRE MOVIENDOSE, HACER COMO EN EL LOL
-
-        /* if (Input.GetMouseButtonDown(1))
-         {
-             // MovePlayerServerRpc(ray);
-                Debug.Log("ddd");
-                Vector3 dest = Input.mousePosition;
-
-                Ray ray = _mainCamera.ScreenPointToRay(dest);
-
-                if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-                {
-                    moveDestination = hitData.point;
-                    moveDestination.y = 0.5f;
-                }
-            }
-
-            if (transform.position != moveDestination)
-            {
-                //  screenPosition = Input.mousePosition;
-
-
-                    MovePlayerServerRpc(moveDestination);
-                    MoveCamera();   
-            }
-
-
-             Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
-             MovePlayerPcServerRpc(ray);
-         }
-        */
 
 
         //Meter todo esto en una función
@@ -196,8 +162,9 @@ public class PlayerManager : NetworkBehaviour
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
 
-                Quaternion newRotation = Quaternion.LookRotation(moveDestination);
-                transform.rotation = newRotation;
+
+                Vector3 targetDirection = moveDestination - transform.position;
+                transform.forward = targetDirection;
                 gun.AimWeapon(moveDestination);
 
             }
@@ -328,6 +295,17 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
+   /* [ClientRpc]
+    public void setPlayerLifeBarsClientRpc(ulong clientId, int team)
+    {
+        if(team != PlayerTeam.Value)
+        {
+            PlayerManager enemy = OnlineManager.Instance.playerList.Find(x => x.clientId == clientId).playerObject.GetComponent<PlayerManager>();
+            healthUI.healthBar.color = Color.red;
+            Debug.Log("CHANGING COLORS!!");
+        }
+    }
+   */
 
     public override void OnNetworkSpawn()
     {
@@ -353,8 +331,20 @@ public class PlayerManager : NetworkBehaviour
 
         if (IsOwner)
         {
-            joystickShoot = Assets.Instance.joystickShoot;
-            joystick = Assets.Instance.joystick;
+           joystickShoot = Assets.Instance.joystickShoot;
+           joystick = Assets.Instance.joystick;
+
+        /*    foreach(PlayerInfo playerInfo in OnlineManager.Instance.playerList)
+            {
+                if(playerInfo.team != PlayerTeam.Value)
+                {
+                    Debug.Log("DIFERENT TEAMS!!");
+                    playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color = Color.red;
+                    //Might not be spawned yet!!
+                    Debug.Log(playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color);
+                }
+            }
+        */
         }
 
 
@@ -364,8 +354,11 @@ public class PlayerManager : NetworkBehaviour
 
 
 #elif UNITY_STANDALONE_WIN
-        joystickShoot.gameObject.SetActive(false);
-        joystick.gameObject.SetActive(false);
+        if (IsOwner)
+        {
+            joystickShoot.gameObject.SetActive(false);
+            joystick.gameObject.SetActive(false);
+        }
 
 
 #endif

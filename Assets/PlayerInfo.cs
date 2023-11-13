@@ -13,4 +13,7 @@ public class PlayerInfo
     public int team;
     public LobbyManager.PlayerCharacter playerCharacter;
     public GameObject playerObject;
+    public bool isOwner;
+
+    public bool isDeleted;
 }

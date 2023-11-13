@@ -46,7 +46,6 @@ public class Weapon : NetworkBehaviour
     protected virtual void Start()
     {
         isReady = true;
-        Debug.Log(isReady);
 
         // float bulletSpeed = bullet.GetComponent<Bullet>().speed;
 
@@ -55,6 +54,7 @@ public class Weapon : NetworkBehaviour
 
         if (IsOwner)
         {
+            Debug.Log(Assets.Instance);
             reloadBar = Assets.Instance.reloadBar;
         }
     }
@@ -68,7 +68,7 @@ public class Weapon : NetworkBehaviour
     }
 
     // Update is called once per frame
-    public virtual void Update()
+    protected virtual void Update()
     {
         if (IsOwner)
         {
@@ -91,7 +91,7 @@ public class Weapon : NetworkBehaviour
         if (!isReady || !isActiveAndEnabled) return;
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
-        bulletGameObject.transform.Rotate(90, 0, 0);
+        bulletGameObject.transform.rotation = Quaternion.Euler(90, transform.rotation.eulerAngles.y, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
         StartCoolDownServerRpc();
     }

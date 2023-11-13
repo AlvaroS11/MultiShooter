@@ -24,7 +24,6 @@ public class GranadeLauncer : Weapon
     public float grenadeForce = 20f;
 
 
-    // Start is called before the first frame update
     protected override void Start()
     {
         base.Start();
@@ -40,16 +39,12 @@ public class GranadeLauncer : Weapon
 
     }
 
-    // Update is called once per frame
-    public override void Update()
+    protected override void Update()
     {
         base.Update();
     }
 
-    /*public override void PlayerFireServerRpc()
-    {
-    }
-    */
+
 
     [ServerRpc]
     public override void PlayerFireServerRpc()
@@ -76,6 +71,17 @@ public class GranadeLauncer : Weapon
 
 
         bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
+
+        base.StartCoolDownServerRpc();
+
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+        StartReloadAnimationClientRpc(clientRpcParams);
     }
 
     [ServerRpc]
@@ -92,6 +98,9 @@ public class GranadeLauncer : Weapon
     public override void AimWeapon(Vector3 dir)
     {
         DrawProjection();
+
+       // DrawProjectionMobile(dir);
+
     }
 
     public override Vector3 AimWeaponMobile(Vector3 dir)

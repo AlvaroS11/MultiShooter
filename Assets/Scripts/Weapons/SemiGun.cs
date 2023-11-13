@@ -16,10 +16,12 @@ public class SemiGun : Weapon
         base.Start();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
+    
 
+    // Update is called once per frame
+    protected override void Update()
+    {
+        base.Update();
     }
 
     public override void AimWeapon()
@@ -47,8 +49,50 @@ public class SemiGun : Weapon
         StartCoolDownServerRpc();
 
         //3 times
-
     }
+
+    [ServerRpc]
+    public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)
+    {
+        Debug.Log("ES ESTE!");
+        if (!isReady) return;
+
+
+        Vector3 targetDirection = dir - transform.position;
+        transform.forward = targetDirection;
+
+        //Start animation and set player rotation until animation finishes
+
+        GetComponent<PlayerManager>().firing = true;
+        StartCoroutine(FiringAnimation());
+
+        StartWaitBulletsServerRpc();
+
+        /*bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
+        bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
+        bulletGameObject.transform.Rotate(90, 0, 0);
+        bulletGameObject.GetComponent<NetworkObject>().Spawn();
+        */
+
+
+
+
+
+
+        // StartCoroutine(CoolDownServerRpc());
+        StartCoolDownServerRpc();
+
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+        StartReloadAnimationClientRpc(clientRpcParams);
+    }
+
+
 
 
     [ServerRpc]
@@ -61,9 +105,11 @@ public class SemiGun : Weapon
     {
         for (int i = 0; i < nBullets; i++)
         {
+            Debug.Log("BULLET " + i);
             bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
             bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
-            bulletGameObject.transform.Rotate(90, 0, 0);
+            bulletGameObject.transform.rotation = Quaternion.Euler(90, transform.rotation.eulerAngles.y, 0);
+
             bulletGameObject.GetComponent<NetworkObject>().Spawn();
             yield return new WaitForSeconds(timeBetweenBullets);
         }

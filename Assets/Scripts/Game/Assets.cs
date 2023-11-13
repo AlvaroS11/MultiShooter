@@ -21,7 +21,14 @@ public class Assets : MonoBehaviour
 
     public Joystick joystickShoot;
 
-    void Start()
+   /* void Start()
+    {
+        Instance = this;
+        Debug.Log("OOOOOOOOOO");
+    }
+   */
+
+    private void Awake()
     {
         Instance = this;
     }

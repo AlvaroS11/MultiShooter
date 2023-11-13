@@ -27,6 +27,10 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private Button changeGameModeButton;
     [SerializeField] private Button startGameButton;
 
+    [SerializeField] public GameObject JoiningLobbyGameObject;
+    [SerializeField] public TextMeshProUGUI JoiningLobbyText;
+
+
     public bool dropDownExpanded;
 
     [SerializeField] public Dictionary<string, LobbyPlayerSingleUI> LobbyPlayers;
@@ -74,10 +78,17 @@ public class LobbyUI : MonoBehaviour {
         LobbyManager.Instance.OnJoinedLobby += SetUpLobby_Event;
         LobbyManager.Instance.OnJoinedLobbyUpdate += UpdateLobby_Event;
         LobbyManager.Instance.OnLobbyGameModeChanged += UpdateLobby_Event2;
-        LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby;
+        LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby; 
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnLeftLobby;
+        LobbyManager.Instance.OnKickPlayer += LobbyManagerKickPlayer;
+
 
         Hide();
+    }
+
+    private void LobbyManagerKickPlayer(object sender, String id)
+    {
+        DeletePlayer(id);
     }
 
     private void LobbyManager_OnLeftLobby(object sender, System.EventArgs e) {
@@ -95,7 +106,6 @@ public class LobbyUI : MonoBehaviour {
         OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
         OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
 
-  //      OnlineManager.Instance.GetPlayerNamesServerRpc(PlayerLobbyId);
 
     }
 
@@ -147,7 +157,6 @@ public class LobbyUI : MonoBehaviour {
 
 
         //METER EN ONCLIENT SPAWN O ALGOS ASI
-        int i = 0;
         foreach (Player player in lobby.Players) {
 
             LobbyPlayerSingleUI lobbyPlayerSingleUI = null;
@@ -179,16 +188,15 @@ public class LobbyUI : MonoBehaviour {
 
                 LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
 
+                lobbyPlayerSingleUI.playerId = player.Id;
+                Debug.Log("ddd" + lobbyPlayerSingleUI.player);
 
-//                OnlineManager.Instance.GetServerValuesServerRpc(player.Id, clientId: NetworkManager.Singleton.ConnectedClientsIds[i]);
+
+
+                //                OnlineManager.Instance.GetServerValuesServerRpc(player.Id, clientId: NetworkManager.Singleton.ConnectedClientsIds[i]);
                 //   (team, name, playerCharacter) = OnlineManager.Instance.GetServerValuesServerRpc(player.Id);
 
                 // lobbyPlayerSingleUI.SetUpTemplate(team, name, playerCharacter);
-
-
-                i++;
-                Debug.Log(i);
-                Debug.Log(NetworkManager.Singleton.ConnectedClientsIds.Count);
 
             }
         }
@@ -256,9 +264,24 @@ public class LobbyUI : MonoBehaviour {
         foreach (Transform child in container) {
             if (child == playerSingleTemplate) continue;
 
-            //if(child.name == "Team") continue;
             Destroy(child.gameObject);
         }
+    }
+
+    private void DeletePlayer(string idToDelete)
+    {
+        foreach(Transform child in container)
+        {
+            if(child.TryGetComponent<LobbyPlayerSingleUI>(out LobbyPlayerSingleUI lobbyUI))
+            {
+                if(lobbyUI.playerId == idToDelete)
+                    Destroy(lobbyUI.gameObject);
+            }
+        }
+        Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
+        playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
+        Debug.Log(lobby.Players.Count + "/" + lobby.MaxPlayers);
+
     }
 
     private void Hide() {
