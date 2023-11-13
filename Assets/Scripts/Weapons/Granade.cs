@@ -39,6 +39,13 @@ public class Granade : Bullet
     {
         if (direction == null)
             direction = GetComponentInParent<Transform>().forward;
+        else
+        {
+            direction = direction - transform.position;
+        }
+           //direction = Vector3.Normalize((Vector3)direction);
+
+
 
         Rigidbody Grenade = GetComponent<Rigidbody>();
         Grenade.velocity = Vector3.zero;
@@ -47,11 +54,19 @@ public class Granade : Bullet
         Grenade.freezeRotation = false;
         Grenade.transform.SetParent(null, true);
 
-        Vector3 dir = (Vector3)(grenadeForce * direction);
-        dir.y = granadeInclination;
+        //Vector3 dir = (Vector3)(grenadeForce * direction);
+        //dir.y = granadeInclination;
 
-        Debug.Log(dir);
-        Grenade.AddForce(dir, ForceMode.Impulse);
+
+        Vector3 newVel = Vector3.ClampMagnitude((Vector3)(direction / 2), grenadeForce);
+
+        newVel.y += granadeInclination;
+
+
+
+        Grenade.AddForce(newVel, ForceMode.Impulse);
+        //        Grenade.AddForce(dir, ForceMode.Impulse);
+
     }
 
 

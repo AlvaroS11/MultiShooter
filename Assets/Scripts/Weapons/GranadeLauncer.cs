@@ -70,7 +70,8 @@ public class GranadeLauncer : Weapon
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
 
-        bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
+         bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination, dir);
+        //bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
 
         base.StartCoolDownServerRpc();
 
@@ -92,14 +93,14 @@ public class GranadeLauncer : Weapon
 
     public override void AimWeapon()
     {
-        DrawProjection();
+      //  DrawProjection();
     }
 
     public override void AimWeapon(Vector3 dir)
     {
-        DrawProjection();
+        DrawProjection(dir);
 
-       // DrawProjectionMobile(dir);
+        //DrawProjectionMobile(dir);
 
     }
 
@@ -175,36 +176,45 @@ public class GranadeLauncer : Weapon
 
     }
 
-    private void DrawProjection()
+    private void DrawProjection(Vector3 finalPos)
     {
-        Debug.Log("DRAW PROJECTION!");
-        lineRenderer.enabled = true;
-        lineRenderer.positionCount = Mathf.CeilToInt(LinePoints / timeBetweenPoint) + 1;
-        Vector3 startPos = transform.position;
-        Vector3 startVel = grenadeForce * GetComponentInParent<Transform>().forward / bullet.GetComponent<Granade>().GetComponent<Rigidbody>().mass;
-        startVel.y += granadeInclination;
-        int i = 0;
+             lineRenderer.enabled = true;
+             lineRenderer.positionCount = Mathf.CeilToInt(LinePoints / timeBetweenPoint) + 1;
+             Vector3 startPos = transform.position;
 
-        lineRenderer.SetPosition(i, startPos);
-        for(float time = 0; time < LinePoints; time += timeBetweenPoint)
-        {
-            i++;
-            Vector3 point = startPos + time * startVel;
-            point.y = startPos.y + startVel.y * time + (Physics.gravity.y / 2f * time * time); // y = vi * t +1/2 * a * t2
 
-            lineRenderer.SetPosition(i, point);
+             Vector3 startVel = finalPos - transform.position;
 
-            Vector3 lastPos = lineRenderer.GetPosition(i - 1);
-            if (Physics.Raycast(lastPos, (point - lastPos).normalized, out RaycastHit hit, (point - lastPos).magnitude, granadeCollisionMask)) 
-            {
-                lineRenderer.SetPosition(i, hit.point);
-                lineRenderer.positionCount = i + 1;
-                return;
-            }
-        }
+            Vector3 newVel = Vector3.ClampMagnitude(startVel/2, grenadeForce);
+
+             newVel.y += granadeInclination;
+
+
+            int i = 0;
+        
+
+             lineRenderer.SetPosition(i, startPos);
+             for(float time = 0; time < LinePoints; time += timeBetweenPoint)
+             {
+                 i++;
+                 Vector3 point = startPos + time * newVel;
+                 point.y = startPos.y + newVel.y * time + (Physics.gravity.y / 2f * time * time); // y = vi * t +1/2 * a * t2
+
+                 lineRenderer.SetPosition(i, point);
+
+                 Vector3 lastPos = lineRenderer.GetPosition(i - 1);
+                 if (Physics.Raycast(lastPos, (point - lastPos).normalized, out RaycastHit hit, (point - lastPos).magnitude, granadeCollisionMask)) 
+                 {
+                     lineRenderer.SetPosition(i, hit.point);
+                     lineRenderer.positionCount = i + 1;
+                     return;
+                 }
+             }
+             //lineRenderer.SetPosition(i, finalPos);
+
     }
 
-
+   
 
 
     private void ReleaseGrenade()

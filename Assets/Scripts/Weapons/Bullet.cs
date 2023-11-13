@@ -92,7 +92,9 @@ public class Bullet : MonoBehaviour {
         //return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam; 
         try
         {
-            return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam;
+            Debug.Log(playerManager.PlayerTeam.Value);
+            Debug.Log(hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value);
+            return playerManager.PlayerTeam.Value != hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value;
         }
         catch(Exception e)
         {

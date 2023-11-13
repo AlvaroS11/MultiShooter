@@ -161,13 +161,15 @@ public class PlayerManager : NetworkBehaviour
             {
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
-
-
-                Vector3 targetDirection = moveDestination - transform.position;
-                transform.forward = targetDirection;
                 gun.AimWeapon(moveDestination);
 
+                if (Input.GetMouseButtonDown(0))
+                {
+                    gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+                }
             }
+            else
+                gun.StopAim();
         }
         else
             gun.StopAim();

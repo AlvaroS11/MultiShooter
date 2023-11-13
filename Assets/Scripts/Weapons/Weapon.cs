@@ -103,7 +103,11 @@ public class Weapon : NetworkBehaviour
 
 
         Vector3 targetDirection = dir - transform.position;
-        transform.forward = targetDirection;
+      //  transform.forward = targetDirection;
+
+        Transform bulletPos = transform;
+        bulletPos.forward = targetDirection;
+
 
         //Start animation and set player rotation until animation finishes
 
@@ -228,7 +232,7 @@ public class Weapon : NetworkBehaviour
     public virtual void AimWeapon(Vector3 dir)
     {
         Vector3 targetDirection = dir - transform.position;
-        transform.forward = targetDirection;
+       // transform.forward = targetDirection;
         
         
         lineRenderer.positionCount = 2;
