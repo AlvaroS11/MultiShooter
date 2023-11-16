@@ -18,11 +18,22 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     [SerializeField] private TMP_Dropdown selectTeamDropdown;
 
+    [SerializeField] private GameObject sound;
+    [SerializeField] private Scrollbar soundBar;
+    [SerializeField] private Button soundButton;
+
+
     public string selected;
     [SerializeField]
     public Player player;
 
     public string playerId;
+
+    public Sprite mutedSprite;
+    public Sprite soundSprite;
+
+    public float soundValue;
+    public bool isSounding = true;
 
 
     private void Awake() {
@@ -34,7 +45,17 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         {
             SelectTeam(selectTeamDropdown);
         });
-      
+
+        soundBar.onValueChanged.AddListener((float val) =>
+        {
+            ChangeVolume(val);
+        });
+
+        soundButton.onClick.AddListener(() =>
+        {
+            MuteUnMute();
+        });
+
 
         //selectTeamDropdown.gameObject.SetActive(true);
     }
@@ -72,21 +93,48 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         selectTeamDropdown.enabled = visible;
     }
 
-/*    public void UpdatePlayer(Player player) {
+    public void MuteUnMute()
+    {
+        isSounding = !isSounding;
+        if(isSounding)
+            soundButton.image.sprite = soundSprite;
+        else
+        {
+            soundButton.image.sprite = mutedSprite;
+            soundValue = 0;
+            soundBar.value = 0;
+        }
+    }
 
-        this.player = player;
-        playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
-        LobbyManager.PlayerCharacter playerCharacter = 
-            System.Enum.Parse<LobbyManager.PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
-        characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
+    private void ChangeVolume(float soundVal)
+    {
+        Debug.Log("changing sound " + playerId + soundVal);
+        soundValue = soundVal;
+        if(soundVal == 0)
+        {
+            soundButton.image.sprite = mutedSprite;
+        }
+        else
+            soundButton.image.sprite = soundSprite;
 
-        selected = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
-
-        selectTeamDropdown.value = int.Parse(selected);
-        //selectTeamDropdown.itemText.text = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
 
     }
-*/
+
+    /*    public void UpdatePlayer(Player player) {
+
+            this.player = player;
+            playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
+            LobbyManager.PlayerCharacter playerCharacter = 
+                System.Enum.Parse<LobbyManager.PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
+            characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
+
+            selected = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
+
+            selectTeamDropdown.value = int.Parse(selected);
+            //selectTeamDropdown.itemText.text = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
+
+        }
+    */
 
 
     public void UpdateTeamUi(int team)
@@ -129,6 +177,11 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         selectTeamDropdown.value = change.value;
         int prevTeam = LobbyManager.Instance.GetTeam(playerId);
         OnlineManager.Instance.ChangeTeamServerRpc(playerId, change.value + 1, NetworkManager.Singleton.LocalClientId);
+    }
+
+    public void DesactivateSound()
+    {
+        sound.SetActive(false);
     }
 
 

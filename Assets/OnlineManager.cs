@@ -391,6 +391,7 @@ public class OnlineManager : NetworkBehaviour
         try
         {
             //REVISAR ESTO!
+            int nTeams = 0;
             while (SceneManager.GetActiveScene().name != "GameScene") { }
 
 
@@ -401,10 +402,18 @@ public class OnlineManager : NetworkBehaviour
             {
                 if (playerInfo.isDeleted)
                     continue;
-                if (!teamScore.Contains(playerInfo.team))
+
+                //if teamScore.Count 
+                if(playerInfo.team > nTeams)
                 {
+
+              /* }
+                if (!teamScore.Contains(playerInfo.team))
+                {*/
                     Debug.Log("NEW TEAM! " + playerInfo.team);
                     Debug.Log(teamScore.Contains(playerInfo.team));
+
+                    nTeams++;
                     teamScore.Add(0);
                     SetPlayerSpawns(teamScore.Count - 1);
                 }

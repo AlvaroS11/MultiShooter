@@ -244,6 +244,11 @@ public class LobbyUI : MonoBehaviour {
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
+                if (player.Id == AuthenticationService.Instance.PlayerId)
+                {
+                    lobbyPlayerSingleUI.DesactivateSound();
+                }
+
                 if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
                     startGameButton.gameObject.SetActive(true);
                 else
