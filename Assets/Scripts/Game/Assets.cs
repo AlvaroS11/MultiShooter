@@ -21,14 +21,23 @@ public class Assets : MonoBehaviour
 
     public Joystick joystickShoot;
 
-   /* void Start()
-    {
-        Instance = this;
-        Debug.Log("OOOOOOOOOO");
-    }
-   */
+    public Transform teamContainer;
+
+    public Transform scoreCounterPrefab;
+    /* void Start()
+     {
+         Instance = this;
+         Debug.Log("OOOOOOOOOO");
+     }
+    */
 
     private void Awake()
+    {
+        Instance = this;
+        Debug.Log("ASSETS INITIALIZED! ");
+    }
+
+    private void Start()
     {
         Instance = this;
     }

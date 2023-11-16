@@ -9,7 +9,7 @@ using TMPro;
 using UnityEngine.SceneManagement;
 using Unity.Collections;
 using UnityEditor.PackageManager;
-
+using UnityEngine.Jobs;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -58,7 +58,13 @@ public class OnlineManager : NetworkBehaviour
     public NetworkList<int> teamScore;
 
 
-   // [SerializeField]
+    [SerializeField]
+    private List<TextMeshProUGUI> teamScoreTexts;
+
+    [SerializeField]
+    private Transform scoreCounterPrefab;
+
+    // [SerializeField]
     //private NetworkList<int> teamSpawn = new NetworkList<int>();
 
     [SerializeField]
@@ -70,6 +76,8 @@ public class OnlineManager : NetworkBehaviour
 
     [SerializeField] private TextMeshProUGUI team1;
     [SerializeField] private TextMeshProUGUI team2;
+
+
 
     [SerializeField] private int timeToRespawn = 3;
 
@@ -89,7 +97,20 @@ public class OnlineManager : NetworkBehaviour
     //public List <PlayerManager> playerManagers;
 
     private HashSet<PlayerManager> playerManagers = new HashSet<PlayerManager>();
-    
+
+    private Scene m_LoadedScene;
+
+    public bool SceneIsLoaded
+    {
+        get
+        {
+            if (m_LoadedScene.IsValid() && m_LoadedScene.isLoaded)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
 
 
 
@@ -107,8 +128,15 @@ public class OnlineManager : NetworkBehaviour
 
         DontDestroyOnLoad(gameObject);
 
+      //  NetworkManager.Singleton.SceneManager.OnLoadComplete += OnlineManager_CreatePlayers;
 
+    }
 
+    private void OnlineManager_CreatePlayers(ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
+    {
+        Debug.Log(sceneName);
+        //if(sceneName == SceneLoader.Scene.GameScene.ToString())
+       // CreatePlayersServerRpc();
     }
 
     private void Start()
@@ -128,9 +156,58 @@ public class OnlineManager : NetworkBehaviour
         {
             //     NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
         }
+
+        NetworkManager.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
     }
 
-    private IEnumerator DelayJoin()
+    private void SceneManager_OnSceneEvent(SceneEvent sceneEvent)
+    {
+        var clientOrServer = sceneEvent.ClientId == NetworkManager.ServerClientId ? "server" : "client";
+        switch (sceneEvent.SceneEventType)
+        {
+            case SceneEventType.LoadComplete:
+                {
+                    // We want to handle this for only the server-side
+                    if (sceneEvent.ClientId == NetworkManager.ServerClientId)
+                    {
+                        // *** IMPORTANT ***
+                        // Keep track of the loaded scene, you need this to unload it
+                        m_LoadedScene = sceneEvent.Scene;
+                    }
+                    Debug.Log($"Loaded the {sceneEvent.SceneName} scene on " +
+                        $"{clientOrServer}-({sceneEvent.ClientId}).");
+                    break;
+                }
+            case SceneEventType.UnloadComplete:
+                {
+                    Debug.Log($"Unloaded the {sceneEvent.SceneName} scene on " +
+                        $"{clientOrServer}-({sceneEvent.ClientId}).");
+                    break;
+                }
+            case SceneEventType.LoadEventCompleted:
+                {
+                    //All clients have changed from scene
+                    Debug.Log("All clients joined");
+                    CreatePlayersServerRpc();
+                    break;
+                }
+            case SceneEventType.UnloadEventCompleted:
+                {
+                    var loadUnload = sceneEvent.SceneEventType == SceneEventType.LoadEventCompleted ? "Load" : "Unload";
+                    Debug.Log($"{loadUnload} event completed for the following client " +
+                        $"identifiers:({sceneEvent.ClientsThatCompleted})");
+                    if (sceneEvent.ClientsThatTimedOut.Count > 0)
+                    {
+                        Debug.LogWarning($"{loadUnload} event timed out for the following client " +
+                            $"identifiers:({sceneEvent.ClientsThatTimedOut})");
+                    }
+                    break;
+                }
+        }
+    }
+
+
+        private IEnumerator DelayJoin()
     {
         yield return new WaitForSeconds(1.5f);
         LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
@@ -306,6 +383,7 @@ public class OnlineManager : NetworkBehaviour
     }
 
 
+
     //Se tiene que llamar en el OnNetworkSpawn, se esta llamando antes que se prepare el playerTeamDictionary
     [ServerRpc]
     public void CreatePlayersServerRpc(ServerRpcParams serverRpcParams = default)
@@ -325,14 +403,24 @@ public class OnlineManager : NetworkBehaviour
                     continue;
                 if (!teamScore.Contains(playerInfo.team))
                 {
+                    Debug.Log("NEW TEAM! " + playerInfo.team);
+                    Debug.Log(teamScore.Contains(playerInfo.team));
                     teamScore.Add(0);
                     SetPlayerSpawns(teamScore.Count - 1);
                 }
                     
                 GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerInfo.playerCharacter);
 
-                int randomIndex = rand.Next(playerInfo.team, (playerInfo.team + 2));
 
+                /*   Debug.Log(teamScore.Count);
+                   int maxTeam = Mathf.Clamp(playerInfo.team, 0, teamScore.Count-1);
+                   int randomIndex = rand.Next(playerInfo.team, maxTeam+2);
+                */
+                int ran = rand.Next(1, 2);
+                int clampledTeam = Mathf.Clamp(playerInfo.team, 0, teamScore.Count - 1)*2; //real team spawn from 1 to n of teams
+                Debug.Log(" Player team " + playerInfo.team + " teamScoreCount  " + teamScore.Count + " real: " + clampledTeam);
+                int randomIndex = rand.Next(clampledTeam, clampledTeam+2);
+                Debug.Log(randomIndex);
                 Transform randomSpawn = spawnPoints[randomIndex];
                 GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance, randomSpawn);
 
@@ -349,6 +437,7 @@ public class OnlineManager : NetworkBehaviour
 
 
             }
+            Debug.Log(teamScore.Count);
             StartTeamScoreClientRpc(teamScore.Count);
 
             setPlayerLifeBarsClientRpc();
@@ -444,7 +533,9 @@ public class OnlineManager : NetworkBehaviour
 
     private void SetPlayerSpawns(int teamIndex)
     {
+        Debug.Log(teamIndex);
         GameObject spawnTeam = spawnParent.transform.GetChild(teamIndex).gameObject;
+        Debug.Log(spawnTeam.name);
         for (int i = 0; i < 3; i++)
         {
             spawnPoints.Add(spawnTeam.transform.GetChild(i));//  GET CHILDREN
@@ -455,9 +546,22 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     private void StartTeamScoreClientRpc(int nTeams)
     {
+        Transform container = Assets.Instance.teamContainer;
+        scoreCounterPrefab = Assets.Instance.scoreCounterPrefab;
+        for(int i = 0; i<nTeams; i++)
+        {
+            Transform newCounterText = Instantiate(scoreCounterPrefab, container);
+            newCounterText.gameObject.SetActive(true);
+            TextMeshProUGUI counter = newCounterText.GetComponent<TextMeshProUGUI>();
+            counter.text = "Team " + i + ":  0";
+            teamScoreTexts.Add(counter);
+        }
+
+        scoreCounterPrefab.gameObject.SetActive(false);
+
         //PONER AL CAMBIAR DE ESCENA Y DINÁMICO!
-        team1 = GameObject.Find("Team1").GetComponent<TextMeshProUGUI>();
-        team2 = GameObject.Find("Team2").GetComponent<TextMeshProUGUI>();
+        //  team1 = GameObject.Find("Team1").GetComponent<TextMeshProUGUI>();
+        //team2 = GameObject.Find("Team2").GetComponent<TextMeshProUGUI>();
     }
 
 
@@ -476,7 +580,9 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     public void ChangeScoreClientRpc(int team, int score)
     {
-        switch (team) {
+        teamScoreTexts[team].text = "Team " + (team + 1) + ": " + score;
+
+       /* switch (team) {
             case 0:
                 team1.text = "Team 1: " + score.ToString();
                 break;
@@ -485,7 +591,7 @@ public class OnlineManager : NetworkBehaviour
                 break;
 
 
-        }
+        }*/
     }
 
     //Server only
