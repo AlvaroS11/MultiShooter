@@ -66,7 +66,7 @@ public class LobbyManager : MonoBehaviour {
     private float heartbeatTimer;
     private float lobbyPollTimer;
     private float refreshLobbyListTimer = 5f;
-    private Lobby joinedLobby;
+    public Lobby joinedLobby;
     private string playerName;
 
     private int maxPlayers;
@@ -392,7 +392,6 @@ public class LobbyManager : MonoBehaviour {
 
         NetworkManager.Singleton.StartHost();
 
-
         Player player = CreatePlayer();
 
 
@@ -418,6 +417,8 @@ public class LobbyManager : MonoBehaviour {
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
 
         Debug.Log("Created Lobby " + lobby.Name);
+
+     //   VivoxManager.Instance.StartVivoxLogin();
     }
 
     public async void RefreshLobbyList() {
@@ -599,6 +600,7 @@ public class LobbyManager : MonoBehaviour {
                 Debug.Log(joinedLobby.Players.Count);
                 joinedLobby = null;
                 OnLeftLobby?.Invoke(this, EventArgs.Empty);
+                VivoxManager.Instance.LeaveVivox();
             } catch (LobbyServiceException e) {
                 Debug.Log(e);
             }

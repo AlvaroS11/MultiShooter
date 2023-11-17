@@ -2,8 +2,6 @@
 using Unity.Services.Vivox;
 using VivoxUnity;
 
-namespace LobbyRelaySample.vivox
-{
     /// <summary>
     /// Listens for changes to Vivox state for one user in the lobby.
     /// Instead of going through Relay, this will listen to the Vivox service since it will already transmit state changes for all clients.
@@ -11,7 +9,7 @@ namespace LobbyRelaySample.vivox
     public class VivoxUserHandler : MonoBehaviour
     {
         [SerializeField]
-        private UI.LobbyUserVolumeUI m_lobbyUserVolumeUI;
+        private LobbyPlayerSingleUI lobbyPlayer;
 
         private IChannelSession m_channelSession;
         private string m_id;
@@ -26,7 +24,7 @@ namespace LobbyRelaySample.vivox
 
         public void Start()
         {
-            m_lobbyUserVolumeUI.DisableVoice(true);
+         //   lobbyPlayer.DisableVoice(true);
         }
 
         public void SetId(string id)
@@ -50,8 +48,8 @@ namespace LobbyRelaySample.vivox
                     if (m_id == participant.Account.DisplayName)
                     {
                         m_vivoxId = participant.Key;
-                        m_lobbyUserVolumeUI.IsLocalPlayer = participant.IsSelf;
-                        m_lobbyUserVolumeUI.EnableVoice(true);
+                        lobbyPlayer.IsLocalPlayer = participant.IsSelf;
+                       // lobbyPlayer.EnableVoice(true);
                         break;
                     }
                 }
@@ -92,19 +90,19 @@ namespace LobbyRelaySample.vivox
             if (isThisUser)
             {
                 m_vivoxId = keyEventArg.Key; // Since we couldn't construct the Vivox ID earlier, retrieve it here.
-                m_lobbyUserVolumeUI.IsLocalPlayer = participant.IsSelf;
+                lobbyPlayer.IsLocalPlayer = participant.IsSelf;
 
                 if (!participant.IsMutedForAll)
-                    m_lobbyUserVolumeUI.EnableVoice(false); //Should check if user is muted or not.
+                    lobbyPlayer.EnableVoice(false); //Should check if user is muted or not.
                 else
-                    m_lobbyUserVolumeUI.DisableVoice(false);
+                    lobbyPlayer.DisableVoice(false);
             }
             else
             {
                 if (!participant.LocalMute)
-                    m_lobbyUserVolumeUI.EnableVoice(false); //Should check if user is muted or not.
+                    lobbyPlayer.EnableVoice(false); //Should check if user is muted or not.
                 else
-                    m_lobbyUserVolumeUI.DisableVoice(false);
+                    lobbyPlayer.DisableVoice(false);
             }
         }
 
@@ -117,7 +115,7 @@ namespace LobbyRelaySample.vivox
             bool isThisUser = username == m_id;
             if (isThisUser)
             {
-                m_lobbyUserVolumeUI.DisableVoice(true);
+                lobbyPlayer.DisableVoice(true);
             }
         }
 
@@ -134,21 +132,21 @@ namespace LobbyRelaySample.vivox
                 {
                     if (participant.UnavailableCaptureDevice)
                     {
-                        m_lobbyUserVolumeUI.DisableVoice(false);
+                        lobbyPlayer.DisableVoice(false);
                         participant.SetIsMuteForAll(true, null); // Note: If you add more places where a player might be globally muted, a state machine might be required for accurate logic.
                     }
                     else
                     {
-                        m_lobbyUserVolumeUI.EnableVoice(false);
+                        lobbyPlayer.EnableVoice(false);
                         participant.SetIsMuteForAll(false, null); // Also note: This call is asynchronous, so it's possible to exit the lobby before this completes, resulting in a Vivox error.
                     }
                 }
                 else if (property == "IsMutedForAll")
                 {
                     if (participant.IsMutedForAll)
-                        m_lobbyUserVolumeUI.DisableVoice(false);
+                        lobbyPlayer.DisableVoice(false);
                     else
-                        m_lobbyUserVolumeUI.EnableVoice(false);
+                        lobbyPlayer.EnableVoice(false);
                 }
             }
         }
@@ -186,4 +184,3 @@ namespace LobbyRelaySample.vivox
             }
         }
     }
-}

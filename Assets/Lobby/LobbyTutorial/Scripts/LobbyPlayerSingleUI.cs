@@ -36,6 +36,10 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     public bool isSounding = true;
 
 
+    public bool IsLocalPlayer { private get; set; }
+
+
+
     private void Awake() {
         kickPlayerButton.onClick.AddListener(KickPlayer);
 
@@ -53,7 +57,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
         soundButton.onClick.AddListener(() =>
         {
-            MuteUnMute();
+            MuteUnMute(!isSounding);
         });
 
 
@@ -93,9 +97,21 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         selectTeamDropdown.enabled = visible;
     }
 
-    public void MuteUnMute()
+    public void DisableVoice(bool shouldResetUi)
     {
-        isSounding = !isSounding;
+        if (shouldResetUi)
+        {
+            soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
+        }
+        MuteUnMute(true);
+
+    }
+    
+
+
+    public void MuteUnMute(bool mute)
+    {
+        isSounding = mute;
         if(isSounding)
             soundButton.image.sprite = soundSprite;
         else
@@ -105,6 +121,35 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
             soundBar.value = 0;
         }
     }
+
+    public void EnableVoice(bool shouldResetUi)
+    {
+        if (shouldResetUi)
+        {
+            soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
+            soundButton.image.sprite = soundSprite;
+        }
+
+        if (IsLocalPlayer)
+        {
+            //AÑADIR MICROFONO PARA SI ES EL MISMO JUGADOR
+
+           /* m_volumeSliderContainer.Hide(0);
+            m_muteToggleContainer.Show();
+            m_muteIcon.SetActive(false);
+            m_micMuteIcon.SetActive(true);
+           */
+        }
+        else
+        {
+           /* m_volumeSliderContainer.Show();
+            m_muteToggleContainer.Show();
+            m_muteIcon.SetActive(true);
+            m_micMuteIcon.SetActive(false);
+           */
+        }
+    }
+
 
     private void ChangeVolume(float soundVal)
     {

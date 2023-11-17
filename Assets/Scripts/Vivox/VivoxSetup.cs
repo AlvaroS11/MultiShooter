@@ -5,8 +5,6 @@ using Unity.Services.Authentication;
 using Unity.Services.Vivox;
 using VivoxUnity;
 
-namespace LobbyRelaySample.vivox
-{
     /// <summary>
     /// Handles setting up a voice channel once inside a lobby.
     /// </summary>
@@ -158,4 +156,3 @@ namespace LobbyRelaySample.vivox
             m_loginSession.Logout();
         }
     }
-}
