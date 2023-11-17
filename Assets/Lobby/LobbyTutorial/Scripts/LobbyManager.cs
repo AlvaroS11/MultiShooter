@@ -11,6 +11,7 @@ using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
+using Unity.Services.Vivox;
 using UnityEngine;
 using static LobbyManager;
 
@@ -95,6 +96,9 @@ public class LobbyManager : MonoBehaviour {
         this.playerName = playerName;
         InitializationOptions initializationOptions = new InitializationOptions();
         initializationOptions.SetProfile(playerName);
+
+        VivoxService.Instance.Initialize();
+
 
         await UnityServices.InitializeAsync(initializationOptions);
 
