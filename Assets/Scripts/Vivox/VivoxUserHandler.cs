@@ -24,7 +24,8 @@ using VivoxUnity;
 
         public void Start()
         {
-         //   lobbyPlayer.DisableVoice(true);
+        //   lobbyPlayer.DisableVoice(true);
+        lobbyPlayer = GetComponent<LobbyPlayerSingleUI>();
         }
 
         public void SetId(string id)

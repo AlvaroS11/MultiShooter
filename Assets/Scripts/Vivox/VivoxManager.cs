@@ -5,8 +5,8 @@ using System;
 
 public class VivoxManager : MonoBehaviour
 {
-
-    List<VivoxUserHandler> m_vivoxUserHandlers;
+    [SerializeField]
+    private List<VivoxUserHandler> m_vivoxUserHandlers;
     VivoxSetup m_VivoxSetup = new VivoxSetup();
 
     public static VivoxManager Instance;
@@ -18,7 +18,7 @@ public class VivoxManager : MonoBehaviour
 
     private void Awake()
     {
-            //StartVivoxJoin();
+         //  StartVivoxJoin();
     }
 
     // Update is called once per frame
@@ -41,7 +41,7 @@ public class VivoxManager : MonoBehaviour
         }
     }
 
-    void StartVivoxJoin()
+    public void StartVivoxJoin()
     {
         m_VivoxSetup.JoinLobbyChannel(LobbyManager.Instance.joinedLobby.Id, OnVivoxJoinComplete);
 

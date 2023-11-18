@@ -97,7 +97,7 @@ public class LobbyManager : MonoBehaviour {
         InitializationOptions initializationOptions = new InitializationOptions();
         initializationOptions.SetProfile(playerName);
 
-        VivoxService.Instance.Initialize();
+        //VivoxService.Instance.Initialize();
 
 
         await UnityServices.InitializeAsync(initializationOptions);
@@ -422,7 +422,10 @@ public class LobbyManager : MonoBehaviour {
 
         Debug.Log("Created Lobby " + lobby.Name);
 
-     //   VivoxManager.Instance.StartVivoxLogin();
+        VivoxManager.Instance.StartVivoxLogin();
+
+        VivoxManager.Instance.StartVivoxJoin();
+        //   VivoxManager.Instance.StartVivoxLogin();
     }
 
     public async void RefreshLobbyList() {
@@ -473,6 +476,11 @@ public class LobbyManager : MonoBehaviour {
         joinedLobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id, new JoinLobbyByIdOptions {
             Player = player
         });
+
+        VivoxManager.Instance.StartVivoxLogin();
+
+
+        VivoxManager.Instance.StartVivoxJoin();
 
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
 
