@@ -97,6 +97,8 @@ public class LobbyManager : MonoBehaviour {
         InitializationOptions initializationOptions = new InitializationOptions();
         initializationOptions.SetProfile(playerName);
 
+
+
         //VivoxService.Instance.Initialize();
 
 
@@ -110,6 +112,9 @@ public class LobbyManager : MonoBehaviour {
         };
 
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+
+
     }
 
     private void HandleRefreshLobbyList() {

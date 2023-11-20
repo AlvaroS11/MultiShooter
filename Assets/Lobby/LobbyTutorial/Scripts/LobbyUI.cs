@@ -97,7 +97,7 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
-        Debug.Log("OnJoinedLobbyUpdate");
+     //   Debug.Log("OnJoinedLobbyUpdate");
 
         //  UpdateLobby();
         string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
@@ -127,9 +127,9 @@ public class LobbyUI : MonoBehaviour {
      //   UpdateLobby();
     }
 
-    public void UpdateLobby() {
+    /*public void UpdateLobby() {
         UpdateLobby(LobbyManager.Instance.GetJoinedLobby());
-    }
+    }*/
 
 
 
@@ -152,7 +152,7 @@ public class LobbyUI : MonoBehaviour {
 
     //Client Only
     
-    private void UpdateLobby(Lobby lobby) {
+    /*private void UpdateLobby(Lobby lobby) {
         //ClearLobby();
 
 
@@ -188,7 +188,10 @@ public class LobbyUI : MonoBehaviour {
 
                 LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
 
-                lobbyPlayerSingleUI.playerId = player.Id;
+                //lobbyPlayerSingleUI.playerId = player.Id;
+
+                lobbyPlayerSingleUI.SetId(player.Id);
+
                 Debug.Log("ddd" + lobbyPlayerSingleUI.player);
 
 
@@ -215,23 +218,26 @@ public class LobbyUI : MonoBehaviour {
         Show();
     }
 
-
+    */
 
     public void CreatePlayersUI()
     {
         Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
-        Debug.Log(lobby);
+        //Debug.Log(lobby);
         foreach (Player player in lobby.Players)
         {
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
                 Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
-                playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>().playerId = player.Id;
+                LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>();
+
+
+                lobbyPlayerSingleUI.SetId(player.Id);
 
                 playerSingleTransform.gameObject.SetActive(true);
 
 
-                LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
+                //LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
 
                 lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
                     LobbyManager.Instance.IsLobbyHost() &&
@@ -244,10 +250,10 @@ public class LobbyUI : MonoBehaviour {
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
-                if (player.Id == AuthenticationService.Instance.PlayerId)
+                /*if (player.Id == AuthenticationService.Instance.PlayerId)
                 {
                     lobbyPlayerSingleUI.DesactivateSound();
-                }
+                }*/
 
                 if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
                     startGameButton.gameObject.SetActive(true);
@@ -255,6 +261,8 @@ public class LobbyUI : MonoBehaviour {
                     startGameButton.gameObject.SetActive(false);
 
                 Show();
+
+                VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
             }
         }
     }

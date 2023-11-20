@@ -31,12 +31,17 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     public Sprite mutedSprite;
     public Sprite soundSprite;
+    public GameObject mutedMic;
+    public Sprite soundMic;
 
     public float soundValue;
     public bool isSounding = true;
 
 
     public bool IsLocalPlayer { private get; set; }
+
+    public VivoxUserHandler userHandler;
+
 
 
 
@@ -62,6 +67,8 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
 
         //selectTeamDropdown.gameObject.SetActive(true);
+
+        //EnableVoice(true);
     }
 
     private void Start()
@@ -78,6 +85,12 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         }
         else
             LobbyUI.Instance.dropDownExpanded = false;
+    }
+
+    public void SetId(string id)
+    {
+        playerId = id;
+        userHandler.SetId(id);
     }
 
     public void SetKickPlayerButtonVisible(bool visible) {
@@ -108,32 +121,62 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     }
     
 
-
+    //Para el botón
     public void MuteUnMute(bool mute)
     {
         isSounding = mute;
-        if(isSounding)
-            soundButton.image.sprite = soundSprite;
+        Debug.Log("muteUnMute");
+        if (isSounding)
+        {
+            if (!IsLocalPlayer)
+            {
+                soundButton.image.sprite = soundSprite;
+
+            }
+            else
+            {
+                mutedMic.SetActive(true);
+                soundButton.image.sprite = soundMic;
+            }
+            soundValue = .5f;
+            soundBar.value = .5f;
+        }
         else
         {
-            soundButton.image.sprite = mutedSprite;
+            if (!IsLocalPlayer)
+            {
+                soundButton.image.sprite = mutedSprite;
+            }
+            else
+            {
+                mutedMic.SetActive(true);
+                soundButton.image.sprite = soundMic;
+            }
             soundValue = 0;
             soundBar.value = 0;
+
+            userHandler.OnVolumeSlide(soundValue);
+
         }
+
     }
 
     public void EnableVoice(bool shouldResetUi)
     {
-        if (shouldResetUi)
+        /*if (shouldResetUi)
         {
             soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
             soundButton.image.sprite = soundSprite;
-        }
+        }*/
+
+        Debug.Log("IS LOCAL " + IsLocalPlayer);
 
         if (IsLocalPlayer)
         {
             //AÑADIR MICROFONO PARA SI ES EL MISMO JUGADOR
 
+            mutedMic.SetActive(true);
+            soundButton.image.sprite = soundMic; 
            /* m_volumeSliderContainer.Hide(0);
             m_muteToggleContainer.Show();
             m_muteIcon.SetActive(false);
@@ -142,18 +185,21 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         }
         else
         {
-           /* m_volumeSliderContainer.Show();
-            m_muteToggleContainer.Show();
-            m_muteIcon.SetActive(true);
-            m_micMuteIcon.SetActive(false);
-           */
+            mutedMic.SetActive(false);
+            soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
+            soundButton.image.sprite = soundSprite;
+            /* m_volumeSliderContainer.Show();
+             m_muteToggleContainer.Show();
+             m_muteIcon.SetActive(true);
+             m_micMuteIcon.SetActive(false);
+            */
         }
     }
 
 
     private void ChangeVolume(float soundVal)
     {
-        Debug.Log("changing sound " + playerId + soundVal);
+        //Debug.Log("changing sound " + playerId + soundVal);
         soundValue = soundVal;
         if(soundVal == 0)
         {
@@ -162,6 +208,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         else
             soundButton.image.sprite = soundSprite;
 
+        userHandler.OnVolumeSlide(soundValue);
 
     }
 
@@ -224,10 +271,10 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         OnlineManager.Instance.ChangeTeamServerRpc(playerId, change.value + 1, NetworkManager.Singleton.LocalClientId);
     }
 
-    public void DesactivateSound()
+   /* public void DesactivateSound()
     {
         sound.SetActive(false);
-    }
+    }*/
 
 
 }

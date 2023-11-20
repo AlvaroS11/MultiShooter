@@ -8,7 +8,7 @@ using Unity.Services.Authentication;
 using TMPro;
 using UnityEngine.SceneManagement;
 using Unity.Collections;
-using UnityEditor.PackageManager;
+//using UnityEditor.PackageManager;
 using UnityEngine.Jobs;
 
 public class OnlineManager : NetworkBehaviour
@@ -308,7 +308,7 @@ public class OnlineManager : NetworkBehaviour
     {
         
         int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
-        Debug.Log("AAA " + index);
+        //Debug.Log("AAA " + index);
         if (index >= 0)
         {
             var player = playerList[index];

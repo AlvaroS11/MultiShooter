@@ -6,7 +6,7 @@ using System;
 public class VivoxManager : MonoBehaviour
 {
     [SerializeField]
-    private List<VivoxUserHandler> m_vivoxUserHandlers;
+    public List<VivoxUserHandler> m_vivoxUserHandlers;
     VivoxSetup m_VivoxSetup = new VivoxSetup();
 
     public static VivoxManager Instance;
