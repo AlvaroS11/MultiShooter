@@ -125,23 +125,47 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     public void MuteUnMute(bool mute)
     {
         isSounding = mute;
+
+
         Debug.Log("muteUnMute");
         if (isSounding)
         {
-            if (!IsLocalPlayer)
+           /* if (!IsLocalPlayer)
             {
                 soundButton.image.sprite = soundSprite;
-
             }
             else
             {
                 mutedMic.SetActive(true);
                 soundButton.image.sprite = soundMic;
-            }
+            }*/
             soundValue = .5f;
             soundBar.value = .5f;
         }
         else
+        {
+           /* if (!IsLocalPlayer)
+            {
+                soundButton.image.sprite = mutedSprite;
+            }
+            else
+            {
+                mutedMic.SetActive(false);
+                soundButton.image.sprite = soundMic;
+            }*/
+            soundValue = 0;
+            soundBar.value = 0;
+        }
+        //userHandler.OnVolumeSlide(soundValue);
+        ChangeVolume(soundValue);
+    }
+
+
+    private void ChangeVolume(float soundVal)
+    {
+        //Debug.Log("changing sound " + playerId + soundVal);
+        soundValue = soundVal;
+        if (soundVal == 0)
         {
             if (!IsLocalPlayer)
             {
@@ -152,16 +176,32 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
                 mutedMic.SetActive(true);
                 soundButton.image.sprite = soundMic;
             }
-            soundValue = 0;
-            soundBar.value = 0;
-
-            userHandler.OnVolumeSlide(soundValue);
+        }
+        else
+        {
+        if (!IsLocalPlayer)
+        {
+            soundButton.image.sprite = soundSprite;
 
         }
+        else
+        {
+            mutedMic.SetActive(false);
+            soundButton.image.sprite = soundMic;
+        }
+        mutedMic.SetActive(false);
+    }
+
+        userHandler.OnVolumeSlide(soundValue);
 
     }
 
-    public void EnableVoice(bool shouldResetUi)
+    private void HandleVolume()
+    {
+
+    }
+
+    /*public void EnableVoice(bool shouldResetUi)
     {
         /*if (shouldResetUi)
         {
@@ -169,48 +209,33 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
             soundButton.image.sprite = soundSprite;
         }*/
 
-        Debug.Log("IS LOCAL " + IsLocalPlayer);
+    /*Debug.Log("IS LOCAL " + IsLocalPlayer);
 
-        if (IsLocalPlayer)
-        {
-            //AÑADIR MICROFONO PARA SI ES EL MISMO JUGADOR
-
-            mutedMic.SetActive(true);
-            soundButton.image.sprite = soundMic; 
-           /* m_volumeSliderContainer.Hide(0);
-            m_muteToggleContainer.Show();
-            m_muteIcon.SetActive(false);
-            m_micMuteIcon.SetActive(true);
-           */
-        }
-        else
-        {
-            mutedMic.SetActive(false);
-            soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
-            soundButton.image.sprite = soundSprite;
-            /* m_volumeSliderContainer.Show();
-             m_muteToggleContainer.Show();
-             m_muteIcon.SetActive(true);
-             m_micMuteIcon.SetActive(false);
-            */
-        }
-    }
-
-
-    private void ChangeVolume(float soundVal)
+    if (IsLocalPlayer)
     {
-        //Debug.Log("changing sound " + playerId + soundVal);
-        soundValue = soundVal;
-        if(soundVal == 0)
-        {
-            soundButton.image.sprite = mutedSprite;
-        }
-        else
-            soundButton.image.sprite = soundSprite;
+        //AÑADIR MICROFONO PARA SI ES EL MISMO JUGADOR
 
-        userHandler.OnVolumeSlide(soundValue);
+        mutedMic.SetActive(true);
+        soundButton.image.sprite = soundMic; 
+       /* m_volumeSliderContainer.Hide(0);
+        m_muteToggleContainer.Show();
+        m_muteIcon.SetActive(false);
+        m_micMuteIcon.SetActive(true);
+       */
+    /* }
+     else
+     {
+         mutedMic.SetActive(false);
+         soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
+         soundButton.image.sprite = soundSprite;
+         /* m_volumeSliderContainer.Show();
+          m_muteToggleContainer.Show();
+          m_muteIcon.SetActive(true);
+          m_micMuteIcon.SetActive(false);
+         */
+    /* }
+ }*/
 
-    }
 
     /*    public void UpdatePlayer(Player player) {
 

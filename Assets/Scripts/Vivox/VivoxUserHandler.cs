@@ -12,8 +12,10 @@ using VivoxUnity;
         private LobbyPlayerSingleUI lobbyPlayer;
 
         private IChannelSession m_channelSession;
+        [SerializeField]
         private string m_id;
-        private string m_vivoxId;
+    [SerializeField]
+    private string m_vivoxId;
 
         private const int k_volumeMin = -50, k_volumeMax = 20; // From the Vivox docs, the valid range is [-50, 50] but anything above 25 risks being painfully loud.
 
@@ -177,11 +179,16 @@ using VivoxUnity;
         public void OnVolumeSlide(float volumeNormalized)
         {
             if (m_channelSession == null || m_vivoxId == null) // Verify initialization, since SetId and OnChannelJoined are called at different times for local vs. remote clients.
-                return;
 
-      //  Debug.Log("On volume Slide!!");
+        {
+            Debug.Log("ERROR IN SESSION ");
+            return;
 
-            int vol = (int)Mathf.Clamp(k_volumeMin + (k_volumeMax - k_volumeMin) * volumeNormalized, k_volumeMin, k_volumeMax); // Clamping as a precaution; if UserVolume somehow got above 1, listeners could be harmed.
+        }
+
+        //  Debug.Log("On volume Slide!!");
+
+        int vol = (int)Mathf.Clamp(k_volumeMin + (k_volumeMax - k_volumeMin) * volumeNormalized, k_volumeMin, k_volumeMax); // Clamping as a precaution; if UserVolume somehow got above 1, listeners could be harmed.
             bool isSelf = m_channelSession.Participants[m_vivoxId].IsSelf;
 
         if(volumeNormalized == 0)
@@ -193,7 +200,7 @@ using VivoxUnity;
         else if(VivoxService.Instance.Client.AudioInputDevices.Muted)
         {
             OnMuteToggle(false);
-            return;
+            //return;
         }
 
 
