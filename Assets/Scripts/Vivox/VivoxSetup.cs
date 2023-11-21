@@ -99,6 +99,11 @@ using VivoxUnity;
             });
         }
 
+    public IChannelSession GetChannel()
+    {
+        return m_channelSession;
+    }
+
         /// <summary>
         /// To be called when leaving a lobby.
         /// </summary>

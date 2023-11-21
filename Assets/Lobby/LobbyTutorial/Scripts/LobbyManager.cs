@@ -482,14 +482,13 @@ public class LobbyManager : MonoBehaviour {
             Player = player
         });
 
+        await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
+
+
         VivoxManager.Instance.StartVivoxLogin();
-
-
         VivoxManager.Instance.StartVivoxJoin();
 
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
-
-        await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
     }
 
     public async void UpdatePlayerName(string playerName) {

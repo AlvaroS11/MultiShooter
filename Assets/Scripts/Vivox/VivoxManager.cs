@@ -7,7 +7,7 @@ public class VivoxManager : MonoBehaviour
 {
     [SerializeField]
     public List<VivoxUserHandler> m_vivoxUserHandlers;
-    VivoxSetup m_VivoxSetup = new VivoxSetup();
+    public VivoxSetup m_VivoxSetup = new VivoxSetup();
 
     public static VivoxManager Instance;
     // Start is called before the first frame update
@@ -43,6 +43,7 @@ public class VivoxManager : MonoBehaviour
 
     public void StartVivoxJoin()
     {
+        Debug.Log("JOINNING CHANNEL");
         m_VivoxSetup.JoinLobbyChannel(LobbyManager.Instance.joinedLobby.Id, OnVivoxJoinComplete);
 
         void OnVivoxJoinComplete(bool didSucceed)

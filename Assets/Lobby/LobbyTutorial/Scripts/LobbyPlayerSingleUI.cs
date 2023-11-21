@@ -161,7 +161,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     }
 
 
-    private void ChangeVolume(float soundVal)
+    public void ChangeVolume(float soundVal)
     {
         //Debug.Log("changing sound " + playerId + soundVal);
         soundValue = soundVal;
