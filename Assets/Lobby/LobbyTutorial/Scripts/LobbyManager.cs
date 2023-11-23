@@ -430,8 +430,9 @@ public class LobbyManager : MonoBehaviour {
 
         VivoxManager.Instance.StartVivoxLogin();
 
-        VivoxManager.Instance.StartVivoxJoin();
-        //   VivoxManager.Instance.StartVivoxLogin();
+        //VivoxManager.Instance.StartVivoxJoin();
+        StartCoroutine(VivoxManager.Instance.WaitForJoin());
+;        //   VivoxManager.Instance.StartVivoxLogin();
     }
 
     public async void RefreshLobbyList() {

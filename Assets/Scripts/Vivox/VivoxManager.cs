@@ -5,7 +5,6 @@ using System;
 
 public class VivoxManager : MonoBehaviour
 {
-    [SerializeField]
     public List<VivoxUserHandler> m_vivoxUserHandlers;
     public VivoxSetup m_VivoxSetup = new VivoxSetup();
 
@@ -58,6 +57,12 @@ public class VivoxManager : MonoBehaviour
                 StartCoroutine(RetryConnection(StartVivoxJoin, LobbyManager.Instance.joinedLobby.Id));
             }
         }
+    }
+
+    public IEnumerator WaitForJoin()
+    {
+       yield return new WaitForSeconds(2f);
+        StartVivoxJoin();
     }
 
     IEnumerator RetryConnection(Action doConnection, string lobbyId)

@@ -259,11 +259,35 @@ public class LobbyUI : MonoBehaviour {
 
                 Show();
 
-                VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
+                AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
+                //VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
+                
             }
         }
     }
 
+
+    private void AddUserHandler(VivoxUserHandler playerLobbyHandler)
+    {
+        Debug.Log("ADD USER HANDLER! ");
+        VivoxManager.Instance.m_vivoxUserHandlers.Add(playerLobbyHandler);
+
+       /* Debug.Log("---");
+        Debug.Log(VivoxManager.Instance.m_vivoxUserHandlers.Count);
+        if (VivoxManager.Instance.m_vivoxUserHandlers.Count == 1)
+        {
+            playerLobbyHandler.lobbyPlayer.IsLocalPlayer = true;
+            playerLobbyHandler.lobbyPlayer.ChangeVolume(0);
+        }*/
+        //  VivoxManager.Instance.m_VivoxSetup.m_userHandlers.Add(playerLobbyHandler);
+    }
+
+    private void ClearUserHandler()
+    {
+        LobbyPlayers.Clear();
+        VivoxManager.Instance.m_vivoxUserHandlers.Clear();
+        VivoxManager.Instance.m_VivoxSetup.m_userHandlers.Clear();
+    }
 
     public void UpdateUITeam()
     {
@@ -276,9 +300,10 @@ public class LobbyUI : MonoBehaviour {
 
             Destroy(child.gameObject);
         }
+        ClearUserHandler();
         //LobbyPlayers = null;
-        LobbyPlayers.Clear();
-        VivoxManager.Instance.m_vivoxUserHandlers.Clear();
+        //LobbyPlayers.Clear();
+        //VivoxManager.Instance.m_vivoxUserHandlers.Clear();
     }
 
     private void DeletePlayer(string idToDelete)

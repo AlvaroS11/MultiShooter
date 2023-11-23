@@ -9,7 +9,7 @@ using VivoxUnity;
 public class VivoxUserHandler : MonoBehaviour
 {
     [SerializeField]
-    private LobbyPlayerSingleUI lobbyPlayer;
+    public LobbyPlayerSingleUI lobbyPlayer;
 
     [SerializeField]
     private IChannelSession m_channelSession;
@@ -46,7 +46,7 @@ public class VivoxUserHandler : MonoBehaviour
 
         m_vivoxId = $"sip:.{account.Issuer}.{m_id}.{globalVariables.environmentId_dev}.@{account.Domain}";
 
-      /*  if (m_channelSession != null)
+        if (m_channelSession != null)
         {
             foreach (var participant in m_channelSession.Participants)
             {
@@ -62,7 +62,7 @@ public class VivoxUserHandler : MonoBehaviour
                     break;
                 }
             }
-        }*/
+        }
     }
 
     public void OnChannelJoined(IChannelSession channelSession) // Called after a connection is established, which begins once a lobby is joined.
@@ -73,6 +73,25 @@ public class VivoxUserHandler : MonoBehaviour
         m_channelSession.Participants.AfterKeyAdded += OnParticipantAdded;
         m_channelSession.Participants.BeforeKeyRemoved += BeforeParticipantRemoved;
         m_channelSession.Participants.AfterValueUpdated += OnParticipantValueUpdated;
+
+        Debug.Log("^^^^");
+        Debug.Log(channelSession == null);
+        Debug.Log(channelSession.Participants);
+
+        //NO ESTÁ LLEGANDO, PARTICIPANTS ES 0?
+        /*foreach (var participant in m_channelSession.Participants)
+        {
+            Debug.Log("**");
+            Debug.Log(m_id);
+            Debug.Log(participant.Account.DisplayName);
+            if (m_id == participant.Account.DisplayName)
+            {
+//                m_vivoxId = participant.Key;
+                lobbyPlayer.IsLocalPlayer = participant.IsSelf;
+                lobbyPlayer.MuteUnMute(true);
+                break;
+            }
+        }*/
     }
 
     public void OnChannelLeft() // Called when we leave the lobby.
@@ -103,8 +122,10 @@ public class VivoxUserHandler : MonoBehaviour
             m_vivoxId = keyEventArg.Key; // Since we couldn't construct the Vivox ID earlier, retrieve it here.
             lobbyPlayer.IsLocalPlayer = participant.IsSelf;
 
+            Debug.Log("*****");
             Debug.Log(participant.IsSelf);
             Debug.Log(lobbyPlayer.IsLocalPlayer);
+            Debug.Log(lobbyPlayer.gameObject.name);
             if (lobbyPlayer == null)
             {
                 Debug.Log("WAS NULL!");

@@ -15,7 +15,7 @@ public class VivoxSetup
     private bool m_isMidInitialize = false;
     public ILoginSession m_loginSession = null;
     private IChannelSession m_channelSession = null;
-    private List<VivoxUserHandler> m_userHandlers;
+    public List<VivoxUserHandler> m_userHandlers;
 
     /// <summary>
     /// Initialize the Vivox service, before actually joining any audio channels.
@@ -107,6 +107,12 @@ public class VivoxSetup
 
                 m_channelSession.EndConnect(result);
                 onComplete?.Invoke(true);
+                UnityEngine.Debug.Log(m_userHandlers.Count);
+                if(m_userHandlers.Count == 0)
+                {
+                    m_userHandlers = VivoxManager.Instance.m_vivoxUserHandlers;
+                }
+
                 foreach (VivoxUserHandler userHandler in m_userHandlers)
                     userHandler.OnChannelJoined(m_channelSession);
             }

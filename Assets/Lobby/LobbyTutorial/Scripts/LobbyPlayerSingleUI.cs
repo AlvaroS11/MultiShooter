@@ -148,7 +148,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         {
             if (!IsLocalPlayer)
             {
-                Debug.Log("*");
+                //Debug.Log("*");
                 soundButton.image.sprite = mutedSprite;
             }
             else
@@ -163,15 +163,13 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         {
         if (!IsLocalPlayer)
             {
-                Debug.Log("*");
+                //Debug.Log("*");
 
                 soundButton.image.sprite = soundSprite;
 
         }
         else
             {
-                Debug.Log("*");
-
                 mutedMic.SetActive(false);
             soundButton.image.sprite = soundMic;
         }
