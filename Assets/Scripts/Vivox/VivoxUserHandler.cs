@@ -6,27 +6,27 @@ using VivoxUnity;
 /// Listens for changes to Vivox state for one user in the lobby.
 /// Instead of going through Relay, this will listen to the Vivox service since it will already transmit state changes for all clients.
 /// </summary>
-    public class VivoxUserHandler : MonoBehaviour
-    {
-        [SerializeField]
-        private LobbyPlayerSingleUI lobbyPlayer;
+public class VivoxUserHandler : MonoBehaviour
+{
+    [SerializeField]
+    private LobbyPlayerSingleUI lobbyPlayer;
 
     [SerializeField]
-        private IChannelSession m_channelSession;
-        [SerializeField]
-        private string m_id;
+    private IChannelSession m_channelSession;
+    [SerializeField]
+    private string m_id;
     [SerializeField]
     private string m_vivoxId;
 
-        private const int k_volumeMin = -50, k_volumeMax = 20; // From the Vivox docs, the valid range is [-50, 50] but anything above 25 risks being painfully loud.
+    private const int k_volumeMin = -50, k_volumeMax = 20; // From the Vivox docs, the valid range is [-50, 50] but anything above 25 risks being painfully loud.
 
-        public static float NormalizedVolumeDefault
-        {
-            get { return (0f - k_volumeMin) / (k_volumeMax - k_volumeMin); }
-        }
+    public static float NormalizedVolumeDefault
+    {
+        get { Debug.Log((0f - k_volumeMin) / (k_volumeMax - k_volumeMin)); return (0f - k_volumeMin) / (k_volumeMax - k_volumeMin); }
+    }
 
-        public void Start()
-        {
+    public void Start()
+    {
         //   lobbyPlayer.DisableVoice(true);
         lobbyPlayer = GetComponent<LobbyPlayerSingleUI>();
 
@@ -37,223 +37,195 @@ using VivoxUnity;
         }
     }
 
-        public void SetId(string id)
+    public void SetId(string id)
+    {
+
+        m_id = id;
+
+        Account account = new Account(id);
+
+        m_vivoxId = $"sip:.{account.Issuer}.{m_id}.{globalVariables.environmentId_dev}.@{account.Domain}";
+
+      /*  if (m_channelSession != null)
         {
-            m_id = id;
-
-        // Vivox appends additional info to the ID we provide, in order to associate it with a specific channel. We'll construct m_vivoxId to match the ID used by Vivox.
-        // FUTURE: This isn't yet available. When using Auth, the Vivox ID will match this format:
-
-            Account account = new Account(id);
-
-        
-            m_vivoxId = $"sip:.{account.Issuer}.{m_id}.{globalVariables.environmentId_dev}.@{account.Domain}";
-            // However, the environment ID from Auth is not exposed anywhere, and Vivox doesn't provide a way to retrieve the ID, either.
-            // Instead, when needed, we'll search for the Vivox ID containing this user's Auth ID, which is a GUID so collisions are extremely unlikely.
-            // In the future, remove FindVivoxId and pass the environment ID here instead.
-            //m_vivoxId = null;
-
-        // SetID might be called after we've received the IChannelSession for remote players, which would mean after OnParticipantAdded. So, duplicate the VivoxID work here.
-
-            if (m_channelSession != null)
+            foreach (var participant in m_channelSession.Participants)
             {
-            Debug.Log("passes chanelSession");
-                foreach (var participant in m_channelSession.Participants)
+                Debug.Log(m_id == participant.Account.DisplayName);
+                //Al volver a entrar no sse pone el microfono
+                Debug.Log(participant.Account.DisplayName);
+                Debug.Log(m_id);
+                if (m_id == participant.Account.DisplayName)
                 {
-                Debug.Log("foreach  ");
-                    if (m_id == participant.Account.DisplayName)
-                    {
-                        m_vivoxId = participant.Key;
-                        lobbyPlayer.IsLocalPlayer = participant.IsSelf;
-                        lobbyPlayer.MuteUnMute(true);
-                        //lobbyPlayer.EnableVoice(true);
-                       // lobbyPlayer.EnableVoice(true);
-                        break;
-                    }
+                    m_vivoxId = participant.Key;
+                    lobbyPlayer.IsLocalPlayer = participant.IsSelf;
+                    lobbyPlayer.MuteUnMute(true);
+                    break;
                 }
             }
-        }
+        }*/
+    }
 
-        public void OnChannelJoined(IChannelSession channelSession) // Called after a connection is established, which begins once a lobby is joined.
+    public void OnChannelJoined(IChannelSession channelSession) // Called after a connection is established, which begins once a lobby is joined.
+    {
+        //Check if we are muted or not
+
+        m_channelSession = channelSession;
+        m_channelSession.Participants.AfterKeyAdded += OnParticipantAdded;
+        m_channelSession.Participants.BeforeKeyRemoved += BeforeParticipantRemoved;
+        m_channelSession.Participants.AfterValueUpdated += OnParticipantValueUpdated;
+    }
+
+    public void OnChannelLeft() // Called when we leave the lobby.
+    {
+        if (m_channelSession != null) // It's possible we'll attempt to leave a channel that isn't joined, if we leave the lobby while Vivox is connecting.
         {
-            //Check if we are muted or not
-
-            m_channelSession = channelSession;
-        Debug.Log("CHANNEL ADDED! ");
-            m_channelSession.Participants.AfterKeyAdded += OnParticipantAdded;
-            m_channelSession.Participants.BeforeKeyRemoved += BeforeParticipantRemoved;
-            m_channelSession.Participants.AfterValueUpdated += OnParticipantValueUpdated;
-        }
-
-        public void OnChannelLeft() // Called when we leave the lobby.
-        {
-            if (m_channelSession != null) // It's possible we'll attempt to leave a channel that isn't joined, if we leave the lobby while Vivox is connecting.
-            {
-                m_channelSession.Participants.AfterKeyAdded -= OnParticipantAdded;
-                m_channelSession.Participants.BeforeKeyRemoved -= BeforeParticipantRemoved;
-                m_channelSession.Participants.AfterValueUpdated -= OnParticipantValueUpdated;
-                m_channelSession = null;
-            }
-        }
-
-        /// <summary>
-        /// To be called whenever a new Participant is added to the channel, using the events from Vivox's custom dictionary.
-        /// </summary>
-        private void OnParticipantAdded(object sender, KeyEventArg<string> keyEventArg)
-        {
-            var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
-            var participant = source[keyEventArg.Key];
-            var username = participant.Account.DisplayName;
-
-            bool isThisUser = username == m_id;
-            //m_vivoxId = keyEventArg.Key;
-        if (isThisUser)
-            {
-                m_vivoxId = keyEventArg.Key; // Since we couldn't construct the Vivox ID earlier, retrieve it here.
-                lobbyPlayer.IsLocalPlayer = participant.IsSelf;
-
-            if (!participant.IsMutedForAll)
-                lobbyPlayer.ChangeVolume(0);
-            //lobbyPlayer.MuteUnMute(false);
-            // lobbyPlayer.EnableVoice(false); //Should check if user is muted or not.
-            else
-                lobbyPlayer.ChangeVolume(0.5f);
-
-            //lobbyPlayer.MuteUnMute(true);
-
-            //            lobbyPlayer.DisableVoice(false);
-        }
-        else
-            {
-                if (!participant.LocalMute)
-                lobbyPlayer.ChangeVolume(0.5f);
-
-            //lobbyPlayer.MuteUnMute(true);
-
-            //lobbyPlayer.EnableVoice(false); //Should check if user is muted or not.
-            else
-                lobbyPlayer.ChangeVolume(0);
-
-//            lobbyPlayer.MuteUnMute(false);
-            //lobbyPlayer.DisableVoice(false);
+            m_channelSession.Participants.AfterKeyAdded -= OnParticipantAdded;
+            m_channelSession.Participants.BeforeKeyRemoved -= BeforeParticipantRemoved;
+            m_channelSession.Participants.AfterValueUpdated -= OnParticipantValueUpdated;
+            m_channelSession = null;
         }
     }
 
-        private void BeforeParticipantRemoved(object sender, KeyEventArg<string> keyEventArg)
-        {
-            var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
-            var participant = source[keyEventArg.Key];
-            var username = participant.Account.DisplayName;
+    /// <summary>
+    /// To be called whenever a new Participant is added to the channel, using the events from Vivox's custom dictionary.
+    /// </summary>
+    private void OnParticipantAdded(object sender, KeyEventArg<string> keyEventArg)
+    {
+        var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
+        var participant = source[keyEventArg.Key];
+        var username = participant.Account.DisplayName;
 
-            bool isThisUser = username == m_id;
-            if (isThisUser)
+        bool isThisUser = username == m_id;
+        Debug.Log(username);
+        Debug.Log(m_id);
+        if (isThisUser)
+        {
+            m_vivoxId = keyEventArg.Key; // Since we couldn't construct the Vivox ID earlier, retrieve it here.
+            lobbyPlayer.IsLocalPlayer = participant.IsSelf;
+
+            Debug.Log(participant.IsSelf);
+            Debug.Log(lobbyPlayer.IsLocalPlayer);
+            if (lobbyPlayer == null)
             {
-                lobbyPlayer.DisableVoice(true);
+                Debug.Log("WAS NULL!");
+                lobbyPlayer = GetComponent<LobbyPlayerSingleUI>();
+
             }
+            Debug.Log(lobbyPlayer.gameObject.name);
+            if (!participant.IsMutedForAll)
+                lobbyPlayer.ChangeVolume(0);
+
+            else
+                lobbyPlayer.ChangeVolume(0.5f);
         }
-
-        private void OnParticipantValueUpdated(object sender, ValueEventArg<string, IParticipant> valueEventArg)
+        else
         {
-           // Debug.Log("ON PARTICIPANT VALUE UPDATED!!");
-            var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
-            var participant = source[valueEventArg.Key];
-            var username = participant.Account.DisplayName;
-            string property = valueEventArg.PropertyName;
+            if (!participant.LocalMute)
+                lobbyPlayer.ChangeVolume(0.5f);
 
-      //  Debug.Log(property);
+            else
+                lobbyPlayer.ChangeVolume(0);
 
-            if (username == m_id)
+        }
+    }
+
+    private void BeforeParticipantRemoved(object sender, KeyEventArg<string> keyEventArg)
+    {
+        var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
+        var participant = source[keyEventArg.Key];
+        var username = participant.Account.DisplayName;
+
+        bool isThisUser = username == m_id;
+        if (isThisUser)
+        {
+            lobbyPlayer.DisableVoice(true);
+        }
+    }
+
+    private void OnParticipantValueUpdated(object sender, ValueEventArg<string, IParticipant> valueEventArg)
+    {
+        var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
+        var participant = source[valueEventArg.Key];
+        var username = participant.Account.DisplayName;
+        string property = valueEventArg.PropertyName;
+
+
+        if (username == m_id)
+        {
+            if (property == "UnavailableCaptureDevice")
             {
-                if (property == "UnavailableCaptureDevice")
+                if (participant.UnavailableCaptureDevice)
                 {
-                    if (participant.UnavailableCaptureDevice)
-                    {
-                    //    lobbyPlayer.DisableVoice(false);
-                        lobbyPlayer.MuteUnMute(false);
-                        participant.SetIsMuteForAll(true, null); // Note: If you add more places where a player might be globally muted, a state machine might be required for accurate logic.
-                    }
-                    else
-                    {
-                        //lobbyPlayer.EnableVoice(false);
-                        lobbyPlayer.MuteUnMute(false);
-
-                    participant.SetIsMuteForAll(false, null); // Also note: This call is asynchronous, so it's possible to exit the lobby before this completes, resulting in a Vivox error.
-                    }
-                }
-                else if (property == "IsMutedForAll")
-                {
-                    if (participant.IsMutedForAll)
                     lobbyPlayer.MuteUnMute(false);
-                //lobbyPlayer.DisableVoice(false);
+                    participant.SetIsMuteForAll(true, null);
+                }
+                else
+                {
+                    lobbyPlayer.MuteUnMute(false);
+
+                    participant.SetIsMuteForAll(false, null); //  This call is asynchronous, so it's possible to exit the lobby before this completes, resulting in a Vivox error.
+                }
+            }
+            else if (property == "IsMutedForAll")
+            {
+                if (participant.IsMutedForAll)
+                    lobbyPlayer.MuteUnMute(false);
                 else
                     lobbyPlayer.MuteUnMute(true);
-               // lobbyPlayer.EnableVoice(false);
-                }
             }
         }
+    }
 
-        public void OnVolumeSlide(float volumeNormalized)
+    public void OnVolumeSlide(float volumeNormalized)
+    {
+        if (m_channelSession == null || m_vivoxId == null) // Verify initialization, since SetId and OnChannelJoined are called at different times for local vs. remote clients.
         {
-            if (m_channelSession == null || m_vivoxId == null) // Verify initialization, since SetId and OnChannelJoined are called at different times for local vs. remote clients.
-
-        {
-            if(m_channelSession == null)
+            if (m_channelSession == null)
             {
-                Debug.Log("ERROR IN CHANNEL ");
                 OnChannelJoined(VivoxManager.Instance.m_VivoxSetup.GetChannel());
             }
-            if (m_vivoxId == null)
-                Debug.Log("ERROR IN VIVOX ID");
             return;
 
         }
 
-        //  Debug.Log("On volume Slide!!");
 
         int vol = (int)Mathf.Clamp(k_volumeMin + (k_volumeMax - k_volumeMin) * volumeNormalized, k_volumeMin, k_volumeMax); // Clamping as a precaution; if UserVolume somehow got above 1, listeners could be harmed.
-            bool isSelf = m_channelSession.Participants[m_vivoxId].IsSelf;
+        bool isSelf = m_channelSession.Participants[m_vivoxId].IsSelf;
 
-        if(volumeNormalized == 0)
+        if (volumeNormalized == 0)
         {
-            Debug.Log("Normalized is 0!");
-            OnMuteToggle(true); 
-            return; 
+            OnMuteToggle(true);
+            return;
         }
-        else if(VivoxService.Instance.Client.AudioInputDevices.Muted)
+        else if (VivoxService.Instance.Client.AudioInputDevices.Muted)
         {
             OnMuteToggle(false);
-            //return;
         }
 
-
-        Debug.Log(m_channelSession.Participants.Count);
-            if (isSelf)
-            {
-                VivoxService.Instance.Client.AudioInputDevices.VolumeAdjustment = vol;
-            }
-            else
-            {
-                m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment = vol;
-            Debug.Log(m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment);
-            }
-        }
-
-        public void OnMuteToggle(bool isMuted)
+        if (isSelf)
         {
-            if (m_channelSession == null || m_vivoxId == null)
-                return;
-
-            bool isSelf = m_channelSession.Participants[m_vivoxId].IsSelf;
-            if (isSelf)
-            {
-                VivoxService.Instance.Client.AudioInputDevices.Muted = isMuted;
-            Debug.Log("MUTING LOCAL MICRO INPUT " + isMuted);
-            }
-            else
-            {
-                m_channelSession.Participants[m_vivoxId].LocalMute = isMuted;
-            Debug.Log("MUTING LOCAL VOLUME " + isMuted);
-
+            VivoxService.Instance.Client.AudioInputDevices.VolumeAdjustment = vol;
+        }
+        else
+        {
+            m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment = vol;
+            Debug.Log(m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment);
         }
     }
+
+    public void OnMuteToggle(bool isMuted)
+    {
+        if (m_channelSession == null || m_vivoxId == null)
+            return;
+
+        bool isSelf = m_channelSession.Participants[m_vivoxId].IsSelf;
+        if (isSelf)
+        {
+            VivoxService.Instance.Client.AudioInputDevices.Muted = isMuted;
+        }
+        else
+        {
+            m_channelSession.Participants[m_vivoxId].LocalMute = isMuted;
+        }
     }
+}

@@ -376,9 +376,30 @@ public class OnlineManager : NetworkBehaviour
     }
 
     [ServerRpc]
-    public void DeletePlayerLobbyIdServerRpc(string playerId)
+    public void DeletePlayerLobbyIdServerRpc(string playerId, ServerRpcParams serverRpcParams = default)
     {
-        playerList.Find(x => x.lobbyPlayerId == playerId).isDeleted = true;
+
+        ulong leaveId = serverRpcParams.Receive.SenderClientId;
+        PlayerInfo foundPlayer = playerList.Find(x => x.lobbyPlayerId == playerId);
+
+        if (foundPlayer != null)
+        {
+            foundPlayer.isDeleted = true;
+
+            Debug.Log(foundPlayer.clientId);
+
+            NetworkManager.Singleton.Shutdown();
+
+            /*if(NetworkManager.ServerClientId == leaveId)
+                NetworkManager.Singleton.Shutdown();
+
+            //TODO add host migration here
+
+            else
+                NetworkManager.Singleton.DisconnectClient(foundPlayer.clientId);
+            */
+        }
+
         //  playerList.Remove(playerList.Find(x => x.lobbyPlayerId == playerId));isDeleted
     }
 

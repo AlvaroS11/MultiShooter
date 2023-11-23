@@ -29,8 +29,11 @@ public class VivoxManager : MonoBehaviour
 
    public void StartVivoxLogin()
     {
+        //if (m_VivoxSetup.m_loginSession != null)
+          //  return;
         m_VivoxSetup.Initialize(m_vivoxUserHandlers, OnVivoxLoginComplete);
 
+        Debug.Log("login vivox");
         void OnVivoxLoginComplete(bool didSucceed)
         {
             if (!didSucceed)
@@ -50,6 +53,7 @@ public class VivoxManager : MonoBehaviour
         {
             if (!didSucceed)
             {
+                Debug.Log(LobbyManager.Instance.joinedLobby.Id);
                 Debug.LogError("Vivox connection failed! Retrying in 5s...");
                 StartCoroutine(RetryConnection(StartVivoxJoin, LobbyManager.Instance.joinedLobby.Id));
             }
@@ -66,6 +70,7 @@ public class VivoxManager : MonoBehaviour
 
     public void LeaveVivox()
     {
+        Debug.Log("LEAVING VIVOX!");
         m_VivoxSetup.LeaveLobbyChannel();
     }
 }

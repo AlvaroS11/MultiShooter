@@ -28,6 +28,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     public Player player;
 
     public string playerId;
+    public ulong playerIdRelay;
 
     public Sprite mutedSprite;
     public Sprite soundSprite;
@@ -38,7 +39,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     public bool isSounding = true;
 
 
-    public bool IsLocalPlayer { private get; set; }
+    public bool IsLocalPlayer;
 
     public VivoxUserHandler userHandler;
 
@@ -66,9 +67,6 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         });
 
 
-        //selectTeamDropdown.gameObject.SetActive(true);
-
-        //EnableVoice(true);
     }
 
     private void Start()
@@ -130,33 +128,14 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         Debug.Log("muteUnMute");
         if (isSounding)
         {
-           /* if (!IsLocalPlayer)
-            {
-                soundButton.image.sprite = soundSprite;
-            }
-            else
-            {
-                mutedMic.SetActive(true);
-                soundButton.image.sprite = soundMic;
-            }*/
             soundValue = .5f;
             soundBar.value = .5f;
         }
         else
         {
-           /* if (!IsLocalPlayer)
-            {
-                soundButton.image.sprite = mutedSprite;
-            }
-            else
-            {
-                mutedMic.SetActive(false);
-                soundButton.image.sprite = soundMic;
-            }*/
             soundValue = 0;
             soundBar.value = 0;
         }
-        //userHandler.OnVolumeSlide(soundValue);
         ChangeVolume(soundValue);
     }
 
@@ -169,10 +148,13 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         {
             if (!IsLocalPlayer)
             {
+                Debug.Log("*");
                 soundButton.image.sprite = mutedSprite;
             }
             else
             {
+                Debug.Log("ADSA");
+
                 mutedMic.SetActive(true);
                 soundButton.image.sprite = soundMic;
             }
@@ -180,13 +162,17 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         else
         {
         if (!IsLocalPlayer)
-        {
-            soundButton.image.sprite = soundSprite;
+            {
+                Debug.Log("*");
+
+                soundButton.image.sprite = soundSprite;
 
         }
         else
-        {
-            mutedMic.SetActive(false);
+            {
+                Debug.Log("*");
+
+                mutedMic.SetActive(false);
             soundButton.image.sprite = soundMic;
         }
         mutedMic.SetActive(false);
@@ -201,58 +187,6 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     }
 
-    /*public void EnableVoice(bool shouldResetUi)
-    {
-        /*if (shouldResetUi)
-        {
-            soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
-            soundButton.image.sprite = soundSprite;
-        }*/
-
-    /*Debug.Log("IS LOCAL " + IsLocalPlayer);
-
-    if (IsLocalPlayer)
-    {
-        //AÑADIR MICROFONO PARA SI ES EL MISMO JUGADOR
-
-        mutedMic.SetActive(true);
-        soundButton.image.sprite = soundMic; 
-       /* m_volumeSliderContainer.Hide(0);
-        m_muteToggleContainer.Show();
-        m_muteIcon.SetActive(false);
-        m_micMuteIcon.SetActive(true);
-       */
-    /* }
-     else
-     {
-         mutedMic.SetActive(false);
-         soundBar.value = VivoxUserHandler.NormalizedVolumeDefault;
-         soundButton.image.sprite = soundSprite;
-         /* m_volumeSliderContainer.Show();
-          m_muteToggleContainer.Show();
-          m_muteIcon.SetActive(true);
-          m_micMuteIcon.SetActive(false);
-         */
-    /* }
- }*/
-
-
-    /*    public void UpdatePlayer(Player player) {
-
-            this.player = player;
-            playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
-            LobbyManager.PlayerCharacter playerCharacter = 
-                System.Enum.Parse<LobbyManager.PlayerCharacter>(player.Data[LobbyManager.KEY_PLAYER_CHARACTER].Value);
-            characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
-
-            selected = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
-
-            selectTeamDropdown.value = int.Parse(selected);
-            //selectTeamDropdown.itemText.text = player.Data[LobbyManager.KEY_PLAYER_TEAM].Value;
-
-        }
-    */
-
 
     public void UpdateTeamUi(int team)
     {
@@ -261,20 +195,12 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     public void UpdateCharacterUI(LobbyManager.PlayerCharacter playerCharacter)
     {
-
-        //PARA EL NOMBRE:         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
-
         characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
-
     }
 
     public void UpdateNameUI(FixedString128Bytes name)
     {
-
-        //PARA EL NOMBRE:         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;
-
         playerNameText.text = name.ToSafeString();
-
     }
 
     private void KickPlayer() {

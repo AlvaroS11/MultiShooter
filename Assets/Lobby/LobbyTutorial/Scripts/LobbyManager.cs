@@ -135,7 +135,8 @@ public class LobbyManager : MonoBehaviour {
             if (heartbeatTimer < 0f) {
                 float heartbeatTimerMax = 15f;
                 heartbeatTimer = heartbeatTimerMax;
-
+                if (joinedLobby == null)
+                    return;
                 //Debug.Log("Heartbeat");
                 await LobbyService.Instance.SendHeartbeatPingAsync(joinedLobby.Id);
             }
@@ -608,15 +609,23 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
-    public async void LeaveLobby() {
+    public async Task LeaveLobby() {
+        Debug.Log("task called");
+        Debug.Log("LEAVE LOBBY BUTTON " + joinedLobby == null);
         if (joinedLobby != null) {
             try {
+                VivoxManager.Instance.LeaveVivox();
+
                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
 
                 Debug.Log(joinedLobby.Players.Count);
+                Debug.Log("***" + AuthenticationService.Instance.PlayerId);
+
+                OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
                 joinedLobby = null;
                 OnLeftLobby?.Invoke(this, EventArgs.Empty);
-                VivoxManager.Instance.LeaveVivox();
+
+
             } catch (LobbyServiceException e) {
                 Debug.Log(e);
             }

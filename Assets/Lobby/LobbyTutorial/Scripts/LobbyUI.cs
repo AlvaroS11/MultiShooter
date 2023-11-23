@@ -58,8 +58,9 @@ public class LobbyUI : MonoBehaviour {
 
         });
 
-        leaveLobbyButton.onClick.AddListener(() => {
-            LobbyManager.Instance.LeaveLobby();
+        leaveLobbyButton.onClick.AddListener(async () => {
+            Debug.Log("event leave lobby");
+            await LobbyManager.Instance.LeaveLobby();
         });
 
         changeGameModeButton.onClick.AddListener(() => {
@@ -250,10 +251,6 @@ public class LobbyUI : MonoBehaviour {
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
-                /*if (player.Id == AuthenticationService.Instance.PlayerId)
-                {
-                    lobbyPlayerSingleUI.DesactivateSound();
-                }*/
 
                 if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
                     startGameButton.gameObject.SetActive(true);
@@ -279,6 +276,9 @@ public class LobbyUI : MonoBehaviour {
 
             Destroy(child.gameObject);
         }
+        //LobbyPlayers = null;
+        LobbyPlayers.Clear();
+        VivoxManager.Instance.m_vivoxUserHandlers.Clear();
     }
 
     private void DeletePlayer(string idToDelete)
