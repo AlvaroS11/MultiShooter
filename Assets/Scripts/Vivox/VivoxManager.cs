@@ -61,7 +61,7 @@ public class VivoxManager : MonoBehaviour
 
     public IEnumerator WaitForJoin()
     {
-       yield return new WaitForSeconds(2f);
+       yield return new WaitForSeconds(4f);
         StartVivoxJoin();
     }
 

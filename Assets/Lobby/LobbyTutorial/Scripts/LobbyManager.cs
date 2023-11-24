@@ -428,11 +428,12 @@ public class LobbyManager : MonoBehaviour {
 
         Debug.Log("Created Lobby " + lobby.Name);
 
+
+
+        //TODO ADD IN EVENT OnJoinedLobby
         VivoxManager.Instance.StartVivoxLogin();
 
-        //VivoxManager.Instance.StartVivoxJoin();
         StartCoroutine(VivoxManager.Instance.WaitForJoin());
-;        //   VivoxManager.Instance.StartVivoxLogin();
     }
 
     public async void RefreshLobbyList() {
@@ -487,6 +488,7 @@ public class LobbyManager : MonoBehaviour {
         await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
 
 
+        //TODO ADD IN EVENT OnJoinedLobby
         VivoxManager.Instance.StartVivoxLogin();
         VivoxManager.Instance.StartVivoxJoin();
 

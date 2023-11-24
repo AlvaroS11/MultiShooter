@@ -287,6 +287,7 @@ public class LobbyUI : MonoBehaviour {
         LobbyPlayers.Clear();
         VivoxManager.Instance.m_vivoxUserHandlers.Clear();
         VivoxManager.Instance.m_VivoxSetup.m_userHandlers.Clear();
+        OnlineManager.Instance.playerList.Clear();
     }
 
     public void UpdateUITeam()
