@@ -35,19 +35,27 @@ public class LobbyListUI : MonoBehaviour {
     }
 
     private void LobbyManager_OnKickedFromLobby(object sender, LobbyManager.LobbyEventArgs e) {
+        Debug.Log("kicked from lobby");
         Show();
     }
 
     private void LobbyManager_OnLeftLobby(object sender, EventArgs e) {
+        Debug.Log("leave from lobby");
+
+      //  OnlineManager.Instance = null;
         Show();
     }
 
     private void LobbyManager_OnJoinedLobby(object sender, LobbyManager.LobbyEventArgs e) {
+        Debug.Log("joined lobby");
         Hide();
     }
 
     private void LobbyManager_OnLobbyListChanged(object sender, LobbyManager.OnLobbyListChangedEventArgs e) {
+        Debug.Log("Lobby list changed");
+
         UpdateLobbyList(e.lobbyList);
+        //Hide();
     }
 
     private void UpdateLobbyList(List<Lobby> lobbyList) {

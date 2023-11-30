@@ -37,7 +37,6 @@ public class LobbyUI : MonoBehaviour {
 
 
 
-
     private void Awake() {
         Instance = this;
 
@@ -61,6 +60,7 @@ public class LobbyUI : MonoBehaviour {
         leaveLobbyButton.onClick.AddListener(async () => {
             Debug.Log("event leave lobby");
             await LobbyManager.Instance.LeaveLobby();
+            //LobbyManager.Instance.PlayerLeftServerRpc(AuthenticationService.Instance.PlayerId);
         });
 
         changeGameModeButton.onClick.AddListener(() => {
@@ -89,6 +89,7 @@ public class LobbyUI : MonoBehaviour {
 
     private void LobbyManagerKickPlayer(object sender, String id)
     {
+        Debug.Log("DELETE PLAYER LOBBY UI");
         DeletePlayer(id);
     }
 
@@ -98,7 +99,7 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
-     //   Debug.Log("OnJoinedLobbyUpdate");
+        Debug.Log("UpdateLobby_Even");
 
         //  UpdateLobby();
         string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
@@ -123,7 +124,7 @@ public class LobbyUI : MonoBehaviour {
 
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)
     {
-      //  Debug.Log("SET UP EVENT");
+       Debug.Log("SET UP EVENT");
 
      //   UpdateLobby();
     }
@@ -225,10 +226,15 @@ public class LobbyUI : MonoBehaviour {
     {
         Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
         //Debug.Log(lobby);
+        Debug.Log("CREATE PLAYERS " + lobby.Players.Count);
         foreach (Player player in lobby.Players)
         {
+            Debug.Log(player.Id);
+            Debug.Log(LobbyPlayers.Count);
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
+                Debug.Log("lo tiene");
+
                 Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
                 LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>();
 
@@ -288,6 +294,7 @@ public class LobbyUI : MonoBehaviour {
         VivoxManager.Instance.m_vivoxUserHandlers.Clear();
         VivoxManager.Instance.m_VivoxSetup.m_userHandlers.Clear();
         OnlineManager.Instance.playerList.Clear();
+        OnlineManager.Instance.ClearLobby();
     }
 
     public void UpdateUITeam()
@@ -307,17 +314,22 @@ public class LobbyUI : MonoBehaviour {
         //VivoxManager.Instance.m_vivoxUserHandlers.Clear();
     }
 
-    private void DeletePlayer(string idToDelete)
+    public void DeletePlayer(string idToDelete)
     {
         foreach(Transform child in container)
         {
             if(child.TryGetComponent<LobbyPlayerSingleUI>(out LobbyPlayerSingleUI lobbyUI))
             {
                 if(lobbyUI.playerId == idToDelete)
+                {
                     Destroy(lobbyUI.gameObject);
+                    LobbyPlayers.Remove(idToDelete);
+
+                }
             }
         }
         Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
+        Debug.Log(lobby.Players.Count);
         playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
         Debug.Log(lobby.Players.Count + "/" + lobby.MaxPlayers);
 

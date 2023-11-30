@@ -381,7 +381,7 @@ public class LobbyManager : MonoBehaviour {
         }
         catch (RelayServiceException e)
         {
-            Debug.Log(e);
+            Debug.LogError(e);
             LobbyCanvas.SetActive(true);
             return default;
         }
@@ -612,27 +612,32 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
-    public async Task LeaveLobby() {
-        Debug.Log("task called");
-        Debug.Log("LEAVE LOBBY BUTTON " + joinedLobby == null);
-        if (joinedLobby != null) {
-            try {
-                VivoxManager.Instance.LeaveVivox();
+     public async Task LeaveLobby() {
+         if (joinedLobby != null) {
+             try {
+                 VivoxManager.Instance.LeaveVivox();
 
-                await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
+                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
 
-                Debug.Log(joinedLobby.Players.Count);
-                Debug.Log("***" + AuthenticationService.Instance.PlayerId);
+                 OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
+                 joinedLobby = null;
 
-                OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
-                joinedLobby = null;
-                OnLeftLobby?.Invoke(this, EventArgs.Empty);
+                 OnLeftLobby?.Invoke(this, EventArgs.Empty);
 
 
-            } catch (LobbyServiceException e) {
-                Debug.Log(e);
-            }
-        }
+             } catch (LobbyServiceException e) {
+                 Debug.Log(e);
+             }
+         }
+     }
+    
+
+    [ServerRpc]
+    public async void PlayerLeftServerRpc(string playerId)
+    {
+        OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(playerId);
+
+        joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
     }
 
     public async void KickPlayer(string playerId) {

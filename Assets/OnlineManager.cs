@@ -142,6 +142,21 @@ public class OnlineManager : NetworkBehaviour
     private void Start()
     {
         teamScore = new NetworkList<int>();
+
+        LobbyManager.Instance.OnLeftLobby += StopClient;
+        LobbyManager.Instance.OnJoinedLobby += StartClient;
+
+    }
+
+    private void StartClient(object sender, System.EventArgs e)
+    {
+
+    }
+
+    private void StopClient(object sender, System.EventArgs e)
+    {
+        Debug.Log("STOPPING CLIENT!");
+        NetworkManager.Singleton.Shutdown();
     }
 
     public override void OnNetworkSpawn()
@@ -188,7 +203,8 @@ public class OnlineManager : NetworkBehaviour
                 {
                     //All clients have changed from scene
                     Debug.Log("All clients joined");
-                    CreatePlayersServerRpc();
+                    if(IsServer)
+                        CreatePlayersServerRpc();
                     break;
                 }
             case SceneEventType.UnloadEventCompleted:
@@ -215,15 +231,16 @@ public class OnlineManager : NetworkBehaviour
     }
 
 
-    [ServerRpc(RequireOwnership = false)]
+    /*[ServerRpc(RequireOwnership = false)]
     public void GetDefNameServerRpc(string playerId)
     {
         //GetPlayerById(playerId);
         GetDefNameClientRpc(playerId);
     }
+    */
 
 
-    [ClientRpc]
+  /*  [ClientRpc]
     public void GetDefNameClientRpc(string playerId)
     {
         //GetPlayerById(playerId);
@@ -231,6 +248,7 @@ public class OnlineManager : NetworkBehaviour
 
         ChangeNameServerRpc(playerId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
     }
+  */
 
     [ServerRpc(RequireOwnership = false)]
     public void GetTeamCharacterServerRpc(string playerId, ServerRpcParams serverRpcParams = default)
@@ -261,6 +279,7 @@ public class OnlineManager : NetworkBehaviour
     public void ChangeNameServerRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
         //GetPlayerById(playerId);
+        Debug.Log("Change Name Server Rpc");
         ChangeNameClientRpc(playerId, name, clientId);
     }
 
@@ -268,7 +287,7 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     public void ChangeNameClientRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
-
+        Debug.Log("CALLED NAME CLIENT CHANGE " + playerId);
         int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
         if (index >= 0)
         {
@@ -375,33 +394,48 @@ public class OnlineManager : NetworkBehaviour
 
     }
 
-    [ServerRpc]
+    public void ClearLobby()
+    {
+        LobbyUI.Instance.LobbyPlayers.Clear();
+    }
+
+    [ServerRpc (RequireOwnership = false)]
     public void DeletePlayerLobbyIdServerRpc(string playerId, ServerRpcParams serverRpcParams = default)
     {
 
-        ulong leaveId = serverRpcParams.Receive.SenderClientId;
         PlayerInfo foundPlayer = playerList.Find(x => x.lobbyPlayerId == playerId);
 
         if (foundPlayer != null)
         {
+            playerList.Remove(foundPlayer);
             foundPlayer.isDeleted = true;
+            LobbyUI.Instance.DeletePlayer(playerId);
 
-            Debug.Log(foundPlayer.clientId);
-
-            NetworkManager.Singleton.Shutdown();
-
-            /*if(NetworkManager.ServerClientId == leaveId)
-                NetworkManager.Singleton.Shutdown();
-
-            //TODO add host migration here
-
-            else
-                NetworkManager.Singleton.DisconnectClient(foundPlayer.clientId);
-            */
         }
 
-        //  playerList.Remove(playerList.Find(x => x.lobbyPlayerId == playerId));isDeleted
-    }
+            /*    ulong leaveId = serverRpcParams.Receive.SenderClientId;
+                PlayerInfo foundPlayer = playerList.Find(x => x.lobbyPlayerId == playerId);
+
+                if (foundPlayer != null)
+                {
+                    foundPlayer.isDeleted = true;
+
+                    Debug.Log(foundPlayer.clientId);
+
+                    NetworkManager.Singleton.Shutdown();
+
+                    /*if(NetworkManager.ServerClientId == leaveId)
+                        NetworkManager.Singleton.Shutdown();
+
+                    //TODO add host migration here
+
+                    else
+                        NetworkManager.Singleton.DisconnectClient(foundPlayer.clientId);
+                    */
+            //   }
+
+            //  playerList.Remove(playerList.Find(x => x.lobbyPlayerId == playerId));isDeleted
+        }
 
 
 
@@ -421,8 +455,8 @@ public class OnlineManager : NetworkBehaviour
             System.Random rand = new System.Random();
             foreach (PlayerInfo playerInfo in playerList)
             {
-                if (playerInfo.isDeleted)
-                    continue;
+               // if (playerInfo.isDeleted)
+                 //   continue;
 
                 //if teamScore.Count 
                 if(playerInfo.team > nTeams)
@@ -462,6 +496,7 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
                 //      newPlayerGameObject = newPlayerGameObject;
                 playerList.Find(x => x.clientId == playerInfo.clientId).playerObject = newPlayerGameObject;
+                Debug.Log(playerInfo.clientId);
                
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
 
