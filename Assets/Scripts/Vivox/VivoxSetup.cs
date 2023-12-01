@@ -90,6 +90,7 @@ public class VivoxSetup
         m_channelSession = m_loginSession.GetChannelSession(channel);
         string token = m_channelSession.GetConnectToken();
 
+
         m_channelSession.BeginConnect(true, false, true, token, result =>
         {
             try
@@ -170,6 +171,8 @@ public class VivoxSetup
 
     private void HandleEarlyDisconnect()
     {
+        UnityEngine.Debug.Log("HANDLE EARLY DISCONNECT");
+        UnityEngine.Debug.Log(m_channelSession.ChannelState);
         DisconnectOnceConnected();
     }
 

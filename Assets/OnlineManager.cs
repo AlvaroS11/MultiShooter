@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using Unity.Collections;
 //using UnityEditor.PackageManager;
 using UnityEngine.Jobs;
+using Unity.VisualScripting;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -145,6 +146,7 @@ public class OnlineManager : NetworkBehaviour
 
         LobbyManager.Instance.OnLeftLobby += StopClient;
         LobbyManager.Instance.OnJoinedLobby += StartClient;
+        LobbyManager.Instance.OnKickedFromLobby += StopClient;
 
     }
 
@@ -306,6 +308,7 @@ public class OnlineManager : NetworkBehaviour
             newPlayer.team = 1;
             newPlayer.name = name;
             playerList.Add(newPlayer);
+            //return;
         }
 
         if (LobbyUI.Instance != null)
@@ -342,6 +345,7 @@ public class OnlineManager : NetworkBehaviour
             newPlayer.team = 1;
             newPlayer.playerCharacter = playerCharacter;
 
+         //   return;
             playerList.Add(newPlayer);
         }
 
@@ -378,7 +382,7 @@ public class OnlineManager : NetworkBehaviour
             newPlayer.clientId = clientId;
             newPlayer.team = team;
             playerList.Add(newPlayer);
-
+            //return;
         }
 
         if (LobbyUI.Instance != null)
@@ -386,6 +390,16 @@ public class OnlineManager : NetworkBehaviour
             LobbyUI.Instance.LobbyPlayers[playerId.ToString()].UpdateTeamUi(team);
         }
     }
+
+    //HOST ONLY
+    public void AddToList(FixedString128Bytes playerId)
+    {
+        PlayerInfo newPlayer = new PlayerInfo();
+        newPlayer.lobbyPlayerId = playerId;
+        playerList.Add(newPlayer);
+    }
+
+
 
 
     public int GetTeam(string playerId)
@@ -399,43 +413,27 @@ public class OnlineManager : NetworkBehaviour
         LobbyUI.Instance.LobbyPlayers.Clear();
     }
 
-    [ServerRpc (RequireOwnership = false)]
-    public void DeletePlayerLobbyIdServerRpc(string playerId, ServerRpcParams serverRpcParams = default)
+
+    [ClientRpc]
+    public void DeletePlayerLobbyIdClientRpc(string playerId)
     {
+        Debug.Log("removing player ");
+        Debug.Log("player id " + playerId);
+        Debug.Log(playerList.Count);
+        playerList.Remove(playerList.Find(x => x.lobbyPlayerId.ToSafeString() == playerId));
+        LobbyUI.Instance.DeletePlayer(playerId);
+        Debug.Log(playerList.Count);
 
-        PlayerInfo foundPlayer = playerList.Find(x => x.lobbyPlayerId == playerId);
+    }
 
-        if (foundPlayer != null)
-        {
-            playerList.Remove(foundPlayer);
-            foundPlayer.isDeleted = true;
-            LobbyUI.Instance.DeletePlayer(playerId);
+    [ServerRpc (RequireOwnership = false)]
+     public void DeletePlayerLobbyIdServerRpc(string playerId, ServerRpcParams serverRpcParams = default)
+     {
+        LobbyManager.Instance.joinedLobby.Players.Remove(LobbyManager.Instance.joinedLobby.Players.Find(x => x.Id == playerId));
 
-        }
+        DeletePlayerLobbyIdClientRpc(playerId);
 
-            /*    ulong leaveId = serverRpcParams.Receive.SenderClientId;
-                PlayerInfo foundPlayer = playerList.Find(x => x.lobbyPlayerId == playerId);
-
-                if (foundPlayer != null)
-                {
-                    foundPlayer.isDeleted = true;
-
-                    Debug.Log(foundPlayer.clientId);
-
-                    NetworkManager.Singleton.Shutdown();
-
-                    /*if(NetworkManager.ServerClientId == leaveId)
-                        NetworkManager.Singleton.Shutdown();
-
-                    //TODO add host migration here
-
-                    else
-                        NetworkManager.Singleton.DisconnectClient(foundPlayer.clientId);
-                    */
-            //   }
-
-            //  playerList.Remove(playerList.Find(x => x.lobbyPlayerId == playerId));isDeleted
-        }
+    }
 
 
 

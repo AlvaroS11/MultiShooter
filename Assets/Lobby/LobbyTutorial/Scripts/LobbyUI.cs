@@ -8,7 +8,11 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 using static LobbyManager;
+using System.Threading;
 using Unity.Collections;
+using System.Threading.Tasks;
+using Unity.Services.Lobbies;
+
 public class LobbyUI : MonoBehaviour {
 
 
@@ -82,29 +86,38 @@ public class LobbyUI : MonoBehaviour {
         LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby; 
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnLeftLobby;
         LobbyManager.Instance.OnKickPlayer += LobbyManagerKickPlayer;
+        //LobbyManager.Instance.ExternalPlayerLeft += LobbyExternalPlayerLeft;
 
 
         Hide();
     }
 
-    private void LobbyManagerKickPlayer(object sender, String id)
+
+ /*   private void LobbyExternalPlayerLeft(object sender, String id)
     {
         Debug.Log("DELETE PLAYER LOBBY UI");
+        DeletePlayer(id);
+    }
+ */
+
+    private void LobbyManagerKickPlayer(object sender, String id)
+    {
         DeletePlayer(id);
     }
 
     private void LobbyManager_OnLeftLobby(object sender, System.EventArgs e) {
         ClearLobby();
         Hide();
+        VivoxManager.Instance.LeaveVivox();
     }
 
     private void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
-        Debug.Log("UpdateLobby_Even");
 
         //  UpdateLobby();
         string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
-
+            
         CreatePlayersUI();
+        Debug.Log("Caling change name");
         OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
         OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
 
@@ -125,6 +138,10 @@ public class LobbyUI : MonoBehaviour {
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)
     {
        Debug.Log("SET UP EVENT");
+      /*  string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
+
+        OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
+      */
 
      //   UpdateLobby();
     }
@@ -136,104 +153,18 @@ public class LobbyUI : MonoBehaviour {
 
 
 
-    private void OnClientConnected(ulong clientId)
-    {
-        Debug.Log(clientId);
-        Debug.Log("CLIENT CONNECTED  ");
-      /*  if (clientId == NetworkManager.Singleton.LocalClientId)
-        {
-            Debug.Log("Client connected. You can now call ServerRpc methods.");
-            // Call your ServerRpc method here or trigger an event to notify other scripts
-            CallYourServerRpc();
-        }
-      */
-    }
 
-
-
-
-    //Client Only
-    
-    /*private void UpdateLobby(Lobby lobby) {
-        //ClearLobby();
-
-
-        //METER EN ONCLIENT SPAWN O ALGOS ASI
-        foreach (Player player in lobby.Players) {
-
-            LobbyPlayerSingleUI lobbyPlayerSingleUI = null;
-
-            if (LobbyPlayers.ContainsKey(player.Id))
-            {
-                //update
-                //lobbyPlayerSingleUI = LobbyPlayers[player.Id];
-            }
-            else
-            {
-                Debug.Log("creating... ");
-                Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
-                playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>().playerId = player.Id;
-
-                Debug.Log(playerSingleTemplate.GetComponent<LobbyPlayerSingleUI>().playerId);
-
-                playerSingleTransform.gameObject.SetActive(true);
-
-                
-                lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
-
-                lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
-                    LobbyManager.Instance.IsLobbyHost() &&
-                    player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
-                );
-
-                lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
-
-                LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
-
-                //lobbyPlayerSingleUI.playerId = player.Id;
-
-                lobbyPlayerSingleUI.SetId(player.Id);
-
-                Debug.Log("ddd" + lobbyPlayerSingleUI.player);
-
-
-
-                //                OnlineManager.Instance.GetServerValuesServerRpc(player.Id, clientId: NetworkManager.Singleton.ConnectedClientsIds[i]);
-                //   (team, name, playerCharacter) = OnlineManager.Instance.GetServerValuesServerRpc(player.Id);
-
-                // lobbyPlayerSingleUI.SetUpTemplate(team, name, playerCharacter);
-
-            }
-        }
-
-        changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
-
-        lobbyNameText.text = lobby.Name;
-        playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
-        gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
-
-        if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
-            startGameButton.gameObject.SetActive(true);
-        else
-            startGameButton.gameObject.SetActive(false);
-
-        Show();
-    }
-
-    */
 
     public void CreatePlayersUI()
     {
         Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
-        //Debug.Log(lobby);
-        Debug.Log("CREATE PLAYERS " + lobby.Players.Count);
+        Debug.Log("createPlayersUI");
         foreach (Player player in lobby.Players)
         {
-            Debug.Log(player.Id);
-            Debug.Log(LobbyPlayers.Count);
+         // Debug.Log(player.Id);
+          //  Debug.Log(LobbyPlayers.Count);
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
-                Debug.Log("lo tiene");
 
                 Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
                 LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>();
@@ -266,6 +197,14 @@ public class LobbyUI : MonoBehaviour {
                 Show();
 
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
+
+
+               /* if (LobbyManager.Instance.IsLobbyHost())
+                {
+                    string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
+                    OnlineManager.Instance.AddToList(PlayerLobbyId);
+                }
+              */
                 //VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
                 
             }
@@ -275,17 +214,7 @@ public class LobbyUI : MonoBehaviour {
 
     private void AddUserHandler(VivoxUserHandler playerLobbyHandler)
     {
-        Debug.Log("ADD USER HANDLER! ");
         VivoxManager.Instance.m_vivoxUserHandlers.Add(playerLobbyHandler);
-
-       /* Debug.Log("---");
-        Debug.Log(VivoxManager.Instance.m_vivoxUserHandlers.Count);
-        if (VivoxManager.Instance.m_vivoxUserHandlers.Count == 1)
-        {
-            playerLobbyHandler.lobbyPlayer.IsLocalPlayer = true;
-            playerLobbyHandler.lobbyPlayer.ChangeVolume(0);
-        }*/
-        //  VivoxManager.Instance.m_VivoxSetup.m_userHandlers.Add(playerLobbyHandler);
     }
 
     private void ClearUserHandler()
@@ -328,6 +257,8 @@ public class LobbyUI : MonoBehaviour {
                 }
             }
         }
+
+        //Lobby lobby = await LobbyService.Instance.GetLobbyAsync(LobbyManager.Instance.joinedLobby.Id);
         Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
         Debug.Log(lobby.Players.Count);
         playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
