@@ -698,7 +698,8 @@ public class OnlineManager : NetworkBehaviour
         Assets.Instance.respawnMsg.SetActive(false);
         PlayerManager pManager = playerObj.GetComponent<PlayerManager>();
       //  pManager.inmuneAnimation.Play();
-        pManager.animator.SetBool("inmuneBool", true);
+        //pManager.animator.SetBool("inmuneBool", true);
+        pManager.bodyAnimator.SetBool("inmuneBool", true);
 
 
     }
@@ -751,7 +752,9 @@ public class OnlineManager : NetworkBehaviour
 
         yield return new WaitForSeconds(inmuneTime);
         p1.isInmune.Value = false;
-        p1.animator.SetBool("inmuneBool", false);
+        //p1.animator.SetBool("inmuneBool", false);
+
+        p1.bodyAnimator.SetBool("inmuneBool", false);
 
 
         PlayerStopInmuneClientRpc(playerName);
@@ -762,7 +765,8 @@ public class OnlineManager : NetworkBehaviour
     public void PlayerStopInmuneClientRpc(FixedString128Bytes playerName)
     {
         PlayerManager p1 = playerList.Find(x => x.name == playerName).playerObject.GetComponent<PlayerManager>();
-        p1.animator.SetBool("inmuneBool", false);
+       // p1.animator.SetBool("inmuneBool", false);
+        p1.bodyAnimator.SetBool("inmuneBool", false);
     }
 
 }

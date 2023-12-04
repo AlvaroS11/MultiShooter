@@ -100,6 +100,7 @@ public class Weapon : NetworkBehaviour
     public virtual void PlayerFireServerRpc(Vector3 dir, ulong clientId)
     {
         if (!isReady) return;
+        StartCoroutine(FiringAnimation());
 
 
         Vector3 targetDirection = dir - transform.position;
@@ -111,14 +112,13 @@ public class Weapon : NetworkBehaviour
 
         //Start animation and set player rotation until animation finishes
 
-
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
         GetComponent<PlayerManager>().firing = true;
-        StartCoroutine(FiringAnimation());
+        
 
         // StartCoroutine(CoolDownServerRpc());
         StartCoolDownServerRpc();
@@ -145,13 +145,14 @@ public class Weapon : NetworkBehaviour
         transform.forward = targetDirection;
 
 
+        StartCoroutine(FiringAnimation());
+
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
         GetComponent<PlayerManager>().firing = true;
-        StartCoroutine(FiringAnimation());
 
         // StartCoroutine(CoolDownServerRpc());
         StartCoolDownServerRpc();
@@ -190,6 +191,8 @@ public class Weapon : NetworkBehaviour
         isReady = false;
         yield return new WaitForSeconds(coolDownSeconds);
         isReady = true;
+        GetComponent<PlayerManager>().bodyAnimator.SetBool("firing", false);
+
     }
 
     [ServerRpc]
@@ -200,9 +203,13 @@ public class Weapon : NetworkBehaviour
 
     public virtual IEnumerator FiringAnimation()
     {
+        PlayerManager pManager = GetComponent<PlayerManager>();
+        pManager.bodyAnimator.SetBool("firing", true);
         yield return new WaitForSeconds(2);
-        GetComponent<PlayerManager>().firing = false;
+        pManager.firing = false;
     }
+
+
 
     public void Awake()
     {

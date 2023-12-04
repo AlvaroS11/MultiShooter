@@ -91,6 +91,10 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     private Vector3 lastAimedPos;
 
+    public GameObject body;
+
+    public Animator bodyAnimator;
+
 
 
     private float previousMov;
@@ -218,6 +222,7 @@ public class PlayerManager : NetworkBehaviour
         if (movPos != Vector3.zero)
         {
             MovePlayerPhoneServerRpc(movPos);
+
         }
 
         MoveCamera();
@@ -242,12 +247,18 @@ public class PlayerManager : NetworkBehaviour
             gun.StopAim();
             if(aiming == true)
             {
-                Debug.Log(previousMov);
+                //Debug.Log(previousMov);
                 if(previousMov >= 0.22)
                 {
                     //Debug.Log(shootPos);
+                    //bodyAnimator.SetBool("firing", false);
+
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
+
+                    //animator.SetBool("firing", true);
+
+                    bodyAnimator.SetBool("firing", true);
                 }
                 
                     

@@ -149,9 +149,10 @@ public class LobbyManager : MonoBehaviour {
                 float lobbyPollTimerMax = 4f;
                 lobbyPollTimer = lobbyPollTimerMax;
 
+                if(IsPlayerInLobby())
                 joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
 
-                if (!IsPlayerInLobby()) {
+                else {
                     // Player was kicked out of this lobby
 
                     OnKickedFromLobby?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
