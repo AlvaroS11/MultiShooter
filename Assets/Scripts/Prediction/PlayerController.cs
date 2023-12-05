@@ -267,6 +267,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (IsServer && extrapolationTimer.IsRunning)
         {
+            Debug.Log("do extrapolate");
             //transform.position += extrapolationState.position.With(y: 0);
             transform.position += extrapolationState.position;
         }
