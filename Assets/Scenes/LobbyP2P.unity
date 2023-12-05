@@ -4333,9 +4333,9 @@ MonoBehaviour:
     Port: 7777
     ServerListenAddress: 127.0.0.1
   DebugSimulator:
-    PacketDelayMS: 500
+    PacketDelayMS: 300
     PacketJitterMS: 0
-    PacketDropRate: 20
+    PacketDropRate: 0
 --- !u!1 &1227334930
 GameObject:
   m_ObjectHideFlags: 0
