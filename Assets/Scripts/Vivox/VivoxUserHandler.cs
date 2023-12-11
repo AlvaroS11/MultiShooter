@@ -117,36 +117,42 @@ public class VivoxUserHandler : MonoBehaviour
         bool isThisUser = username == m_id;
         Debug.Log(username);
         Debug.Log(m_id);
-        if (isThisUser)
+        try
         {
-            m_vivoxId = keyEventArg.Key; // Since we couldn't construct the Vivox ID earlier, retrieve it here.
-            lobbyPlayer.IsLocalPlayer = participant.IsSelf;
-
-            Debug.Log("*****");
-            Debug.Log(participant.IsSelf);
-            Debug.Log(lobbyPlayer.IsLocalPlayer);
-            Debug.Log(lobbyPlayer.gameObject.name);
-            if (lobbyPlayer == null)
+            if (isThisUser)
             {
-                Debug.Log("WAS NULL!");
-                lobbyPlayer = GetComponent<LobbyPlayerSingleUI>();
+                m_vivoxId = keyEventArg.Key; // Since we couldn't construct the Vivox ID earlier, retrieve it here.
+                lobbyPlayer.IsLocalPlayer = participant.IsSelf;
+
+                Debug.Log("*****");
+                Debug.Log(participant.IsSelf);
+                Debug.Log(lobbyPlayer.IsLocalPlayer);
+                Debug.Log(lobbyPlayer.gameObject.name);
+                if (lobbyPlayer == null)
+                {
+                    Debug.Log("WAS NULL!");
+                    lobbyPlayer = GetComponent<LobbyPlayerSingleUI>();
+
+                }
+                Debug.Log(lobbyPlayer.gameObject.name);
+                if (!participant.IsMutedForAll)
+                    lobbyPlayer.ChangeVolume(0);
+
+                else
+                    lobbyPlayer.ChangeVolume(0.5f);
+            }
+            else
+            {
+                if (!participant.LocalMute)
+                    lobbyPlayer.ChangeVolume(0.5f);
+
+                else
+                    lobbyPlayer.ChangeVolume(0);
 
             }
-            Debug.Log(lobbyPlayer.gameObject.name);
-            if (!participant.IsMutedForAll)
-                lobbyPlayer.ChangeVolume(0);
-
-            else
-                lobbyPlayer.ChangeVolume(0.5f);
-        }
-        else
+        }catch(VivoxApiException e)
         {
-            if (!participant.LocalMute)
-                lobbyPlayer.ChangeVolume(0.5f);
-
-            else
-                lobbyPlayer.ChangeVolume(0);
-
+            Debug.LogError("Vivox error");
         }
     }
 

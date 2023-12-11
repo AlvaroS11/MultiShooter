@@ -13,10 +13,13 @@ public class LobbyAssets : MonoBehaviour {
     [SerializeField] private Sprite marineSprite;
     [SerializeField] private Sprite ninjaSprite;
     [SerializeField] private Sprite zombieSprite;
+    [SerializeField] private Sprite noPredSprite;
 
     [SerializeField] private GameObject marineGameObject;
     [SerializeField] private GameObject ninjaGameObject;
     [SerializeField] private GameObject zombieGameObject;
+    [SerializeField] private GameObject noPredGameObject;
+
 
 
     private void Awake() {
@@ -29,6 +32,8 @@ public class LobbyAssets : MonoBehaviour {
             case LobbyManager.PlayerCharacter.Marine:   return marineSprite;
             case LobbyManager.PlayerCharacter.Ninja:    return ninjaSprite;
             case LobbyManager.PlayerCharacter.Zombie:   return zombieSprite;
+            case LobbyManager.PlayerCharacter.NoPred: return noPredSprite;
+
         }
     }
 
@@ -40,6 +45,7 @@ public class LobbyAssets : MonoBehaviour {
             case LobbyManager.PlayerCharacter.Marine: return marineGameObject;
             case LobbyManager.PlayerCharacter.Ninja: return ninjaGameObject;
             case LobbyManager.PlayerCharacter.Zombie: return zombieGameObject;
+            case LobbyManager.PlayerCharacter.NoPred: return noPredGameObject;
         }
     }
 

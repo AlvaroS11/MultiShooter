@@ -27,6 +27,8 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private Button changeMarineButton;
     [SerializeField] private Button changeNinjaButton;
     [SerializeField] private Button changeZombieButton;
+    [SerializeField] private Button changeNoPredButton;
+
     [SerializeField] private Button leaveLobbyButton;
     [SerializeField] private Button changeGameModeButton;
     [SerializeField] private Button startGameButton;
@@ -58,6 +60,12 @@ public class LobbyUI : MonoBehaviour {
         changeZombieButton.onClick.AddListener(() => {
             //  LobbyManager.Instance.UpdatePlayerCharacter(LobbyManager.PlayerCharacter.Zombie);
             OnlineManager.Instance.ChangeCharacterServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, LobbyManager.PlayerCharacter.Zombie, NetworkManager.Singleton.LocalClientId);
+
+        });
+
+        changeNoPredButton.onClick.AddListener(() => {
+            //  LobbyManager.Instance.UpdatePlayerCharacter(LobbyManager.PlayerCharacter.Zombie);
+            OnlineManager.Instance.ChangeCharacterServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, LobbyManager.PlayerCharacter.NoPred, NetworkManager.Singleton.LocalClientId);
 
         });
 

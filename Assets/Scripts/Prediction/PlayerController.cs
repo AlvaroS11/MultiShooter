@@ -43,10 +43,10 @@ public class PlayerController : NetworkBehaviour
 
     public int PlayerInfoIndex;
 
-    [SerializeField]
+  //  [SerializeField]
     private Joystick joystick;
 
-    [SerializeField]
+   // [SerializeField]
     private Joystick joystickShoot;
 
 
@@ -85,10 +85,10 @@ public class PlayerController : NetworkBehaviour
     public bool isOwnPlayer = false;
 
 
-    [SerializeField]
+   // [SerializeField]
     private bool aiming;
 
-    [SerializeField]
+    //[SerializeField]
     private Vector3 lastAimedPos;
 
     public GameObject body;
@@ -123,7 +123,8 @@ public class PlayerController : NetworkBehaviour
         public int tick;
         public ulong networkObjectId;
         public Vector3 position;
-        public Quaternion rotation;
+        //public Quaternion rotation;
+        public Vector3 inputVector;
         //public Vector3 velocity;
         //public Vector3 angularVelocity;
 
@@ -132,7 +133,7 @@ public class PlayerController : NetworkBehaviour
             serializer.SerializeValue(ref tick);
             serializer.SerializeValue(ref networkObjectId);
             serializer.SerializeValue(ref position);
-            serializer.SerializeValue(ref rotation);
+            serializer.SerializeValue(ref inputVector);
             //serializer.SerializeValue(ref velocity);
             //serializer.SerializeValue(ref angularVelocity);
         }
@@ -161,7 +162,8 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] GameObject serverCube;
     [SerializeField] GameObject clientCube;
     [SerializeField] float extrapolationLimit = 0.5f;
-    [SerializeField] float extrapolationMultiplier = 1.2f;
+    [SerializeField] float extrapolationMinimum = 0.1f;
+    [SerializeField] float extrapolationMultiplier = 10f;
     CountdownTimer reconciliationTimer;
     CountdownTimer extrapolationTimer;
     StatePayload extrapolationState;
@@ -236,7 +238,7 @@ public class PlayerController : NetworkBehaviour
             HandleServerTick();
         }
 
-        Extraplolate();
+        //Extraplolate(); ?
 
     }
 
@@ -252,6 +254,12 @@ public class PlayerController : NetworkBehaviour
 
             bufferIndex = inputPayload.tick % k_bufferSize;
 
+            //ProcessMovement is normally called if there is no lag. Else also call Extrapolation
+
+          /*  if (inputPayload.inputVector != Vector3.zero && !IsOwner)
+                Debug.Log("not zero");
+            else if(!IsOwner)
+                Debug.Log("servertick is zero");*/
             StatePayload statePayload = ProcessMovement(inputPayload);
             serverStateBuffer.Add(statePayload, bufferIndex);
         }
@@ -263,19 +271,60 @@ public class PlayerController : NetworkBehaviour
 
     static float CalculateLatencyInMillis(InputPayload inputPayload) => (DateTime.Now - inputPayload.timestamp).Milliseconds / 1000f;
 
-    void Extraplolate()
+    void Extrapolate()
     {
+        //Debug.Log(extrapolationTimer.is)
         if (IsServer && extrapolationTimer.IsRunning)
         {
-            Debug.Log("do extrapolate");
+            if (!IsOwner && extrapolationState.inputVector != Vector3.zero)
+                Debug.Log("not zero");
+
+            //transform.position += extrapolationState.position
+
+
+            // Debug.Log("do extrapolate");
             //transform.position += extrapolationState.position.With(y: 0);
-            transform.position += extrapolationState.position;
+             if(extrapolationState.inputVector != Vector3.zero)
+               transform.position += extrapolationState.inputVector * Time.deltaTime * speed;
+            //MovePlayerPc(extrapolationState.inputVector);
+
+            //ExtrapolateServer(extrapolationState.inputVector);
+            //Debug.Log("extrapolating from server");
         }
     }
 
+    void ExtrapolateServer(Vector3 inputV)
+    {
+        transform.position += inputV * Time.deltaTime * speed;
+        // Vector3 targetDirection = input - transform.position;
+
+        if (IsServer && !IsOwner && inputV != Vector3.zero)
+        {
+            //Debug.Log("external client input " + input);
+            //Debug.Log("external client position " + transform.position);
+        }
+
+        //if (input == Vector3.zero)
+        // Debug.Log("ZERO!");
+
+
+        if (!firing && inputV != Vector3.zero)
+        {
+            Quaternion newRotation = Quaternion.LookRotation(inputV);
+            transform.rotation = newRotation;
+        }
+
+    }
+
+    //Server only preprares extrapolationState to be executed in Extrapolate()
     void HandleExtrapolation(StatePayload latest, float latency)
     {
-        if (ShouldExtrapolate(latency))
+       /* Debug.Log("***");
+        Debug.Log(latency);
+        Debug.Log(extrapolationLimit);
+        Debug.Log(Time.fixedDeltaTime);
+        Debug.Log(latency < extrapolationLimit && latency > Time.fixedDeltaTime);  
+       */ if (ShouldExtrapolate(latency))
         {
             // Calculate the arc the object would traverse in degrees
             /*   float axisLength = latency * latest.angularVelocity.magnitude * Mathf.Rad2Deg;
@@ -294,7 +343,7 @@ public class PlayerController : NetworkBehaviour
                extrapolationState.angularVelocity = latest.angularVelocity;
               */
 
-            Debug.Log("EXTRAPOLATING!!");
+           // Debug.Log("EXTRAPOLATING!!");
 
             if (extrapolationState.position != default)
             {
@@ -302,12 +351,28 @@ public class PlayerController : NetworkBehaviour
             }
 
             // Update position based on extrapolation
-            var posAdjustment = latest.position + (Vector3.up * latency * extrapolationMultiplier); // Adjust as needed
-            extrapolationState.position = posAdjustment;
+            //var posAdjustment = latest.position + (Vector3.up * latency * extrapolationMultiplier); // Adjust as needed
 
+            //var posAdjustment = latest.position + (speed * latest.inputVector * latency * extrapolationMultiplier);
+
+
+            // NO ESTA HACIENDO NADA, EN EXTRAPOLATE LO HACEMOS CON EL IMPUT
+           /* var posAdjustment = transform.position;
+            if (latest.inputVector != Vector3.zero)
+                posAdjustment = speed * (latest.inputVector.normalized * latency * extrapolationMultiplier);
+           */
+
+
+            //Debug.Log("posAdjustment : " + posAdjustment);
+            //var posAdjustment = speed * latest.inputVector;
+           // extrapolationState.position = posAdjustment;
+            extrapolationState.inputVector = latest.inputVector;
+
+
+
+            //Allows Extrapolate method to continue
             extrapolationTimer.Start();
 
-            extrapolationTimer.Start();
         }
         else
         {
@@ -315,7 +380,9 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    bool ShouldExtrapolate(float latency) => latency < extrapolationLimit && latency > Time.fixedDeltaTime;
+
+    //True if latency is less than the maximum latency and latency is more than the FPS/1
+    bool ShouldExtrapolate(float latency) => latency > extrapolationMinimum && latency < extrapolationLimit && latency > Time.fixedDeltaTime;
 
 
 
@@ -358,59 +425,52 @@ public class PlayerController : NetworkBehaviour
         if (receivedInput != Vector3.zero)
         {
             receivedInput.Normalize();
-            MovePlayerPcServerRpc(receivedInput);
+            MovePlayerPc(receivedInput);
         }
         MoveCamera();
 
         //Meter en una funcion
-        if (Input.GetMouseButton(1))
-        {
-            Vector3 dest = Input.mousePosition;
+         if (Input.GetMouseButton(1))
+         {
+             Vector3 dest = Input.mousePosition;
 
-            Ray ray = _mainCamera.ScreenPointToRay(dest);
+             Ray ray = _mainCamera.ScreenPointToRay(dest);
 
-            if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-            {
-                Vector3 moveDestination = hitData.point;
-                moveDestination.y = 0.5f;
-                gun.AimWeapon(moveDestination);
+             if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+             {
+                 Vector3 moveDestination = hitData.point;
+                 moveDestination.y = 0.5f;
+                 gun.AimWeapon(moveDestination);
 
-                if (Input.GetMouseButtonDown(0))
-                {
-                    gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-                }
-            }
-            else
-                gun.StopAim();
-        }
-        else
-            gun.StopAim();
+                 if (Input.GetMouseButtonDown(0))
+                 {
+                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+                 }
+             }
+             else
+                 gun.StopAim();
+         }
+         else
+             gun.StopAim();
 
-        //Meter en una funcion
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector3 dest = Input.mousePosition;
+         //Meter en una funcion
+         if (Input.GetMouseButtonDown(0))
+         {
+             Vector3 dest = Input.mousePosition;
 
-            Ray ray = _mainCamera.ScreenPointToRay(dest);
+             Ray ray = _mainCamera.ScreenPointToRay(dest);
 
-            if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-            {
-                Vector3 moveDestination = hitData.point;
-                moveDestination.y = 0.5f;
-                return moveDestination;
-                gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-            }
-        }
-         return Vector3.zero;
+             if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+             {
+                 Vector3 moveDestination = hitData.point;
+                 moveDestination.y = 0.5f;
+                 //return moveDestination;
+                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+             }
+         }
+         // return Vector3.zero;
 
-
-        if(IsServer)
-        {
-            if (isHealthing)
-            {
-               // life.Value = 
-            }
-        }
+        return receivedInput;
 
 
 
@@ -507,7 +567,10 @@ public class PlayerController : NetworkBehaviour
         bool isLastStateUndefinedOrDifferent = lastProcessedState.Equals(default)
                                                || !lastProcessedState.Equals(lastServerState);
 
+       // Debug.Log("RECONCILIATION" + (isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning));
+        //Debug.Log(isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning);
         return isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning;
+        //return false;
     }
 
     void HandleServerReconciliation()
@@ -524,10 +587,25 @@ public class PlayerController : NetworkBehaviour
         StatePayload clientState = IsHost ? clientStateBuffer.Get(bufferIndex - 1) : clientStateBuffer.Get(bufferIndex);
         positionError = Vector3.Distance(rewindState.position, clientState.position);
 
+        //Debug.Log("position error " + positionError);
+
+       /* if(rewindState.position != clientState.position)
+            Debug.Log("position differs! " + positionError);
+
+       // if(IsHost )
+         //   Debug.Log(" rewind and client positions "  + rewindState.position + " " + clientState.position);
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Debug.Log("distance: " + rewindState.position + "  " + clientState.position);
+        }*/
+
         if (positionError > reconciliationThreshold)
         {
+            Debug.Break();
             ReconcileState(rewindState);
             reconciliationTimer.Start();
+            Debug.Log("start reconciliation");
         }
 
         lastProcessedState = rewindState;
@@ -535,9 +613,10 @@ public class PlayerController : NetworkBehaviour
 
     void ReconcileState(StatePayload rewindState)
     {
+        Debug.Log("RECONCILING");
         transform.position = rewindState.position;
-        transform.rotation = rewindState.rotation;
-      
+       // transform.rotation = rewindState.rotation;
+        transform.rotation = Quaternion.Euler(rewindState.inputVector.x, rewindState.inputVector.y, rewindState.inputVector.z);
 
         if (!rewindState.Equals(lastServerState)) return;
 
@@ -554,6 +633,8 @@ public class PlayerController : NetworkBehaviour
             tickToReplay++;
         }
     }
+   
+
 
     [ServerRpc]
     void SendToServerRpc(InputPayload input)
@@ -566,15 +647,19 @@ public class PlayerController : NetworkBehaviour
 
     StatePayload ProcessMovement(InputPayload input)
     {
-        Move(input.inputVector);
+        MovePlayerPc(input.inputVector);
+
 
         return new StatePayload()
         {
             tick = input.tick,
+
             networkObjectId = NetworkObjectId,
-            position = transform.position,
-            rotation = transform.rotation,
-       
+            position = input.position,
+            //position = transform.position,
+            //rotation = transform.rotation,
+            inputVector = input.inputVector,
+
         };
     }
 
@@ -587,13 +672,14 @@ public class PlayerController : NetworkBehaviour
         networkTimer.Update(Time.deltaTime);
         reconciliationTimer.Tick(Time.deltaTime);
         extrapolationTimer.Tick(Time.deltaTime);
-        Extraplolate();
+        Extrapolate();
 
-        Debug.Log($"Owner: {IsOwner} NetworkObjectId: {NetworkObjectId} Velocity: {transform.position:F1}");
+        //Debug.Log($"Owner: {IsOwner} NetworkObjectId: {NetworkObjectId} Velocity: {transform.position:F1}");
         if (Input.GetKeyDown(KeyCode.Q))
         {
             transform.position += transform.forward * 20f;
         }
+     
     }
 
     void Move(Vector3 inputVector)
@@ -622,7 +708,7 @@ public class PlayerController : NetworkBehaviour
         MovePlayerPhoneServerRpc(inputVector);
 
 #elif UNITY_EDITOR_WIN
-        MovePlayerPcServerRpc(inputVector);
+        MovePlayerPc(inputVector);
 
 #endif
 
@@ -789,14 +875,41 @@ public class PlayerController : NetworkBehaviour
 
     // }*/
 
-    [ServerRpc]
+    /*[ServerRpc]
     private void MovePlayerPcServerRpc(Vector3 input)
     {
         transform.position += input * Time.deltaTime * speed;
         // Vector3 targetDirection = input - transform.position;
 
 
-        if (!firing)
+        if (!firing && input != Vector3.zero)
+        {
+            Quaternion newRotation = Quaternion.LookRotation(input);
+            transform.rotation = newRotation;
+        }
+    }*/
+
+
+   // [ServerRpc]
+    private void MovePlayerPc(Vector3 input)
+    {
+        if(input == Vector3.zero)
+            return;
+        transform.position += input.normalized * Time.deltaTime * speed;
+        // Vector3 targetDirection = input - transform.position;
+
+        if (IsServer && !IsOwner && input != Vector3.zero)
+        {
+            Debug.Log(transform.position);
+            //Debug.Log("external client input " + input);
+            //Debug.Log("external client position " + transform.position);
+        }
+
+        //if (input == Vector3.zero)
+           // Debug.Log("ZERO!");
+
+
+        if (!firing && input != Vector3.zero)
         {
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;

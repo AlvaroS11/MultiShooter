@@ -8,6 +8,7 @@ public class Bullet : MonoBehaviour {
     public Vector3 direction;
     public LayerMask obstacle;
     protected int obstacleLayer = 0;
+    [SerializeField]
     protected int playerLayer = 0;
 
     protected GameObject parent;
@@ -15,28 +16,58 @@ public class Bullet : MonoBehaviour {
     [SerializeField]
     protected int bulletDmg = 20;
 
-    protected PlayerManager playerManager;
+    public PlayerManager playerManager;
 
 
     [SerializeField]
     public int timeToDestroy = 5;
     //public NetworkVariable<int> bulletDmg;
 
+    [SerializeField]
+    private bool shouldFollow = false;
 
     private void Start()
+    {
+       /* if (!NetworkManager.Singleton.IsServer) return;
+        StartCoroutine(WaitToDeleteServerRpc());
+        obstacleLayer = LayerMask.NameToLayer("Obstacle");
+        playerLayer = LayerMask.NameToLayer("Player");
+
+
+        if(playerManager == null)
+        {
+            playerManager = parent.GetComponent<PlayerManager>();
+            Debug.Log("playermanager was null");
+        }
+
+        Debug.Log("parent is " + playerManager.gameObject.name);
+        //Calculate range with speed and timeToDestroy*/
+
+        SetUp();
+    }
+   
+    private void Awake()
+    {
+        SetUp();
+
+
+      /*  if (playerManager == null)
+        {
+            playerManager = parent.GetComponent<PlayerManager>();
+            Debug.Log("playermanager was null");
+        }*/
+
+        //Debug.Log("parent is " + playerManager.gameObject.name);
+    }
+
+
+    private void SetUp()
     {
         if (!NetworkManager.Singleton.IsServer) return;
         StartCoroutine(WaitToDeleteServerRpc());
         obstacleLayer = LayerMask.NameToLayer("Obstacle");
         playerLayer = LayerMask.NameToLayer("Player");
-
-        playerManager = parent.GetComponent<PlayerManager>();
-
-
-        //Calculate range with speed and timeToDestroy
-
     }
-
     [ServerRpc]
     public void SetParent(GameObject parent)
     {
@@ -47,8 +78,10 @@ public class Bullet : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-
-        transform.Translate(Vector3.up * speed * Time.deltaTime);
+        if(!shouldFollow)
+            transform.Translate(Vector3.up * speed * Time.deltaTime);
+        else
+            transform.position = parent.transform.position;
      //   if(direction == Vector3.zero)
         //    Debug.Log(direction);
       //  else
@@ -64,17 +97,32 @@ public class Bullet : MonoBehaviour {
     {
         if (!NetworkManager.Singleton.IsServer) return;
         OnTriggerEnterServerRpc(other);
+        Debug.Log("COLLISION ");
     }
 
     [ServerRpc]
     public virtual void OnTriggerEnterServerRpc(Collider other)
     {
         GameObject hitObject = other.gameObject;
+        Debug.Log("****");
+        Debug.Log(other.gameObject.name);
+
+        Debug.Log(hitObject.layer);
+        Debug.Log(IsEnemy(hitObject));
+
+        Debug.Log(hitObject.layer == playerLayer);
+        Debug.Log("*** " + hitObject.layer);
+        Debug.Log(playerLayer);
+
+        Debug.Log(hitObject != parent);
+        Debug.Log(IsEnemy(hitObject));
         if (hitObject.layer == obstacleLayer || (hitObject.layer == playerLayer && hitObject != parent && IsEnemy(hitObject)) )
         {
+            Debug.Log("entra1");
             Destroy(gameObject);
             if (hitObject.layer == playerLayer)
             {
+                Debug.Log("entra2");
                 PlayerManager hitPlayerManager = hitObject.GetComponent<PlayerManager>();
 
                 if(!hitPlayerManager.isInmune.Value)

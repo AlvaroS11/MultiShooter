@@ -453,16 +453,10 @@ public class OnlineManager : NetworkBehaviour
             System.Random rand = new System.Random();
             foreach (PlayerInfo playerInfo in playerList)
             {
-               // if (playerInfo.isDeleted)
-                 //   continue;
 
-                //if teamScore.Count 
                 if(playerInfo.team > nTeams)
                 {
 
-              /* }
-                if (!teamScore.Contains(playerInfo.team))
-                {*/
                     Debug.Log("NEW TEAM! " + playerInfo.team);
                     Debug.Log(teamScore.Contains(playerInfo.team));
 
@@ -473,11 +467,6 @@ public class OnlineManager : NetworkBehaviour
                     
                 GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerInfo.playerCharacter);
 
-
-                /*   Debug.Log(teamScore.Count);
-                   int maxTeam = Mathf.Clamp(playerInfo.team, 0, teamScore.Count-1);
-                   int randomIndex = rand.Next(playerInfo.team, maxTeam+2);
-                */
                 int ran = rand.Next(1, 2);
                 int clampledTeam = Mathf.Clamp(playerInfo.team, 0, teamScore.Count - 1)*2; //real team spawn from 1 to n of teams
                 Debug.Log(" Player team " + playerInfo.team + " teamScoreCount  " + teamScore.Count + " real: " + clampledTeam);
@@ -485,6 +474,7 @@ public class OnlineManager : NetworkBehaviour
                 Debug.Log(randomIndex);
                 Transform randomSpawn = spawnPoints[randomIndex];
                 GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance, randomSpawn);
+
 
                 PlayerManager newPlayerManager = newPlayerGameObject.GetComponent<PlayerManager>();
 

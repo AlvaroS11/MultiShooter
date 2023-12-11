@@ -61,7 +61,8 @@ public class LobbyManager : MonoBehaviour {
     public enum PlayerCharacter {
         Marine,
         Ninja,
-        Zombie
+        Zombie,
+        NoPred
     }
 
 

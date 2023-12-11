@@ -33,10 +33,19 @@ public class UIPlayer : NetworkBehaviour
    
     public void setPlayersData()
     {
-        maxLife = playerController.MaxLife;
-        healthAmount = maxLife;
-        //CUANDO UN CLIENTE SE CONECTA, NO ESTÁ COGIENDO LOS MAX LIFES DE LOS CLIENTES YA CONECTADOS,
-        //DADO QUE NO SE HA EJECUTADO ESTE MÉTODO DESDE DICHOS CLIENTES, SE EJECUTÓ ANTERIORMENTE
+        try
+        {
+            maxLife = playerController.MaxLife;
+            healthAmount = maxLife;
+            //CUANDO UN CLIENTE SE CONECTA, NO ESTÁ COGIENDO LOS MAX LIFES DE LOS CLIENTES YA CONECTADOS,
+            //DADO QUE NO SE HA EJECUTADO ESTE MÉTODO DESDE DICHOS CLIENTES, SE EJECUTÓ ANTERIORMENTE
+        }
+        catch
+        {
+            Debug.LogWarning("PLAYING WITH NO PREDICTION CLIENT ");
+            maxLife = 100;
+            healthAmount = maxLife;
+        }
     }
   
 

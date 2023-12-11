@@ -25,30 +25,30 @@ public class PlayerManager : NetworkBehaviour
 
     public UIPlayer healthUI;
 
-    [SerializeField] private Transform playerPrefab;
+    private Transform playerPrefab;
 
     // public NetworkVariable<int> team = new NetworkVariable<int>();
     // public int team;
 
 
-   /* public string PlayerLobbyId;
-    public string PlayerName;
-    public int PlayerTeam;
-   */
-   // public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    /* public string PlayerLobbyId;
+     public string PlayerName;
+     public int PlayerTeam;
+    */
+    // public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<FixedString128Bytes> PlayerName = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> PlayerTeam = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-   
+
     public LobbyManager.PlayerCharacter playerCharacterr;
 
     public int PlayerInfoIndex;
 
-    [SerializeField]
+    //  [SerializeField]
     private Joystick joystick;
 
-    [SerializeField]
+    // [SerializeField]
     private Joystick joystickShoot;
-    
+
 
     [SerializeField]
     private TextMeshProUGUI nameText;
@@ -76,7 +76,7 @@ public class PlayerManager : NetworkBehaviour
     private GameObject CanvasDeath;
 
 
-   // public Animation inmuneAnimation;
+    // public Animation inmuneAnimation;
     public Animator animator;
 
     //[SerializeField]
@@ -85,19 +85,130 @@ public class PlayerManager : NetworkBehaviour
     public bool isOwnPlayer = false;
 
 
-    [SerializeField]
+    // [SerializeField]
     private bool aiming;
 
-    [SerializeField]
+    //[SerializeField]
     private Vector3 lastAimedPos;
 
     public GameObject body;
 
     public Animator bodyAnimator;
 
-
-
     private float previousMov;
+
+
+    // Network variables should be value objects
+    public struct InputPayload : INetworkSerializable
+    {
+        public int tick;
+        public DateTime timestamp;
+        public ulong networkObjectId;
+        public Vector3 inputVector;
+        public Vector3 position;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref tick);
+            serializer.SerializeValue(ref timestamp);
+            serializer.SerializeValue(ref networkObjectId);
+            serializer.SerializeValue(ref inputVector);
+            serializer.SerializeValue(ref position);
+        }
+    }
+
+    //The state of the player
+    public struct StatePayload : INetworkSerializable
+    {
+        public int tick;
+        public ulong networkObjectId;
+        public Vector3 position;
+        //public Quaternion rotation;
+        public Vector3 inputVector;
+        //public Vector3 velocity;
+        //public Vector3 angularVelocity;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref tick);
+            serializer.SerializeValue(ref networkObjectId);
+            serializer.SerializeValue(ref position);
+            serializer.SerializeValue(ref inputVector);
+            //serializer.SerializeValue(ref velocity);
+            //serializer.SerializeValue(ref angularVelocity);
+        }
+    }
+
+    // Netcode general
+    NetworkTimer networkTimer;
+    const float k_serverTickRate = 60f; // 60 FPS
+    const int k_bufferSize = 1024;
+
+    // Netcode client specific
+    CircularBuffer<StatePayload> clientStateBuffer;
+    CircularBuffer<InputPayload> clientInputBuffer;
+    StatePayload lastServerState;
+    StatePayload lastProcessedState;
+
+    ClientNetworkTransform clientNetworkTransform;
+
+    // Netcode server specific
+    CircularBuffer<StatePayload> serverStateBuffer;
+    Queue<InputPayload> serverInputQueue;
+
+    [Header("Netcode")]
+    [SerializeField] float reconciliationCooldownTime = 1f;
+    [SerializeField] float reconciliationThreshold = 10f;
+    [SerializeField] GameObject serverCube;
+    [SerializeField] GameObject clientCube;
+    [SerializeField] float extrapolationLimit = 0.5f;
+    [SerializeField] float extrapolationMinimum = 0.1f;
+    [SerializeField] float extrapolationMultiplier = 10f;
+    CountdownTimer reconciliationTimer;
+    CountdownTimer extrapolationTimer;
+    StatePayload extrapolationState;
+
+
+    private void Awake()
+    {
+        networkTimer = new NetworkTimer(k_serverTickRate);
+        clientStateBuffer = new CircularBuffer<StatePayload>(k_bufferSize);
+        clientInputBuffer = new CircularBuffer<InputPayload>(k_bufferSize);
+        serverStateBuffer = new CircularBuffer<StatePayload>(k_bufferSize);
+
+
+        serverInputQueue = new Queue<InputPayload>();
+
+        reconciliationTimer = new CountdownTimer(reconciliationCooldownTime);
+        extrapolationTimer = new CountdownTimer(extrapolationLimit);
+
+        clientNetworkTransform = GetComponent<ClientNetworkTransform>();
+
+
+        reconciliationTimer.OnTimerStart += () => {
+            extrapolationTimer.Stop();
+        };
+
+        extrapolationTimer.OnTimerStart += () => {
+            reconciliationTimer.Stop();
+            SwitchAuthorityMode(AuthorityMode.Server);
+
+        };
+        extrapolationTimer.OnTimerStop += () => {
+            extrapolationState = default;
+            SwitchAuthorityMode(AuthorityMode.Client);
+        };
+    }
+
+    void SwitchAuthorityMode(AuthorityMode mode)
+    {
+        clientNetworkTransform.authorityMode = mode;
+        bool shouldSync = mode == AuthorityMode.Client;
+        clientNetworkTransform.SyncPositionX = shouldSync;
+        clientNetworkTransform.SyncPositionY = shouldSync;
+        clientNetworkTransform.SyncPositionZ = shouldSync;
+    }
+
     void Start()
     {
         Initialized();
@@ -119,11 +230,176 @@ public class PlayerManager : NetworkBehaviour
 
     }
 
-    // Update is called once per frame
-    void Update()
+    private void FixedUpdate()
     {
-        if (!IsOwner || !Application.isFocused) return;
-        //Movement for pc
+        while (networkTimer.ShouldTick())
+        {
+            HandleClientTick();
+            HandleServerTick();
+        }
+
+        //Extraplolate(); ?
+
+    }
+
+    void HandleServerTick()
+    {
+        if (!IsServer) return;
+
+        var bufferIndex = -1;
+        InputPayload inputPayload = default;
+        while (serverInputQueue.Count > 0)
+        {
+            inputPayload = serverInputQueue.Dequeue();
+
+            bufferIndex = inputPayload.tick % k_bufferSize;
+
+            //ProcessMovement is normally called if there is no lag. Else also call Extrapolation
+
+            /*  if (inputPayload.inputVector != Vector3.zero && !IsOwner)
+                  Debug.Log("not zero");
+              else if(!IsOwner)
+                  Debug.Log("servertick is zero");*/
+            StatePayload statePayload = ProcessMovement(inputPayload);
+            serverStateBuffer.Add(statePayload, bufferIndex);
+        }
+
+        if (bufferIndex == -1) return;
+        SendToClientRpc(serverStateBuffer.Get(bufferIndex));
+        HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload));
+    }
+
+    static float CalculateLatencyInMillis(InputPayload inputPayload) => (DateTime.Now - inputPayload.timestamp).Milliseconds / 1000f;
+
+    void Extrapolate()
+    {
+        //Debug.Log(extrapolationTimer.is)
+        if (IsServer && extrapolationTimer.IsRunning)
+        {
+            if (!IsOwner && extrapolationState.inputVector != Vector3.zero)
+                Debug.Log("not zero");
+
+            //transform.position += extrapolationState.position
+
+
+            // Debug.Log("do extrapolate");
+            //transform.position += extrapolationState.position.With(y: 0);
+            if (extrapolationState.inputVector != Vector3.zero)
+                transform.position += extrapolationState.inputVector * Time.deltaTime * speed;
+            //MovePlayerPc(extrapolationState.inputVector);
+
+            //ExtrapolateServer(extrapolationState.inputVector);
+            //Debug.Log("extrapolating from server");
+        }
+    }
+
+    void ExtrapolateServer(Vector3 inputV)
+    {
+        transform.position += inputV * Time.deltaTime * speed;
+        // Vector3 targetDirection = input - transform.position;
+
+        if (IsServer && !IsOwner && inputV != Vector3.zero)
+        {
+            //Debug.Log("external client input " + input);
+            //Debug.Log("external client position " + transform.position);
+        }
+
+        //if (input == Vector3.zero)
+        // Debug.Log("ZERO!");
+
+
+        if (!firing && inputV != Vector3.zero)
+        {
+            Quaternion newRotation = Quaternion.LookRotation(inputV);
+            transform.rotation = newRotation;
+        }
+
+    }
+
+    //Server only preprares extrapolationState to be executed in Extrapolate()
+    void HandleExtrapolation(StatePayload latest, float latency)
+    {
+        /* Debug.Log("***");
+         Debug.Log(latency);
+         Debug.Log(extrapolationLimit);
+         Debug.Log(Time.fixedDeltaTime);
+         Debug.Log(latency < extrapolationLimit && latency > Time.fixedDeltaTime);  
+        */
+        if (ShouldExtrapolate(latency))
+        {
+            // Calculate the arc the object would traverse in degrees
+            /*   float axisLength = latency * latest.angularVelocity.magnitude * Mathf.Rad2Deg;
+               Quaternion angularRotation = Quaternion.AngleAxis(axisLength, latest.angularVelocity);
+
+               if (extrapolationState.position != default)
+               {
+                   latest = extrapolationState;
+               }
+
+               // Update position and rotation based on extrapolation
+               var posAdjustment = latest.velocity * (1 + latency * extrapolationMultiplier);
+               extrapolationState.position = posAdjustment;
+               extrapolationState.rotation = angularRotation * transform.rotation;
+               extrapolationState.velocity = latest.velocity;
+               extrapolationState.angularVelocity = latest.angularVelocity;
+              */
+
+            // Debug.Log("EXTRAPOLATING!!");
+
+            if (extrapolationState.position != default)
+            {
+                latest = extrapolationState;
+            }
+
+            // Update position based on extrapolation
+            //var posAdjustment = latest.position + (Vector3.up * latency * extrapolationMultiplier); // Adjust as needed
+
+            //var posAdjustment = latest.position + (speed * latest.inputVector * latency * extrapolationMultiplier);
+
+
+            // NO ESTA HACIENDO NADA, EN EXTRAPOLATE LO HACEMOS CON EL IMPUT
+            /* var posAdjustment = transform.position;
+             if (latest.inputVector != Vector3.zero)
+                 posAdjustment = speed * (latest.inputVector.normalized * latency * extrapolationMultiplier);
+            */
+
+
+            //Debug.Log("posAdjustment : " + posAdjustment);
+            //var posAdjustment = speed * latest.inputVector;
+            // extrapolationState.position = posAdjustment;
+            extrapolationState.inputVector = latest.inputVector;
+
+
+
+            //Allows Extrapolate method to continue
+            extrapolationTimer.Start();
+
+        }
+        else
+        {
+            extrapolationTimer.Stop();
+        }
+    }
+
+
+    //True if latency is less than the maximum latency and latency is more than the FPS/1
+    bool ShouldExtrapolate(float latency) => latency > extrapolationMinimum && latency < extrapolationLimit && latency > Time.fixedDeltaTime;
+
+
+
+    [ClientRpc]
+    void SendToClientRpc(StatePayload statePayload)
+    {
+        //    Debug.Log($"Received state from server Tick {statePayload.tick} Server POS: {statePayload.position}");
+        //serverCube.transform.position = statePayload.position.With(y: 4);
+        serverCube.transform.position = statePayload.position;
+        if (!IsOwner) return;
+        lastServerState = statePayload;
+    }
+
+    private Vector3 GetInput()
+    {
+        if (!IsOwner || !Application.isFocused) return Vector3.zero;
 
 #if UNITY_STANDALONE_WIN
 
@@ -150,7 +426,7 @@ public class PlayerManager : NetworkBehaviour
         if (receivedInput != Vector3.zero)
         {
             receivedInput.Normalize();
-            MovePlayerPcServerRpc(receivedInput);
+            MovePlayerPc(receivedInput);
         }
         MoveCamera();
 
@@ -189,17 +465,13 @@ public class PlayerManager : NetworkBehaviour
             {
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
+                //return moveDestination;
                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
             }
         }
+        // return Vector3.zero;
 
-        if(IsServer)
-        {
-            if (isHealthing)
-            {
-               // life.Value = 
-            }
-        }
+        return receivedInput;
 
 
 
@@ -221,12 +493,12 @@ public class PlayerManager : NetworkBehaviour
 
         if (movPos != Vector3.zero)
         {
-            MovePlayerPhoneServerRpc(movPos);
+            //MovePlayerPhoneServerRpc(movPos);
 
         }
 
         MoveCamera();
-
+        return movPos;
 
         //Aim And Shoot
         Vector3 shootPos = new Vector3();
@@ -234,10 +506,8 @@ public class PlayerManager : NetworkBehaviour
         shootPos.x += joystickShoot.Horizontal;
         shootPos.z += joystickShoot.Vertical;
 
-        //Debug.Log(shootPos);
         if (shootPos != Vector3.zero)
         {
-      //      Debug.Log("Aiming!! " + shootPos);
             aiming = true;
             lastAimedPos = gun.AimWeaponMobile(shootPos);
             previousMov = shootPos.magnitude;
@@ -245,50 +515,391 @@ public class PlayerManager : NetworkBehaviour
         else
         {
             gun.StopAim();
-            if(aiming == true)
+            if (aiming == true)
             {
-                //Debug.Log(previousMov);
-                if(previousMov >= 0.22)
+                if (previousMov >= 0.22)
                 {
-                    //Debug.Log(shootPos);
-                    //bodyAnimator.SetBool("firing", false);
+
 
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
-
-                    //animator.SetBool("firing", true);
-
                     bodyAnimator.SetBool("firing", true);
                 }
-                
-                    
+
+
             }
         }
-
-
-        /*  if(joystickShoot.Horizontal<= .2f && joystickShoot.Horizontal >= .2f && joystickShoot.Vertical <= .2f && joystickShoot.Vertical >= .2f)
-          {
-              //Vibrate, cancel and set to 0
-          }
-        */
-
-        //   if (joystickShoot.)
-
 #endif
+    }
 
 
-        //  gun.StopAim();
+
+    void HandleClientTick()
+    {
+        if (!IsClient || !IsOwner) return;
+
+        var currentTick = networkTimer.CurrentTick;
+        var bufferIndex = currentTick % k_bufferSize;
+
+        InputPayload inputPayload = new InputPayload()
+        {
+            tick = currentTick,
+            timestamp = DateTime.Now,
+            networkObjectId = NetworkObjectId,
+            //inputVector = input.Move,
+            inputVector = GetInput(),
+            position = transform.position
+        };
+
+        clientInputBuffer.Add(inputPayload, bufferIndex);
+
+
+        SendToServerRpc(inputPayload);
+
+        StatePayload statePayload = ProcessMovement(inputPayload);
+        clientStateBuffer.Add(statePayload, bufferIndex);
+
+        HandleServerReconciliation();
+    }
+
+    bool ShouldReconcile()
+    {
+        bool isNewServerState = !lastServerState.Equals(default);
+        bool isLastStateUndefinedOrDifferent = lastProcessedState.Equals(default)
+                                               || !lastProcessedState.Equals(lastServerState);
+
+        // Debug.Log("RECONCILIATION" + (isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning));
+        //Debug.Log(isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning);
+        return isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning;
+        //return false;
+    }
+
+    void HandleServerReconciliation()
+    {
+        if (!ShouldReconcile()) return;
+
+        float positionError;
+        int bufferIndex;
+
+        bufferIndex = lastServerState.tick % k_bufferSize;
+        if (bufferIndex - 1 < 0) return; // Not enough information to reconcile
+
+        StatePayload rewindState = IsHost ? serverStateBuffer.Get(bufferIndex - 1) : lastServerState; // Host RPCs execute immediately, so we can use the last server state
+        StatePayload clientState = IsHost ? clientStateBuffer.Get(bufferIndex - 1) : clientStateBuffer.Get(bufferIndex);
+        positionError = Vector3.Distance(rewindState.position, clientState.position);
+
+        //Debug.Log("position error " + positionError);
+
+        /* if(rewindState.position != clientState.position)
+             Debug.Log("position differs! " + positionError);
+
+        // if(IsHost )
+          //   Debug.Log(" rewind and client positions "  + rewindState.position + " " + clientState.position);
+
+         if (Input.GetKeyDown(KeyCode.Q))
+         {
+             Debug.Log("distance: " + rewindState.position + "  " + clientState.position);
+         }*/
+
+        if (positionError > reconciliationThreshold)
+        {
+            Debug.Break();
+            ReconcileState(rewindState);
+            reconciliationTimer.Start();
+            Debug.Log("start reconciliation");
+        }
+
+        lastProcessedState = rewindState;
+    }
+
+    void ReconcileState(StatePayload rewindState)
+    {
+        Debug.Log("RECONCILING");
+        transform.position = rewindState.position;
+        // transform.rotation = rewindState.rotation;
+        transform.rotation = Quaternion.Euler(rewindState.inputVector.x, rewindState.inputVector.y, rewindState.inputVector.z);
+
+        if (!rewindState.Equals(lastServerState)) return;
+
+        clientStateBuffer.Add(rewindState, rewindState.tick % k_bufferSize);
+
+        // Replay all inputs from the rewind state to the current state
+        int tickToReplay = lastServerState.tick;
+
+        while (tickToReplay < networkTimer.CurrentTick)
+        {
+            int bufferIndex = tickToReplay % k_bufferSize;
+            StatePayload statePayload = ProcessMovement(clientInputBuffer.Get(bufferIndex));
+            clientStateBuffer.Add(statePayload, bufferIndex);
+            tickToReplay++;
+        }
+    }
+
+
+
+    [ServerRpc]
+    void SendToServerRpc(InputPayload input)
+    {
+        //    Debug.Log($"Received input from client Tick: {input.tick} Client POS: {input.position}");
+        //clientCube.transform.position = input.position.With(y: 4);
+        clientCube.transform.position = input.position;
+        serverInputQueue.Enqueue(input);
+    }
+
+    StatePayload ProcessMovement(InputPayload input)
+    {
+        MovePlayerPc(input.inputVector);
+
+
+        return new StatePayload()
+        {
+            tick = input.tick,
+
+            networkObjectId = NetworkObjectId,
+            position = input.position,
+            //position = transform.position,
+            //rotation = transform.rotation,
+            inputVector = input.inputVector,
+
+        };
+    }
+
+
+
+    // Update is called once per frame
+    void Update()
+    {
+
+        networkTimer.Update(Time.deltaTime);
+        reconciliationTimer.Tick(Time.deltaTime);
+        extrapolationTimer.Tick(Time.deltaTime);
+        Extrapolate();
+
+        //Debug.Log($"Owner: {IsOwner} NetworkObjectId: {NetworkObjectId} Velocity: {transform.position:F1}");
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            transform.position += transform.forward * 20f;
+        }
 
     }
 
-    [ServerRpc]
+    void Move(Vector3 inputVector)
+    {
+        /*float verticalInput = AdjustInput(input.Move.y);
+        float horizontalInput = AdjustInput(input.Move.x);
+
+        float motor = maxMotorTorque * verticalInput;
+        float steering = maxSteeringAngle * horizontalInput;
+
+        UpdateAxles(motor, steering);
+        UpdateBanking(horizontalInput);
+
+        kartVelocity = transform.InverseTransformDirection(rb.velocity);
+
+        if (IsGrounded)
+        {
+            HandleGroundedMovement(verticalInput, horizontalInput);
+        }
+        else
+        {
+            HandleAirborneMovement(verticalInput, horizontalInput);
+        }*/
+
+#if UNITY_ANDROID
+        MovePlayerPhoneServerRpc(inputVector);
+
+#elif UNITY_EDITOR_WIN
+        MovePlayerPc(inputVector);
+
+#endif
+
+    }
+
+
+
+    /*
+    if (!IsOwner || !Application.isFocused) return;
+    //Movement for pc
+#if UNITY_STANDALONE_WIN
+
+
+    //Meter todo esto en una función
+    Vector3 receivedInput = Vector3.zero;
+    if (Input.GetKey("d"))
+    {
+        receivedInput += Vector3.right;
+    }
+    if (Input.GetKey("a"))
+    {
+        receivedInput += Vector3.left;
+    }
+    if (Input.GetKey("w"))
+    {
+        receivedInput += Vector3.forward;
+    }
+    if (Input.GetKey("s"))
+    {
+        receivedInput += Vector3.back;
+    }
+
+    if (receivedInput != Vector3.zero)
+    {
+        receivedInput.Normalize();
+        MovePlayerPcServerRpc(receivedInput);
+    }
+    MoveCamera();
+
+    //Meter en una funcion
+    if (Input.GetMouseButton(1))
+    {
+        Vector3 dest = Input.mousePosition;
+
+        Ray ray = _mainCamera.ScreenPointToRay(dest);
+
+        if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+        {
+            Vector3 moveDestination = hitData.point;
+            moveDestination.y = 0.5f;
+            gun.AimWeapon(moveDestination);
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+            }
+        }
+        else
+            gun.StopAim();
+    }
+    else
+        gun.StopAim();
+
+    //Meter en una funcion
+    if (Input.GetMouseButtonDown(0))
+    {
+        Vector3 dest = Input.mousePosition;
+
+        Ray ray = _mainCamera.ScreenPointToRay(dest);
+
+        if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+        {
+            Vector3 moveDestination = hitData.point;
+            moveDestination.y = 0.5f;
+            gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+        }
+    }
+
+    if(IsServer)
+    {
+        if (isHealthing)
+        {
+           // life.Value = 
+        }
+    }
+
+
+
+#elif UNITY_ANDROID  //ANDROID
+
+    Vector3 movPos = new Vector3();
+    if (joystick.Horizontal >= .2f)
+    {
+        movPos.x = 1;
+    }
+    if (joystick.Horizontal <= -.2f)
+    {
+        movPos.x = -1;
+    }
+    if (joystick.Vertical >= .2f)
+        movPos.z = 1;
+    if (joystick.Vertical <= -.2f)
+        movPos.z = -1;
+
+    if (movPos != Vector3.zero)
+    {
+        MovePlayerPhoneServerRpc(movPos);
+
+    }
+
+    MoveCamera();
+
+
+    //Aim And Shoot
+    Vector3 shootPos = new Vector3();
+
+    shootPos.x += joystickShoot.Horizontal;
+    shootPos.z += joystickShoot.Vertical;
+
+    //Debug.Log(shootPos);
+    if (shootPos != Vector3.zero)
+    {
+        //      Debug.Log("Aiming!! " + shootPos);
+        aiming = true;
+        lastAimedPos = gun.AimWeaponMobile(shootPos);
+        previousMov = shootPos.magnitude;
+    }
+    else
+    {
+        gun.StopAim();
+        if (aiming == true)
+        {
+            //Debug.Log(previousMov);
+            if (previousMov >= 0.22)
+            {
+                //Debug.Log(shootPos);
+                //bodyAnimator.SetBool("firing", false);
+
+                gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
+                aiming = false;
+
+                //animator.SetBool("firing", true);
+
+                bodyAnimator.SetBool("firing", true);
+            }
+
+
+        }
+    }
+
+
+    /*  if(joystickShoot.Horizontal<= .2f && joystickShoot.Horizontal >= .2f && joystickShoot.Vertical <= .2f && joystickShoot.Vertical >= .2f)
+      {
+          //Vibrate, cancel and set to 0
+      }
+    */
+
+    //   if (joystickShoot.)
+
+    //#endif
+
+
+    //  gun.StopAim();
+
+    // }*/
+
+    /*[ServerRpc]
     private void MovePlayerPcServerRpc(Vector3 input)
     {
-        transform.position +=  input * Time.deltaTime * speed;
+        transform.position += input * Time.deltaTime * speed;
         // Vector3 targetDirection = input - transform.position;
 
 
-        if (!firing)
+        if (!firing && input != Vector3.zero)
+        {
+            Quaternion newRotation = Quaternion.LookRotation(input);
+            transform.rotation = newRotation;
+        }
+    }*/
+
+
+    // [ServerRpc]
+    private void MovePlayerPc(Vector3 input)
+    {
+        if (input == Vector3.zero)
+            return;
+        transform.position += input.normalized * Time.deltaTime * speed;
+
+
+        if (!firing && input != Vector3.zero)
         {
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;
@@ -301,24 +912,24 @@ public class PlayerManager : NetworkBehaviour
         //TO DO CHECKs
         transform.position = Vector3.MoveTowards(transform.position, transform.position + input, Time.deltaTime * speed);
 
-        if (!firing)
+        if (!firing && input != Vector3.zero)
         {
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;
         }
     }
 
-   /* [ClientRpc]
-    public void setPlayerLifeBarsClientRpc(ulong clientId, int team)
-    {
-        if(team != PlayerTeam.Value)
-        {
-            PlayerManager enemy = OnlineManager.Instance.playerList.Find(x => x.clientId == clientId).playerObject.GetComponent<PlayerManager>();
-            healthUI.healthBar.color = Color.red;
-            Debug.Log("CHANGING COLORS!!");
-        }
-    }
-   */
+    /* [ClientRpc]
+     public void setPlayerLifeBarsClientRpc(ulong clientId, int team)
+     {
+         if(team != PlayerTeam.Value)
+         {
+             PlayerManager enemy = OnlineManager.Instance.playerList.Find(x => x.clientId == clientId).playerObject.GetComponent<PlayerManager>();
+             healthUI.healthBar.color = Color.red;
+             Debug.Log("CHANGING COLORS!!");
+         }
+     }
+    */
 
     public override void OnNetworkSpawn()
     {
@@ -337,27 +948,27 @@ public class PlayerManager : NetworkBehaviour
             player1.playerObject = gameObject;
             player1.clientId = NetworkManager.Singleton.LocalClientId;
             Debug.Log("ddd" + NetworkManager.Singleton.LocalClientId);
-           // Debug.Log("ddd" + NetworkManager.Singleton.LocalClientId);
+            // Debug.Log("ddd" + NetworkManager.Singleton.LocalClientId);
 
         }
         //        moveDestination = transform.position;
 
         if (IsOwner)
         {
-           joystickShoot = Assets.Instance.joystickShoot;
-           joystick = Assets.Instance.joystick;
+            joystickShoot = Assets.Instance.joystickShoot;
+            joystick = Assets.Instance.joystick;
 
-        /*    foreach(PlayerInfo playerInfo in OnlineManager.Instance.playerList)
-            {
-                if(playerInfo.team != PlayerTeam.Value)
+            /*    foreach(PlayerInfo playerInfo in OnlineManager.Instance.playerList)
                 {
-                    Debug.Log("DIFERENT TEAMS!!");
-                    playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color = Color.red;
-                    //Might not be spawned yet!!
-                    Debug.Log(playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color);
+                    if(playerInfo.team != PlayerTeam.Value)
+                    {
+                        Debug.Log("DIFERENT TEAMS!!");
+                        playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color = Color.red;
+                        //Might not be spawned yet!!
+                        Debug.Log(playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color);
+                    }
                 }
-            }
-        */
+            */
         }
 
 
@@ -442,7 +1053,7 @@ public class PlayerManager : NetworkBehaviour
         else
         {
             //StopCoroutine(WaitToHealth());
-          //  StopCoroutine(HealthByTime());
+            //  StopCoroutine(HealthByTime());
             StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
 
 

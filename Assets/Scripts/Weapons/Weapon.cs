@@ -90,7 +90,12 @@ public class Weapon : NetworkBehaviour
     {
         if (!isReady || !isActiveAndEnabled) return;
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
-        bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
+        Bullet bulletInstance = bulletGameObject.GetComponent<Bullet>();
+        bulletInstance.SetParent(gameObject);
+        bulletInstance.playerManager = GetComponent<PlayerManager>();
+       /* Debug.Log("instantiating bullet");
+        Debug.Break();*/
+
         bulletGameObject.transform.rotation = Quaternion.Euler(90, transform.rotation.eulerAngles.y, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
         StartCoolDownServerRpc();
@@ -113,10 +118,16 @@ public class Weapon : NetworkBehaviour
         //Start animation and set player rotation until animation finishes
 
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
-        bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
+        Bullet bulletInstance = bulletGameObject.GetComponent<Bullet>();
+        bulletInstance.SetParent(gameObject);
+        bulletInstance.playerManager = GetComponent<PlayerManager>();
+
+
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
+        /*Debug.Log("instantiating bullet");
+        Debug.Break();*/
         GetComponent<PlayerManager>().firing = true;
         
 

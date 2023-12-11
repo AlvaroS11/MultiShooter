@@ -101,7 +101,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -206,7 +206,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -225,8 +225,6 @@ GameObject:
   - component: {fileID: 7555539543577750044}
   - component: {fileID: 5461583074550021370}
   - component: {fileID: 1353681362587268395}
-  - component: {fileID: 3253814154705216495}
-  - component: {fileID: 8158996327539952202}
   - component: {fileID: 7017163442682914534}
   - component: {fileID: 5844592369829576264}
   m_Layer: 3
@@ -284,7 +282,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6946356229252101233}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 05f65c69794d9684db513e945a09dbb5, type: 3}
   m_Name: 
@@ -297,7 +295,6 @@ MonoBehaviour:
   life:
     m_InternalValue: 100
   healthUI: {fileID: 5204551108285389891}
-  playerPrefab: {fileID: 0}
   PlayerName:
     m_InternalValue:
       utf8LengthInBytes: 0
@@ -439,10 +436,8 @@ MonoBehaviour:
     m_InternalValue: 1
   playerCharacterr: 0
   PlayerInfoIndex: 0
-  joystick: {fileID: 0}
-  joystickShoot: {fileID: 0}
   nameText: {fileID: 2108624803368915368}
-  playerNavMesh: {fileID: 3253814154705216495}
+  playerNavMesh: {fileID: 0}
   firing: 0
   isHealthing: 0
   healthDamageWait: 3
@@ -454,10 +449,15 @@ MonoBehaviour:
   isInmune:
     m_InternalValue: 0
   isOwnPlayer: 0
-  aiming: 0
-  lastAimedPos: {x: 0, y: 0, z: 0}
   body: {fileID: 0}
   bodyAnimator: {fileID: 1466286097830897641}
+  reconciliationCooldownTime: 1
+  reconciliationThreshold: 10
+  serverCube: {fileID: 3089821097879417116}
+  clientCube: {fileID: 2319804742516511529}
+  extrapolationLimit: 0.5
+  extrapolationMinimum: 0.1
+  extrapolationMultiplier: 10
 --- !u!54 &-5298717513634452897
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -628,215 +628,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
---- !u!195 &3253814154705216495
-NavMeshAgent:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6946356229252101233}
-  m_Enabled: 0
-  m_AgentTypeID: 0
-  m_Radius: 0.5
-  m_Speed: 3.5
-  m_Acceleration: 100
-  avoidancePriority: 50
-  m_AngularSpeed: 500
-  m_StoppingDistance: 0
-  m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
-  m_AutoRepath: 1
-  m_Height: 2
-  m_BaseOffset: 0
-  m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 3
---- !u!114 &8158996327539952202
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6946356229252101233}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 48ba9d7bb74f0114494313f58773a003, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  floor:
-    serializedVersion: 2
-    m_Bits: 64
-  gun: {fileID: 5461583074550021370}
-  MaxLife: 100
-  life:
-    m_InternalValue: 100
-  healthUI: {fileID: 5204551108285389891}
-  playerPrefab: {fileID: 0}
-  PlayerName:
-    m_InternalValue:
-      utf8LengthInBytes: 0
-      bytes:
-        offset0000:
-          byte0000: 0
-          byte0001: 0
-          byte0002: 0
-          byte0003: 0
-          byte0004: 0
-          byte0005: 0
-          byte0006: 0
-          byte0007: 0
-          byte0008: 0
-          byte0009: 0
-          byte0010: 0
-          byte0011: 0
-          byte0012: 0
-          byte0013: 0
-          byte0014: 0
-          byte0015: 0
-        offset0016:
-          byte0000: 0
-          byte0001: 0
-          byte0002: 0
-          byte0003: 0
-          byte0004: 0
-          byte0005: 0
-          byte0006: 0
-          byte0007: 0
-          byte0008: 0
-          byte0009: 0
-          byte0010: 0
-          byte0011: 0
-          byte0012: 0
-          byte0013: 0
-          byte0014: 0
-          byte0015: 0
-        offset0032:
-          byte0000: 0
-          byte0001: 0
-          byte0002: 0
-          byte0003: 0
-          byte0004: 0
-          byte0005: 0
-          byte0006: 0
-          byte0007: 0
-          byte0008: 0
-          byte0009: 0
-          byte0010: 0
-          byte0011: 0
-          byte0012: 0
-          byte0013: 0
-          byte0014: 0
-          byte0015: 0
-        offset0048:
-          byte0000: 0
-          byte0001: 0
-          byte0002: 0
-          byte0003: 0
-          byte0004: 0
-          byte0005: 0
-          byte0006: 0
-          byte0007: 0
-          byte0008: 0
-          byte0009: 0
-          byte0010: 0
-          byte0011: 0
-          byte0012: 0
-          byte0013: 0
-          byte0014: 0
-          byte0015: 0
-        offset0064:
-          byte0000: 0
-          byte0001: 0
-          byte0002: 0
-          byte0003: 0
-          byte0004: 0
-          byte0005: 0
-          byte0006: 0
-          byte0007: 0
-          byte0008: 0
-          byte0009: 0
-          byte0010: 0
-          byte0011: 0
-          byte0012: 0
-          byte0013: 0
-          byte0014: 0
-          byte0015: 0
-        offset0080:
-          byte0000: 0
-          byte0001: 0
-          byte0002: 0
-          byte0003: 0
-          byte0004: 0
-          byte0005: 0
-          byte0006: 0
-          byte0007: 0
-          byte0008: 0
-          byte0009: 0
-          byte0010: 0
-          byte0011: 0
-          byte0012: 0
-          byte0013: 0
-          byte0014: 0
-          byte0015: 0
-        offset0096:
-          byte0000: 0
-          byte0001: 0
-          byte0002: 0
-          byte0003: 0
-          byte0004: 0
-          byte0005: 0
-          byte0006: 0
-          byte0007: 0
-          byte0008: 0
-          byte0009: 0
-          byte0010: 0
-          byte0011: 0
-          byte0012: 0
-          byte0013: 0
-          byte0014: 0
-          byte0015: 0
-        byte0112: 0
-        byte0113: 0
-        byte0114: 0
-        byte0115: 0
-        byte0116: 0
-        byte0117: 0
-        byte0118: 0
-        byte0119: 0
-        byte0120: 0
-        byte0121: 0
-        byte0122: 0
-        byte0123: 0
-        byte0124: 0
-        byte0125: 0
-  PlayerTeam:
-    m_InternalValue: 1
-  playerCharacterr: 0
-  PlayerInfoIndex: 0
-  joystick: {fileID: 0}
-  joystickShoot: {fileID: 0}
-  nameText: {fileID: 2108624803368915368}
-  playerNavMesh: {fileID: 0}
-  firing: 0
-  isHealthing: 0
-  healthDamageWait: 3
-  healthInterval: 1
-  healthBySecond:
-    m_InternalValue: 1
-  CanvasDeath: {fileID: 3635023568967762778}
-  animator: {fileID: 0}
-  isInmune:
-    m_InternalValue: 0
-  isOwnPlayer: 0
-  aiming: 0
-  lastAimedPos: {x: 0, y: 0, z: 0}
-  body: {fileID: 0}
-  bodyAnimator: {fileID: 1466286097830897641}
-  reconciliationCooldownTime: 1
-  reconciliationThreshold: 10
-  serverCube: {fileID: 3089821097879417116}
-  clientCube: {fileID: 2319804742516511529}
-  extrapolationLimit: 0.5
-  extrapolationMultiplier: 1.2
 --- !u!114 &7017163442682914534
 MonoBehaviour:
   m_ObjectHideFlags: 0
