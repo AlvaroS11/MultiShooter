@@ -8,6 +8,7 @@ using System;
 using TMPro;
 using UnityEngine.AI;
 using Unity.Collections;
+using System.Net.NetworkInformation;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -21,6 +22,7 @@ public class PlayerManager : NetworkBehaviour
 
     public int MaxLife = 100;
 
+    //[HideInInspector]
     public NetworkVariable<int> life = new NetworkVariable<int>();
 
     public UIPlayer healthUI;
@@ -36,17 +38,22 @@ public class PlayerManager : NetworkBehaviour
      public int PlayerTeam;
     */
     // public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    [HideInInspector]
     public NetworkVariable<FixedString128Bytes> PlayerName = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    [HideInInspector]
     public NetworkVariable<int> PlayerTeam = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    [HideInInspector]
     public LobbyManager.PlayerCharacter playerCharacterr;
 
     public int PlayerInfoIndex;
 
     //  [SerializeField]
+    [HideInInspector]
     private Joystick joystick;
 
     // [SerializeField]
+    [HideInInspector]
     private Joystick joystickShoot;
 
 
@@ -98,6 +105,8 @@ public class PlayerManager : NetworkBehaviour
     private float previousMov;
 
 
+    static float ping;
+
     // Network variables should be value objects
     public struct InputPayload : INetworkSerializable
     {
@@ -125,6 +134,8 @@ public class PlayerManager : NetworkBehaviour
         public Vector3 position;
         //public Quaternion rotation;
         public Vector3 inputVector;
+        public DateTime timestamp;
+
         //public Vector3 velocity;
         //public Vector3 angularVelocity;
 
@@ -134,6 +145,7 @@ public class PlayerManager : NetworkBehaviour
             serializer.SerializeValue(ref networkObjectId);
             serializer.SerializeValue(ref position);
             serializer.SerializeValue(ref inputVector);
+            serializer.SerializeValue(ref timestamp);
             //serializer.SerializeValue(ref velocity);
             //serializer.SerializeValue(ref angularVelocity);
         }
@@ -167,6 +179,16 @@ public class PlayerManager : NetworkBehaviour
     CountdownTimer reconciliationTimer;
     CountdownTimer extrapolationTimer;
     StatePayload extrapolationState;
+
+
+    [Header("Ping")]
+    [SerializeField] static TextMeshProUGUI pingText;
+
+
+
+
+
+    public static DateTime previousTimeStamp = DateTime.Now;
 
 
     private void Awake()
@@ -227,6 +249,7 @@ public class PlayerManager : NetworkBehaviour
         _mainCamera = Camera.main;
         CanvasDeath.SetActive(false);
         isOwnPlayer = true;
+        pingText = LobbyAssets.Instance.pingText;
 
     }
 
@@ -244,8 +267,6 @@ public class PlayerManager : NetworkBehaviour
 
     void HandleServerTick()
     {
-        if (!IsServer) return;
-
         var bufferIndex = -1;
         InputPayload inputPayload = default;
         while (serverInputQueue.Count > 0)
@@ -261,15 +282,35 @@ public class PlayerManager : NetworkBehaviour
               else if(!IsOwner)
                   Debug.Log("servertick is zero");*/
             StatePayload statePayload = ProcessMovement(inputPayload);
+            statePayload.timestamp = DateTime.Now;
             serverStateBuffer.Add(statePayload, bufferIndex);
         }
 
         if (bufferIndex == -1) return;
         SendToClientRpc(serverStateBuffer.Get(bufferIndex));
-        HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload));
+        //if(!IsOwner)
+        Debug.Log("...");
+        Debug.Log(serverStateBuffer.Get(bufferIndex).position); // Está sacando lo mismo que en el cliente???
+        HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload.timestamp));
     }
 
-    static float CalculateLatencyInMillis(InputPayload inputPayload) => (DateTime.Now - inputPayload.timestamp).Milliseconds / 1000f;
+
+    static float CalculateLatencyInMillis(DateTime timeStamp) {
+        ping = (DateTime.Now - timeStamp).Milliseconds;
+        return ping;
+
+        }
+
+    static void DisplayPing(float actualPing)
+    {
+        if((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
+        {
+            pingText.text = "Ping: " + ((int)actualPing).ToString();
+            previousTimeStamp = DateTime.Now;
+        }
+        ;
+    }
+
 
     void Extrapolate()
     {
@@ -279,42 +320,24 @@ public class PlayerManager : NetworkBehaviour
             if (!IsOwner && extrapolationState.inputVector != Vector3.zero)
                 Debug.Log("not zero");
 
-            //transform.position += extrapolationState.position
+           // Debug.Log(extrapolationState.position);
+           // transform.position += extrapolationState.position;
 
-
-            // Debug.Log("do extrapolate");
-            //transform.position += extrapolationState.position.With(y: 0);
+            //a mas latencia más habrá que preveer
             if (extrapolationState.inputVector != Vector3.zero)
-                transform.position += extrapolationState.inputVector * Time.deltaTime * speed;
+            {
+                Debug.Log("extrapolating");
+                transform.position += extrapolationState.inputVector * Time.deltaTime * speed * ping / 1000 * extrapolationMultiplier;
+
+            }
             //MovePlayerPc(extrapolationState.inputVector);
 
-            //ExtrapolateServer(extrapolationState.inputVector);
-            //Debug.Log("extrapolating from server");
+
+            //MovePlayerPc(extrapolationState.inputVector);
+
         }
     }
 
-    void ExtrapolateServer(Vector3 inputV)
-    {
-        transform.position += inputV * Time.deltaTime * speed;
-        // Vector3 targetDirection = input - transform.position;
-
-        if (IsServer && !IsOwner && inputV != Vector3.zero)
-        {
-            //Debug.Log("external client input " + input);
-            //Debug.Log("external client position " + transform.position);
-        }
-
-        //if (input == Vector3.zero)
-        // Debug.Log("ZERO!");
-
-
-        if (!firing && inputV != Vector3.zero)
-        {
-            Quaternion newRotation = Quaternion.LookRotation(inputV);
-            transform.rotation = newRotation;
-        }
-
-    }
 
     //Server only preprares extrapolationState to be executed in Extrapolate()
     void HandleExtrapolation(StatePayload latest, float latency)
@@ -325,8 +348,10 @@ public class PlayerManager : NetworkBehaviour
          Debug.Log(Time.fixedDeltaTime);
          Debug.Log(latency < extrapolationLimit && latency > Time.fixedDeltaTime);  
         */
+
         if (ShouldExtrapolate(latency))
         {
+            Debug.Log("shouldExtrapolate");
             // Calculate the arc the object would traverse in degrees
             /*   float axisLength = latency * latest.angularVelocity.magnitude * Mathf.Rad2Deg;
                Quaternion angularRotation = Quaternion.AngleAxis(axisLength, latest.angularVelocity);
@@ -367,6 +392,10 @@ public class PlayerManager : NetworkBehaviour
             //Debug.Log("posAdjustment : " + posAdjustment);
             //var posAdjustment = speed * latest.inputVector;
             // extrapolationState.position = posAdjustment;
+
+          //  var posAdjustment = speed * (latest.inputVector.normalized * latency * extrapolationMultiplier);
+            //extrapolationState.position = posAdjustment;
+
             extrapolationState.inputVector = latest.inputVector;
 
 
@@ -378,6 +407,8 @@ public class PlayerManager : NetworkBehaviour
         else
         {
             extrapolationTimer.Stop();
+
+            //Reconciliation if lag is so strong
         }
     }
 
@@ -392,9 +423,14 @@ public class PlayerManager : NetworkBehaviour
     {
         //    Debug.Log($"Received state from server Tick {statePayload.tick} Server POS: {statePayload.position}");
         //serverCube.transform.position = statePayload.position.With(y: 4);
-        serverCube.transform.position = statePayload.position;
+       
         if (!IsOwner) return;
         lastServerState = statePayload;
+        serverCube.transform.position = statePayload.position;
+        Debug.Log(statePayload.position);
+        DisplayPing(CalculateLatencyInMillis(lastServerState.timestamp));
+
+       
     }
 
     private Vector3 GetInput()
@@ -576,6 +612,7 @@ public class PlayerManager : NetworkBehaviour
 
     void HandleServerReconciliation()
     {
+        
         if (!ShouldReconcile()) return;
 
         float positionError;
@@ -583,7 +620,7 @@ public class PlayerManager : NetworkBehaviour
 
         bufferIndex = lastServerState.tick % k_bufferSize;
         if (bufferIndex - 1 < 0) return; // Not enough information to reconcile
-
+        
         StatePayload rewindState = IsHost ? serverStateBuffer.Get(bufferIndex - 1) : lastServerState; // Host RPCs execute immediately, so we can use the last server state
         StatePayload clientState = IsHost ? clientStateBuffer.Get(bufferIndex - 1) : clientStateBuffer.Get(bufferIndex);
         positionError = Vector3.Distance(rewindState.position, clientState.position);
@@ -600,13 +637,15 @@ public class PlayerManager : NetworkBehaviour
          {
              Debug.Log("distance: " + rewindState.position + "  " + clientState.position);
          }*/
-
+        Debug.Log(IsHost);
+        Debug.Log(lastServerState.position);
+        Debug.Log(serverStateBuffer.Get(bufferIndex - 1).position);
+        Debug.Log("distance: " + rewindState.position + "  " + clientState.position);
+        Debug.Log(positionError);
         if (positionError > reconciliationThreshold)
         {
-            Debug.Break();
             ReconcileState(rewindState);
             reconciliationTimer.Start();
-            Debug.Log("start reconciliation");
         }
 
         lastProcessedState = rewindState;
@@ -614,7 +653,7 @@ public class PlayerManager : NetworkBehaviour
 
     void ReconcileState(StatePayload rewindState)
     {
-        Debug.Log("RECONCILING");
+        Debug.Log("Reconciling!! ");
         transform.position = rewindState.position;
         // transform.rotation = rewindState.rotation;
         transform.rotation = Quaternion.Euler(rewindState.inputVector.x, rewindState.inputVector.y, rewindState.inputVector.z);
@@ -650,18 +689,30 @@ public class PlayerManager : NetworkBehaviour
     {
         MovePlayerPc(input.inputVector);
 
-
         return new StatePayload()
         {
             tick = input.tick,
 
             networkObjectId = NetworkObjectId,
-            position = input.position,
-            //position = transform.position,
+           // position = input.position,
+            position = transform.position,
             //rotation = transform.rotation,
             inputVector = input.inputVector,
 
         };
+
+        /* return new StatePayload()
+         {
+             tick = input.tick,
+
+             networkObjectId = NetworkObjectId,
+             position = input.position,
+             //position = transform.position,
+             //rotation = transform.rotation,
+             inputVector = input.inputVector,
+
+         };
+        */
     }
 
 
@@ -678,6 +729,7 @@ public class PlayerManager : NetworkBehaviour
         //Debug.Log($"Owner: {IsOwner} NetworkObjectId: {NetworkObjectId} Velocity: {transform.position:F1}");
         if (Input.GetKeyDown(KeyCode.Q))
         {
+            if(IsOwner)
             transform.position += transform.forward * 20f;
         }
 

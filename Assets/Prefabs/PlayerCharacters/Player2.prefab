@@ -351,9 +351,9 @@ MonoBehaviour:
   reconciliationThreshold: 10
   serverCube: {fileID: 1427270655582853789}
   clientCube: {fileID: 8948491692530633661}
-  extrapolationLimit: 0.5
-  extrapolationMinimum: 0.1
-  extrapolationMultiplier: 10
+  extrapolationLimit: 500
+  extrapolationMinimum: 100
+  extrapolationMultiplier: 0.5
 --- !u!54 &-5298717513634452897
 Rigidbody:
   m_ObjectHideFlags: 0

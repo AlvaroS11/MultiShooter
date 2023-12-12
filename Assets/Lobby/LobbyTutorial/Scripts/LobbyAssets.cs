@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +20,9 @@ public class LobbyAssets : MonoBehaviour {
     [SerializeField] private GameObject ninjaGameObject;
     [SerializeField] private GameObject zombieGameObject;
     [SerializeField] private GameObject noPredGameObject;
+
+
+    [SerializeField] public TextMeshProUGUI pingText;
 
 
 

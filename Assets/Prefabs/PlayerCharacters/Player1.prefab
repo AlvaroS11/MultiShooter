@@ -452,12 +452,12 @@ MonoBehaviour:
   body: {fileID: 0}
   bodyAnimator: {fileID: 1466286097830897641}
   reconciliationCooldownTime: 1
-  reconciliationThreshold: 10
+  reconciliationThreshold: 1
   serverCube: {fileID: 3089821097879417116}
   clientCube: {fileID: 2319804742516511529}
-  extrapolationLimit: 0.5
-  extrapolationMinimum: 0.1
-  extrapolationMultiplier: 10
+  extrapolationLimit: 1000
+  extrapolationMinimum: 100
+  extrapolationMultiplier: 0.5
 --- !u!54 &-5298717513634452897
 Rigidbody:
   m_ObjectHideFlags: 0
