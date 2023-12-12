@@ -101,25 +101,14 @@ public class Bullet : MonoBehaviour {
     }
 
     [ServerRpc]
-    public virtual void OnTriggerEnterServerRpc(Collider other)
+    public virtual void OnTriggerEnterServerRpc(Collider other, bool destroyBullet = true)
     {
         GameObject hitObject = other.gameObject;
-        Debug.Log("****");
-        Debug.Log(other.gameObject.name);
-
-        Debug.Log(hitObject.layer);
-        Debug.Log(IsEnemy(hitObject));
-
-        Debug.Log(hitObject.layer == playerLayer);
-        Debug.Log("*** " + hitObject.layer);
-        Debug.Log(playerLayer);
-
-        Debug.Log(hitObject != parent);
-        Debug.Log(IsEnemy(hitObject));
         if (hitObject.layer == obstacleLayer || (hitObject.layer == playerLayer && hitObject != parent && IsEnemy(hitObject)) )
         {
             Debug.Log("entra1");
-            Destroy(gameObject);
+            if(destroyBullet)
+                Destroy(gameObject);
             if (hitObject.layer == playerLayer)
             {
                 Debug.Log("entra2");
@@ -140,13 +129,16 @@ public class Bullet : MonoBehaviour {
         //return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam; 
         try
         {
+            if(playerManager == null)
+                playerManager = parent.GetComponent<PlayerManager>();
             Debug.Log(playerManager.PlayerTeam.Value);
             Debug.Log(hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value);
             return playerManager.PlayerTeam.Value != hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value;
         }
         catch(Exception e)
         {
-            Debug.Log("PlayerManager not found, error: " + e);
+            Debug.LogError("PlayerManager not found, error: " + e);
+            Debug.LogError(parent.GetComponent<PlayerManager>().name);
             return false;
         }
 

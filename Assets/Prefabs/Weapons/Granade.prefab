@@ -216,8 +216,11 @@ MonoBehaviour:
   obstacle:
     serializedVersion: 2
     m_Bits: 128
+  playerLayer: 0
   bulletDmg: 20
+  playerManager: {fileID: 0}
   timeToDestroy: 5
+  shouldFollow: 0
   timeToExplode: 5
   radius: 5
   ExplosionParticleSystem: {fileID: 6145516831170175880, guid: a02ec7227384aa8408236690c7eb9cb2, type: 3}

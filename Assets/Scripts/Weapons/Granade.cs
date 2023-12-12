@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using static UnityEngine.ParticleSystem;
 
 
 public class Granade : Bullet
@@ -92,23 +93,14 @@ public class Granade : Bullet
         yield return new WaitForSeconds(5);
 
         Explode();
-
-     //   GetComponent<Cinemachine.CinemachineImpulseSource>().GenerateImpulse(new Vector3(Random.Range(-1, 1), Random.Range(0.5f, 1), Random.Range(-1, 1)));
-
-      /*  Grenade.freezeRotation = true;
-        Grenade.isKinematic = true;
-        Grenade.transform.SetParent(InitialParent, false);
-        Grenade.rotation = InitialRotation;
-        Grenade.transform.localPosition = InitialLocalPosition;
-        IsGrenadeThrowAvailable = true;
-      */
-        Destroy(gameObject);
     }
 
+    //Server only
     private void Explode()
     {
         GameObject particle = Instantiate(ExplosionParticleSystem, transform.position, Quaternion.identity);
-
+        particle.GetComponent<NetworkObject>().Spawn();
+        
         Collider[] colliders = Physics.OverlapSphere(transform.position, radius);
 
         foreach (Collider collider in colliders)
@@ -116,19 +108,27 @@ public class Granade : Bullet
             //Add force
 
             //Damage
-            OnTriggerEnterServerRpc(collider);
+            OnTriggerEnterServerRpc(collider, false);
 
         }
 
-        DeleteObjectServerRcp(particle);
+        Debug.Log("EXPLODE");
+        StartCoroutine(DeleteObjectServerRcp(timeToDestroy, particle));
     }
 
     [ServerRpc]
-    private IEnumerator DeleteObjectServerRcp(GameObject gameObjectToDelete)
+    private IEnumerator DeleteObjectServerRcp(int seconds, GameObject gameObjectToDelete)
     {
-        yield return new WaitForSeconds(effectTime);
-
+        Debug.Log("Ienumerator");
+        yield return new WaitForSeconds(seconds);
+        Debug.Log("DESTROYING " + gameObjectToDelete.name);
         Destroy(gameObjectToDelete);
+        gameObjectToDelete.GetComponent<NetworkObject>().Despawn();
+        Destroy(gameObject);
+
+
+
+        //StartCoroutine(WaitToDeleteServerRpc());
     }
 
 

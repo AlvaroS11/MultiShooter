@@ -290,6 +290,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05f65c69794d9684db513e945a09dbb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 9
   floor:
     serializedVersion: 2
     m_Bits: 64
@@ -459,7 +460,7 @@ MonoBehaviour:
   serverCube: {fileID: 3679302906679435429}
   clientCube: {fileID: 8652646281488668107}
   extrapolationLimit: 500
-  extrapolationMinimum: 100
+  extrapolationMinimum: 150
   extrapolationMultiplier: 0.5
 --- !u!54 &-5298717513634452897
 Rigidbody:

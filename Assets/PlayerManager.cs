@@ -12,7 +12,8 @@ using System.Net.NetworkInformation;
 
 public class PlayerManager : NetworkBehaviour
 {
-    private float speed = 3f;
+    [SerializeField]
+    private float speed = 20f;
     private Camera _mainCamera;
     public LayerMask floor;
 
@@ -253,13 +254,35 @@ public class PlayerManager : NetworkBehaviour
 
     }
 
-    private void FixedUpdate()
+    void Update()
     {
+
+        networkTimer.Update(Time.deltaTime);
+        reconciliationTimer.Tick(Time.deltaTime);
+        extrapolationTimer.Tick(Time.deltaTime);
+        Extrapolate();
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            if (IsOwner)
+                transform.position += transform.forward * 20f;
+        }
+
         while (networkTimer.ShouldTick())
         {
             HandleClientTick();
             HandleServerTick();
         }
+
+    }
+
+    private void FixedUpdate()
+    {
+       /* while (networkTimer.ShouldTick())
+        {
+            HandleClientTick();
+            HandleServerTick();
+        }*/
 
         //Extraplolate(); ?
 
@@ -277,10 +300,6 @@ public class PlayerManager : NetworkBehaviour
 
             //ProcessMovement is normally called if there is no lag. Else also call Extrapolation
 
-            /*  if (inputPayload.inputVector != Vector3.zero && !IsOwner)
-                  Debug.Log("not zero");
-              else if(!IsOwner)
-                  Debug.Log("servertick is zero");*/
             StatePayload statePayload = ProcessMovement(inputPayload);
             statePayload.timestamp = DateTime.Now;
             serverStateBuffer.Add(statePayload, bufferIndex);
@@ -288,9 +307,7 @@ public class PlayerManager : NetworkBehaviour
 
         if (bufferIndex == -1) return;
         SendToClientRpc(serverStateBuffer.Get(bufferIndex));
-        //if(!IsOwner)
-        Debug.Log("...");
-        Debug.Log(serverStateBuffer.Get(bufferIndex).position); // Está sacando lo mismo que en el cliente???
+
         HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload.timestamp));
     }
 
@@ -427,7 +444,6 @@ public class PlayerManager : NetworkBehaviour
         if (!IsOwner) return;
         lastServerState = statePayload;
         serverCube.transform.position = statePayload.position;
-        Debug.Log(statePayload.position);
         DisplayPing(CalculateLatencyInMillis(lastServerState.timestamp));
 
        
@@ -462,7 +478,7 @@ public class PlayerManager : NetworkBehaviour
         if (receivedInput != Vector3.zero)
         {
             receivedInput.Normalize();
-            MovePlayerPc(receivedInput);
+          //  MovePlayerPc(receivedInput);
         }
         MoveCamera();
 
@@ -534,7 +550,6 @@ public class PlayerManager : NetworkBehaviour
         }
 
         MoveCamera();
-        return movPos;
 
         //Aim And Shoot
         Vector3 shootPos = new Vector3();
@@ -565,6 +580,8 @@ public class PlayerManager : NetworkBehaviour
 
             }
         }
+        return movPos;
+
 #endif
     }
 
@@ -592,6 +609,8 @@ public class PlayerManager : NetworkBehaviour
 
         SendToServerRpc(inputPayload);
 
+        if (IsServer)
+            return;
         StatePayload statePayload = ProcessMovement(inputPayload);
         clientStateBuffer.Add(statePayload, bufferIndex);
 
@@ -625,23 +644,6 @@ public class PlayerManager : NetworkBehaviour
         StatePayload clientState = IsHost ? clientStateBuffer.Get(bufferIndex - 1) : clientStateBuffer.Get(bufferIndex);
         positionError = Vector3.Distance(rewindState.position, clientState.position);
 
-        //Debug.Log("position error " + positionError);
-
-        /* if(rewindState.position != clientState.position)
-             Debug.Log("position differs! " + positionError);
-
-        // if(IsHost )
-          //   Debug.Log(" rewind and client positions "  + rewindState.position + " " + clientState.position);
-
-         if (Input.GetKeyDown(KeyCode.Q))
-         {
-             Debug.Log("distance: " + rewindState.position + "  " + clientState.position);
-         }*/
-        Debug.Log(IsHost);
-        Debug.Log(lastServerState.position);
-        Debug.Log(serverStateBuffer.Get(bufferIndex - 1).position);
-        Debug.Log("distance: " + rewindState.position + "  " + clientState.position);
-        Debug.Log(positionError);
         if (positionError > reconciliationThreshold)
         {
             ReconcileState(rewindState);
@@ -716,24 +718,6 @@ public class PlayerManager : NetworkBehaviour
     }
 
 
-
-    // Update is called once per frame
-    void Update()
-    {
-
-        networkTimer.Update(Time.deltaTime);
-        reconciliationTimer.Tick(Time.deltaTime);
-        extrapolationTimer.Tick(Time.deltaTime);
-        Extrapolate();
-
-        //Debug.Log($"Owner: {IsOwner} NetworkObjectId: {NetworkObjectId} Velocity: {transform.position:F1}");
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            if(IsOwner)
-            transform.position += transform.forward * 20f;
-        }
-
-    }
 
     void Move(Vector3 inputVector)
     {
