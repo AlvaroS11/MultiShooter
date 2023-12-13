@@ -12,15 +12,15 @@ using Unity.Collections;
 public class LobbyPlayerSingleUI : MonoBehaviour {
 
 
-    [SerializeField] private TextMeshProUGUI playerNameText;
-    [SerializeField] private Image characterImage;
-    [SerializeField] private Button kickPlayerButton;
+    [SerializeField] public TextMeshProUGUI playerNameText;
+    [SerializeField] public Image characterImage;
+    [SerializeField] public Button kickPlayerButton;
 
     [SerializeField] private TMP_Dropdown selectTeamDropdown;
 
-    [SerializeField] private GameObject sound;
-    [SerializeField] private Scrollbar soundBar;
-    [SerializeField] private Button soundButton;
+    [SerializeField] public GameObject sound;
+    [SerializeField] public Scrollbar soundBar;
+    [SerializeField] public Button soundButton;
 
 
     public string selected;
@@ -50,11 +50,13 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         kickPlayerButton.onClick.AddListener(KickPlayer);
 
 
-
-       selectTeamDropdown.onValueChanged.AddListener(delegate
+        if (selectTeamDropdown != null)
         {
-            SelectTeam(selectTeamDropdown);
-        });
+            selectTeamDropdown.onValueChanged.AddListener(delegate
+             {
+                 SelectTeam(selectTeamDropdown);
+             });
+        }
 
         soundBar.onValueChanged.AddListener((float val) =>
         {
@@ -85,7 +87,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
             LobbyUI.Instance.dropDownExpanded = false;
     }
 
-    public void SetId(string id)
+    public virtual void SetId(string id)
     {
         playerId = id;
         userHandler.SetId(id);
@@ -108,7 +110,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         selectTeamDropdown.enabled = visible;
     }
 
-    public void DisableVoice(bool shouldResetUi)
+    public virtual void DisableVoice(bool shouldResetUi)
     {
         if (shouldResetUi)
         {
@@ -120,7 +122,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     
 
     //Para el botón
-    public void MuteUnMute(bool mute)
+    public virtual void MuteUnMute(bool mute)
     {
         isSounding = mute;
 
@@ -140,7 +142,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     }
 
 
-    public void ChangeVolume(float soundVal)
+    public virtual void ChangeVolume(float soundVal)
     {
         //Debug.Log("changing sound " + playerId + soundVal);
         soundValue = soundVal;

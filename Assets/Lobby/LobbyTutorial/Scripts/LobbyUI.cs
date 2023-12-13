@@ -20,6 +20,8 @@ public class LobbyUI : MonoBehaviour {
 
 
     [SerializeField] private Transform playerSingleTemplate;
+    [SerializeField] private Transform playerSingleStats;
+
     [SerializeField] private Transform container;
     [SerializeField] private TextMeshProUGUI lobbyNameText;
     [SerializeField] private TextMeshProUGUI playerCountText;
@@ -85,6 +87,8 @@ public class LobbyUI : MonoBehaviour {
         });
 
         LobbyPlayers = new Dictionary<string, LobbyPlayerSingleUI>();
+
+        DontDestroyOnLoad(gameObject);
     }
 
     private void Start() {
@@ -123,11 +127,22 @@ public class LobbyUI : MonoBehaviour {
 
         //  UpdateLobby();
         string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
-            
-        CreatePlayersUI();
-        Debug.Log("Caling change name");
-        OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
-        OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
+
+
+
+        //if (!OnlineManager.Instance.gameStarted.Value)
+        //{
+            CreatePlayersUI();
+            Debug.Log("Caling change name");
+            OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
+            OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
+        /*}
+        else
+        {
+            CreateStatisticsUI();
+        }
+        */
+
 
 
     }
@@ -157,9 +172,6 @@ public class LobbyUI : MonoBehaviour {
     /*public void UpdateLobby() {
         UpdateLobby(LobbyManager.Instance.GetJoinedLobby());
     }*/
-
-
-
 
 
 
@@ -215,6 +227,66 @@ public class LobbyUI : MonoBehaviour {
               */
                 //VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
                 
+            }
+        }
+    }
+
+
+
+    public void CreateStatisticsUI()
+    {
+        Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
+        Debug.Log("createPlayersUI");
+        Debug.Log(lobby.Players.Count);
+        foreach (Player player in lobby.Players)
+        {
+            // Debug.Log(player.Id);
+            //  Debug.Log(LobbyPlayers.Count);
+            if (!LobbyPlayers.ContainsKey(player.Id))
+            {
+                Debug.Log("client x");
+
+                Transform playerSingleTransform = Instantiate(playerSingleStats, container);
+                LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>();
+
+
+                lobbyPlayerSingleUI.SetId(player.Id);
+
+                playerSingleTransform.gameObject.SetActive(true);
+
+
+                //LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
+
+                lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
+                    LobbyManager.Instance.IsLobbyHost() &&
+                    player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
+                );
+                lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
+                LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
+                changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
+                lobbyNameText.text = lobby.Name;
+                playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
+                gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
+
+
+                if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
+                    startGameButton.gameObject.SetActive(true);
+                else
+                    startGameButton.gameObject.SetActive(false);
+
+                Show();
+
+                AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
+
+
+                /* if (LobbyManager.Instance.IsLobbyHost())
+                 {
+                     string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
+                     OnlineManager.Instance.AddToList(PlayerLobbyId);
+                 }
+               */
+                //VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
+
             }
         }
     }

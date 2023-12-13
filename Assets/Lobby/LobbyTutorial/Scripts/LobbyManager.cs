@@ -80,12 +80,11 @@ public class LobbyManager : MonoBehaviour {
 
     // public OnlineManager onlineManager;
 
-    public PlayerCharacter playerSelected;
-
 
 
     private void Awake() {
         Instance = this;
+        DontDestroyOnLoad(this);
     }
 
     private void Update() {

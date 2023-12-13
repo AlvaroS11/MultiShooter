@@ -85,7 +85,11 @@ public class OnlineManager : NetworkBehaviour
     [SerializeField]
     public int inmuneTime = 5;
 
+    public NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+
+
+    public bool playersCreated = false;
 
 
     //[SerializeField]
@@ -204,9 +208,17 @@ public class OnlineManager : NetworkBehaviour
             case SceneEventType.LoadEventCompleted:
                 {
                     //All clients have changed from scene
-                    Debug.Log("All clients joined");
-                    if(IsServer)
+                    if (IsServer && !playersCreated)
+                    {
+                        Debug.Log("All clients joined");
+
                         CreatePlayersServerRpc();
+                        
+                        gameStarted.Value = true;
+                        //StatisticsUI.Instance.InitializeStatisticsClientRpc();
+                        playersCreated = true;
+                       // LobbyUI.Instance.LobbyPlayers.Clear();                      
+                    }
                     break;
                 }
             case SceneEventType.UnloadEventCompleted:
@@ -451,6 +463,8 @@ public class OnlineManager : NetworkBehaviour
             spawnParent = GameObject.Find("SpawnPoints");
             //Add spawn parent point here
             System.Random rand = new System.Random();
+            Debug.Log("there are x plyers");
+            Debug.Log(playerList.Count);
             foreach (PlayerInfo playerInfo in playerList)
             {
 
@@ -495,7 +509,14 @@ public class OnlineManager : NetworkBehaviour
 
             setPlayerLifeBarsClientRpc();
 
-            Debug.Log(playerManagers.Count);
+
+            //NO SE ESTÁ LLAMANDO EN LOS CLIENTES!!
+            Debug.Log(LobbyAssets.Instance.name);
+            Debug.Log(LobbyAssets.Instance.stats.name);
+            Debug.Log(LobbyAssets.Instance.stats.GetComponent<StatisticsUI>());
+            Debug.Log(LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().name);
+
+            LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().InitializeStatisticsClientRpc();
 
         }
         catch (Exception e)
@@ -533,6 +554,8 @@ public class OnlineManager : NetworkBehaviour
 
         if (ownTeam == -1)
             throw new Exception("FALLO EL HASH");
+
+        Debug.Log("playersLifeBar");
 
     }
 

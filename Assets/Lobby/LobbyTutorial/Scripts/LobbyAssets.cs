@@ -24,6 +24,9 @@ public class LobbyAssets : MonoBehaviour {
 
     [SerializeField] public TextMeshProUGUI pingText;
 
+    [SerializeField] public GameObject stats;
+
+
 
 
     private void Awake() {
