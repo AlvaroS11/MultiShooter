@@ -10,6 +10,7 @@ public class PlayerSingleStat : LobbyPlayerSingleUI
 
     public int kills = 0;
     public bool isAlive = true;
+    public TextMeshProUGUI killsDeaths;
 
    /* [SerializeField] public TextMeshProUGUI playerNameText;
     [SerializeField] public Image characterImage;

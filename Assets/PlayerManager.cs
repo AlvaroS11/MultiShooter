@@ -343,9 +343,7 @@ public class PlayerManager : NetworkBehaviour
             //a mas latencia más habrá que preveer
             if (extrapolationState.inputVector != Vector3.zero)
             {
-                Debug.Log("extrapolating");
-                transform.position += extrapolationState.inputVector * Time.deltaTime * speed * ping / 1000 * extrapolationMultiplier;
-
+                transform.position += extrapolationState.inputVector * Time.deltaTime * speed * ping / 10000 * extrapolationMultiplier;
             }
             //MovePlayerPc(extrapolationState.inputVector);
 
@@ -1082,7 +1080,7 @@ public class PlayerManager : NetworkBehaviour
             //Manage player
             OnlineManager.Instance.PlayerDeath(OnlineManager.Instance.playerList[playerHittedIndex].clientId);
 
-            OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex);
+            OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex, playerHittedIndex);
             life.Value = MaxLife;
 
         }

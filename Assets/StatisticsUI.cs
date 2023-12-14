@@ -4,6 +4,8 @@ using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEditor.PackageManager;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 
 public class StatisticsUI : NetworkBehaviour
@@ -13,17 +15,46 @@ public class StatisticsUI : NetworkBehaviour
 
     [SerializeField] private Transform playerSingleStats;
 
+    [SerializeField] private Transform container;
+
+    [SerializeField] private Button showStatsMobile;
+
 
     // Start is called before the first frame update
     void Start()
     {
         Instance = this;
+
+        showStatsMobile.onClick.AddListener(() => {
+            container.gameObject.SetActive(!container.gameObject.activeSelf);
+        });
+
+#if UNITY_STANDALONE_WIN
+        if (IsOwner)
+            {
+            showStatsMobile.gameObject.SetActive(false);
+            }
+#endif
+
+        Hide();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+#if UNITY_STANDALONE_WIN
+        if (Input.GetKey(KeyCode.Tab))
+        {
+            Show();
+        }
+        else
+            Hide();
+
+#elif UNITY_ANDROID
+        //add button to show/hide stats
+
+#endif
+
     }
 
 
@@ -37,13 +68,15 @@ public class StatisticsUI : NetworkBehaviour
             {
                 Debug.Log("statistic`+");
                 Debug.Log(player);
-                Transform playerSingleTransform = Instantiate(playerSingleStats, transform);
+                Transform playerSingleTransform = Instantiate(playerSingleStats, container);
                 PlayerSingleStat statPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<PlayerSingleStat>();
 
 
                 statPlayerSingleUI.SetId(player.lobbyPlayerId.ToSafeString());
                 statPlayerSingleUI.playerNameText.text = player.name.ToSafeString();
                 statPlayerSingleUI.team.text = player.team.ToSafeString();
+
+                statPlayerSingleUI.characterImage.sprite = LobbyAssets.Instance.GetSprite(player.playerCharacter);
 
 
 
@@ -68,6 +101,8 @@ public class StatisticsUI : NetworkBehaviour
                 //Show();
 
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
+
+                player.PlayerSingleStat = statPlayerSingleUI;
             }
         }
         catch (System.Exception e)
@@ -79,6 +114,16 @@ public class StatisticsUI : NetworkBehaviour
     private void AddUserHandler(VivoxUserHandler playerLobbyHandler)
     {
         VivoxManager.Instance.m_vivoxUserHandlers.Add(playerLobbyHandler);
+    }
+
+    private void Hide()
+    {
+        container.gameObject.SetActive(false);
+    }
+
+    private void Show()
+    {
+        container.gameObject.SetActive(true);
     }
 
 

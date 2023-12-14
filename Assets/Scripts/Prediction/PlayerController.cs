@@ -1056,7 +1056,7 @@ public class PlayerController : NetworkBehaviour
             //Manage player
             OnlineManager.Instance.PlayerDeath(OnlineManager.Instance.playerList[playerHittedIndex].clientId);
 
-            OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex);
+            OnlineManager.Instance.ChangeScoreServerRpc(shooterIndex, 0);
             life.Value = MaxLife;
 
         }

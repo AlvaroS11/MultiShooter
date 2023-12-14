@@ -700,6 +700,7 @@ MonoBehaviour:
   userHandler: {fileID: 2758341486581393002}
   kills: 0
   isAlive: 1
+  killsDeaths: {fileID: 2638237089046119127}
   team: {fileID: 2404378179903575258}
 --- !u!114 &2758341486581393002
 MonoBehaviour:

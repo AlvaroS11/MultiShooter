@@ -11,6 +11,7 @@ using Unity.Collections;
 //using UnityEditor.PackageManager;
 using UnityEngine.Jobs;
 using Unity.VisualScripting;
+using System.Linq;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -58,6 +59,8 @@ public class OnlineManager : NetworkBehaviour
     [SerializeField]
     public NetworkList<int> teamScore;
 
+    [SerializeField]
+    public NetworkList<int> teamNames;
 
     [SerializeField]
     private List<TextMeshProUGUI> teamScoreTexts;
@@ -147,6 +150,7 @@ public class OnlineManager : NetworkBehaviour
     private void Start()
     {
         teamScore = new NetworkList<int>();
+        teamNames = new NetworkList<int>(readPerm: NetworkVariableReadPermission.Everyone, writePerm: NetworkVariableWritePermission.Server);
 
         LobbyManager.Instance.OnLeftLobby += StopClient;
         LobbyManager.Instance.OnJoinedLobby += StartClient;
@@ -179,6 +183,11 @@ public class OnlineManager : NetworkBehaviour
         }
 
         NetworkManager.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
+
+        if (IsClient)
+        {
+            teamNames.OnListChanged += OnClientListChanged;
+        }
     }
 
     private void SceneManager_OnSceneEvent(SceneEvent sceneEvent)
@@ -461,29 +470,28 @@ public class OnlineManager : NetworkBehaviour
 
 
             spawnParent = GameObject.Find("SpawnPoints");
-            //Add spawn parent point here
             System.Random rand = new System.Random();
-            Debug.Log("there are x plyers");
-            Debug.Log(playerList.Count);
+
+            nTeams = playerList.DistinctBy(dd => dd.team).Count();
+
+            int[] teamNames1 = new int[nTeams];
+            int i = 0;
             foreach (PlayerInfo playerInfo in playerList)
             {
 
-                if(playerInfo.team > nTeams)
+                if(!teamScore.Contains(playerInfo.team))
                 {
-
-                    Debug.Log("NEW TEAM! " + playerInfo.team);
-                    Debug.Log(teamScore.Contains(playerInfo.team));
-
-                    nTeams++;
                     teamScore.Add(0);
+                    teamNames.Add(playerInfo.team);
+                    teamNames1[i] = playerInfo.team;
                     SetPlayerSpawns(teamScore.Count - 1);
+                    i++;
                 }
-                    
+
                 GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerInfo.playerCharacter);
 
                 int ran = rand.Next(1, 2);
                 int clampledTeam = Mathf.Clamp(playerInfo.team, 0, teamScore.Count - 1)*2; //real team spawn from 1 to n of teams
-                Debug.Log(" Player team " + playerInfo.team + " teamScoreCount  " + teamScore.Count + " real: " + clampledTeam);
                 int randomIndex = rand.Next(clampledTeam, clampledTeam+2);
                 Debug.Log(randomIndex);
                 Transform randomSpawn = spawnPoints[randomIndex];
@@ -496,16 +504,16 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerManager.PlayerName.Value = playerInfo.name;
                 newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
-                //      newPlayerGameObject = newPlayerGameObject;
                 playerList.Find(x => x.clientId == playerInfo.clientId).playerObject = newPlayerGameObject;
-                Debug.Log(playerInfo.clientId);
                
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
-
-
             }
             Debug.Log(teamScore.Count);
-            StartTeamScoreClientRpc(teamScore.Count);
+            //WaitToInitializeListClientRpc(nTeams);
+
+            StartTeamScoreClientRpc(teamNames1);
+
+            TestClientRpc(teamNames1);
 
             setPlayerLifeBarsClientRpc();
 
@@ -525,6 +533,23 @@ public class OnlineManager : NetworkBehaviour
         }
     }
 
+    [ClientRpc]
+    public void TestClientRpc(int[] testArray)
+    {
+        Debug.Log("···");
+        foreach (var test in testArray)
+            Debug.Log(test);
+    }
+
+    void OnServerListChanged(NetworkListEvent<int> changeEvent)
+    {
+        Debug.Log($"[S] The list changed and now has {teamNames.Count} elements");
+    }
+
+    void OnClientListChanged(NetworkListEvent<int> changeEvent)
+    {
+        Debug.Log($"[S] The list changed and now has {teamNames.Count} elements");
+    }
 
     //Recorre todos los jugadores
     [ClientRpc]
@@ -618,18 +643,20 @@ public class OnlineManager : NetworkBehaviour
         }
     }
 
-
     [ClientRpc]
-    private void StartTeamScoreClientRpc(int nTeams)
+    private void StartTeamScoreClientRpc(int[] nTeams)
     {
+
         Transform container = Assets.Instance.teamContainer;
         scoreCounterPrefab = Assets.Instance.scoreCounterPrefab;
-        for(int i = 0; i<nTeams; i++)
+
+        //while(teamNames.Count != nTeams){
+        for(int i = 0; i< nTeams.Length; i++)
         {
             Transform newCounterText = Instantiate(scoreCounterPrefab, container);
             newCounterText.gameObject.SetActive(true);
             TextMeshProUGUI counter = newCounterText.GetComponent<TextMeshProUGUI>();
-            counter.text = "Team " + i + ":  0";
+            counter.text = "Team " + nTeams[i] + ":  0";
             teamScoreTexts.Add(counter);
         }
 
@@ -640,34 +667,68 @@ public class OnlineManager : NetworkBehaviour
         //team2 = GameObject.Find("Team2").GetComponent<TextMeshProUGUI>();
     }
 
+    /*[ClientRpc]
+    private void WaitToInitializeListClientRpc(int[] nTeams)
+    {
+        StartCoroutine(StartTeamScore(nTeams));
+    }
+    */
 
     [ServerRpc]
-    public void ChangeScoreServerRpc(int team)
+    public void ChangeScoreServerRpc(int shooter, int hitted) 
     {
         //TO DO ADD INITIALIZE NUMBER OF TEAMS
-        teamScore[team]++;
+        teamScore[shooter]++;
 
-        Debug.Log("::::" + team + "  " + teamScore[team]);
+        Debug.Log("::::" + shooter + "  " + teamScore[shooter]);
 
-        ChangeScoreClientRpc(team, teamScore[team]);
+        Debug.Log("´´´´" + playerList[shooter].team);
+        Debug.Log("´´´´" + playerList[shooter].team);
+
+        ChangeScoreClientRpc(shooter, teamScore[shooter], playerList[shooter].lobbyPlayerId, playerList[hitted].lobbyPlayerId);
 
     }
 
     [ClientRpc]
-    public void ChangeScoreClientRpc(int team, int score)
+    public void ChangeScoreClientRpc(int shooter, int score, FixedString128Bytes shooterId, FixedString128Bytes hittedId )
     {
-        teamScoreTexts[team].text = "Team " + (team + 1) + ": " + score;
+        teamScoreTexts[shooter].text = "Team " + (teamNames[shooter]) + ": " + score;
 
-       /* switch (team) {
-            case 0:
-                team1.text = "Team 1: " + score.ToString();
-                break;
-            case 1:
-                team2.text = "Team 2: " + score.ToString();
-                break;
+        // playerList[shooter].kills += 1;
+        //playerList[hitted].deaths += 1;
 
 
-        }*/
+        PlayerInfo pShooter = playerList.Find(pl => pl.lobbyPlayerId == shooterId);
+        pShooter.kills += 1;
+        PlayerInfo pHitted = playerList.Find(pl => pl.lobbyPlayerId == hittedId);
+        pHitted.deaths += 1;
+
+
+        Debug.Log("Team " + (shooter + 1) + ": " + score);
+        // Debug.Log()
+
+        Debug.Log("team");
+        Debug.Log(playerList[shooter]);
+
+        pShooter.UpdateStats();
+        pHitted.UpdateStats();
+        //playerList[shooter].UpdateStats();
+        //playerList[hitted].UpdateStats();
+
+
+
+        // playerList[team]
+
+        /* switch (team) {
+             case 0:
+                 team1.text = "Team 1: " + score.ToString();
+                 break;
+             case 1:
+                 team2.text = "Team 2: " + score.ToString();
+                 break;
+
+
+         }*/
     }
 
     //Server only

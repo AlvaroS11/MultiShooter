@@ -729,7 +729,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GlobalObjectIdHash: 317491987
   AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
+  SynchronizeTransform: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 1
   SpawnWithObservers: 1
@@ -764,6 +764,7 @@ MonoBehaviour:
   inmuneTime: 5
   gameStarted:
     m_InternalValue: 0
+  playersCreated: 0
 --- !u!4 &293443825
 Transform:
   m_ObjectHideFlags: 0
@@ -3951,6 +3952,7 @@ MonoBehaviour:
   zombieGameObject: {fileID: 6946356229252101233, guid: cdbabcac5e2720d479ff4327bdab2982, type: 3}
   noPredGameObject: {fileID: 6946356229252101233, guid: ed3da9fa3cf0274409b41fbd641d2018, type: 3}
   pingText: {fileID: 0}
+  stats: {fileID: 0}
 --- !u!1 &1154160099
 GameObject:
   m_ObjectHideFlags: 0
