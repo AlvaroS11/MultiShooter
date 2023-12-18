@@ -765,6 +765,7 @@ MonoBehaviour:
   gameStarted:
     m_InternalValue: 0
   playersCreated: 0
+  MaxKills: 1
 --- !u!4 &293443825
 Transform:
   m_ObjectHideFlags: 0
@@ -2244,6 +2245,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   LobbyCanvas: {fileID: 187619054}
+  joined: 0
 --- !u!4 &818158579
 Transform:
   m_ObjectHideFlags: 0
@@ -3953,6 +3955,7 @@ MonoBehaviour:
   noPredGameObject: {fileID: 6946356229252101233, guid: ed3da9fa3cf0274409b41fbd641d2018, type: 3}
   pingText: {fileID: 0}
   stats: {fileID: 0}
+  endGame: {fileID: 0}
 --- !u!1 &1154160099
 GameObject:
   m_ObjectHideFlags: 0
@@ -4510,7 +4513,7 @@ MonoBehaviour:
     Port: 7777
     ServerListenAddress: 127.0.0.1
   DebugSimulator:
-    PacketDelayMS: 35
+    PacketDelayMS: 0
     PacketJitterMS: 0
     PacketDropRate: 0
 --- !u!1 &1227334930

@@ -47,8 +47,10 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
 
     private void Awake() {
-        kickPlayerButton.onClick.AddListener(KickPlayer);
-
+        if (kickPlayerButton != null)
+        {
+            kickPlayerButton.onClick.AddListener(KickPlayer);
+        }
 
         if (selectTeamDropdown != null)
         {
@@ -220,6 +222,11 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         selectTeamDropdown.value = change.value;
         int prevTeam = LobbyManager.Instance.GetTeam(playerId);
         OnlineManager.Instance.ChangeTeamServerRpc(playerId, change.value + 1, NetworkManager.Singleton.LocalClientId);
+    }
+
+    public void SetTeam(int team)
+    {
+        selectTeamDropdown.value = team;
     }
 
    /* public void DesactivateSound()

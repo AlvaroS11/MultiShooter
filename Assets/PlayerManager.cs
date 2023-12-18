@@ -274,6 +274,30 @@ public class PlayerManager : NetworkBehaviour
             HandleServerTick();
         }
 
+        HandleInput();
+    }
+
+    private void HandleInput()
+    {
+        if (!IsClient || !IsOwner) return;
+#if UNITY_STANDALONE_WIN
+
+        if (Input.GetMouseButtonDown(0) && !gun.reloading)
+        {
+            Vector3 dest = Input.mousePosition;
+
+            Ray ray = _mainCamera.ScreenPointToRay(dest);
+
+            if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+            {
+                Vector3 moveDestination = hitData.point;
+                moveDestination.y = 0.5f;
+                //return moveDestination;
+                gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+            }
+        }
+
+#endif
     }
 
     private void FixedUpdate()
@@ -493,6 +517,8 @@ public class PlayerManager : NetworkBehaviour
                 moveDestination.y = 0.5f;
                 gun.AimWeapon(moveDestination);
 
+                //if (Input.GetMouseButton(0) && !gun.reloading)
+
                 if (Input.GetMouseButtonDown(0))
                 {
                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
@@ -505,7 +531,9 @@ public class PlayerManager : NetworkBehaviour
             gun.StopAim();
 
         //Meter en una funcion
-        if (Input.GetMouseButtonDown(0))
+
+        //if (Input.GetMouseButton(0) && !gun.reloading)
+        if (Input.GetMouseButtonDown(0) && !gun.reloading)
         {
             Vector3 dest = Input.mousePosition;
 
@@ -589,6 +617,7 @@ public class PlayerManager : NetworkBehaviour
     {
         if (!IsClient || !IsOwner) return;
 
+
         var currentTick = networkTimer.CurrentTick;
         var bufferIndex = currentTick % k_bufferSize;
 
@@ -621,10 +650,8 @@ public class PlayerManager : NetworkBehaviour
         bool isLastStateUndefinedOrDifferent = lastProcessedState.Equals(default)
                                                || !lastProcessedState.Equals(lastServerState);
 
-        // Debug.Log("RECONCILIATION" + (isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning));
-        //Debug.Log(isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning);
+
         return isNewServerState && isLastStateUndefinedOrDifferent && !reconciliationTimer.IsRunning && !extrapolationTimer.IsRunning;
-        //return false;
     }
 
     void HandleServerReconciliation()
@@ -653,9 +680,7 @@ public class PlayerManager : NetworkBehaviour
 
     void ReconcileState(StatePayload rewindState)
     {
-        Debug.Log("Reconciling!! ");
         transform.position = rewindState.position;
-        // transform.rotation = rewindState.rotation;
         transform.rotation = Quaternion.Euler(rewindState.inputVector.x, rewindState.inputVector.y, rewindState.inputVector.z);
 
         if (!rewindState.Equals(lastServerState)) return;
@@ -679,8 +704,6 @@ public class PlayerManager : NetworkBehaviour
     [ServerRpc]
     void SendToServerRpc(InputPayload input)
     {
-        //    Debug.Log($"Received input from client Tick: {input.tick} Client POS: {input.position}");
-        //clientCube.transform.position = input.position.With(y: 4);
         clientCube.transform.position = input.position;
         serverInputQueue.Enqueue(input);
     }
@@ -750,182 +773,6 @@ public class PlayerManager : NetworkBehaviour
     }
 
 
-
-    /*
-    if (!IsOwner || !Application.isFocused) return;
-    //Movement for pc
-#if UNITY_STANDALONE_WIN
-
-
-    //Meter todo esto en una función
-    Vector3 receivedInput = Vector3.zero;
-    if (Input.GetKey("d"))
-    {
-        receivedInput += Vector3.right;
-    }
-    if (Input.GetKey("a"))
-    {
-        receivedInput += Vector3.left;
-    }
-    if (Input.GetKey("w"))
-    {
-        receivedInput += Vector3.forward;
-    }
-    if (Input.GetKey("s"))
-    {
-        receivedInput += Vector3.back;
-    }
-
-    if (receivedInput != Vector3.zero)
-    {
-        receivedInput.Normalize();
-        MovePlayerPcServerRpc(receivedInput);
-    }
-    MoveCamera();
-
-    //Meter en una funcion
-    if (Input.GetMouseButton(1))
-    {
-        Vector3 dest = Input.mousePosition;
-
-        Ray ray = _mainCamera.ScreenPointToRay(dest);
-
-        if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-        {
-            Vector3 moveDestination = hitData.point;
-            moveDestination.y = 0.5f;
-            gun.AimWeapon(moveDestination);
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-            }
-        }
-        else
-            gun.StopAim();
-    }
-    else
-        gun.StopAim();
-
-    //Meter en una funcion
-    if (Input.GetMouseButtonDown(0))
-    {
-        Vector3 dest = Input.mousePosition;
-
-        Ray ray = _mainCamera.ScreenPointToRay(dest);
-
-        if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-        {
-            Vector3 moveDestination = hitData.point;
-            moveDestination.y = 0.5f;
-            gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-        }
-    }
-
-    if(IsServer)
-    {
-        if (isHealthing)
-        {
-           // life.Value = 
-        }
-    }
-
-
-
-#elif UNITY_ANDROID  //ANDROID
-
-    Vector3 movPos = new Vector3();
-    if (joystick.Horizontal >= .2f)
-    {
-        movPos.x = 1;
-    }
-    if (joystick.Horizontal <= -.2f)
-    {
-        movPos.x = -1;
-    }
-    if (joystick.Vertical >= .2f)
-        movPos.z = 1;
-    if (joystick.Vertical <= -.2f)
-        movPos.z = -1;
-
-    if (movPos != Vector3.zero)
-    {
-        MovePlayerPhoneServerRpc(movPos);
-
-    }
-
-    MoveCamera();
-
-
-    //Aim And Shoot
-    Vector3 shootPos = new Vector3();
-
-    shootPos.x += joystickShoot.Horizontal;
-    shootPos.z += joystickShoot.Vertical;
-
-    //Debug.Log(shootPos);
-    if (shootPos != Vector3.zero)
-    {
-        //      Debug.Log("Aiming!! " + shootPos);
-        aiming = true;
-        lastAimedPos = gun.AimWeaponMobile(shootPos);
-        previousMov = shootPos.magnitude;
-    }
-    else
-    {
-        gun.StopAim();
-        if (aiming == true)
-        {
-            //Debug.Log(previousMov);
-            if (previousMov >= 0.22)
-            {
-                //Debug.Log(shootPos);
-                //bodyAnimator.SetBool("firing", false);
-
-                gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
-                aiming = false;
-
-                //animator.SetBool("firing", true);
-
-                bodyAnimator.SetBool("firing", true);
-            }
-
-
-        }
-    }
-
-
-    /*  if(joystickShoot.Horizontal<= .2f && joystickShoot.Horizontal >= .2f && joystickShoot.Vertical <= .2f && joystickShoot.Vertical >= .2f)
-      {
-          //Vibrate, cancel and set to 0
-      }
-    */
-
-    //   if (joystickShoot.)
-
-    //#endif
-
-
-    //  gun.StopAim();
-
-    // }*/
-
-    /*[ServerRpc]
-    private void MovePlayerPcServerRpc(Vector3 input)
-    {
-        transform.position += input * Time.deltaTime * speed;
-        // Vector3 targetDirection = input - transform.position;
-
-
-        if (!firing && input != Vector3.zero)
-        {
-            Quaternion newRotation = Quaternion.LookRotation(input);
-            transform.rotation = newRotation;
-        }
-    }*/
-
-
-    // [ServerRpc]
     private void MovePlayerPc(Vector3 input)
     {
         if (input == Vector3.zero)
@@ -953,18 +800,6 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
-    /* [ClientRpc]
-     public void setPlayerLifeBarsClientRpc(ulong clientId, int team)
-     {
-         if(team != PlayerTeam.Value)
-         {
-             PlayerManager enemy = OnlineManager.Instance.playerList.Find(x => x.clientId == clientId).playerObject.GetComponent<PlayerManager>();
-             healthUI.healthBar.color = Color.red;
-             Debug.Log("CHANGING COLORS!!");
-         }
-     }
-    */
-
     public override void OnNetworkSpawn()
     {
         Player player = LobbyManager.Instance.GetPlayerOrCreate();
@@ -991,18 +826,6 @@ public class PlayerManager : NetworkBehaviour
         {
             joystickShoot = Assets.Instance.joystickShoot;
             joystick = Assets.Instance.joystick;
-
-            /*    foreach(PlayerInfo playerInfo in OnlineManager.Instance.playerList)
-                {
-                    if(playerInfo.team != PlayerTeam.Value)
-                    {
-                        Debug.Log("DIFERENT TEAMS!!");
-                        playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color = Color.red;
-                        //Might not be spawned yet!!
-                        Debug.Log(playerInfo.playerObject.GetComponent<PlayerManager>().healthUI.healthBar.color);
-                    }
-                }
-            */
         }
 
 

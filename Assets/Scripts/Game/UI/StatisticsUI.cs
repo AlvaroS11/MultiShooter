@@ -5,6 +5,7 @@ using Unity.VisualScripting;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Services.Authentication;
 
 
 
@@ -17,8 +18,14 @@ public class StatisticsUI : NetworkBehaviour
 
     [SerializeField] private Transform container;
 
+    [SerializeField] private GameObject ScrollBar;
+
+
     [SerializeField] private Button showStatsMobile;
 
+    public bool gamefinished = false;
+
+    public GameObject respawnMsg;
 
     // Start is called before the first frame update
     void Start()
@@ -26,7 +33,18 @@ public class StatisticsUI : NetworkBehaviour
         Instance = this;
 
         showStatsMobile.onClick.AddListener(() => {
-            container.gameObject.SetActive(!container.gameObject.activeSelf);
+            if (gamefinished)
+            {
+                ScrollBar.SetActive(true);
+                container.gameObject.SetActive(true);
+
+            }
+            else
+            {
+                ScrollBar.SetActive(!container.gameObject.activeSelf);
+                container.gameObject.SetActive(!container.gameObject.activeSelf);
+
+            }
         });
 
 #if UNITY_STANDALONE_WIN
@@ -81,24 +99,14 @@ public class StatisticsUI : NetworkBehaviour
 
 
                 statPlayerSingleUI.gameObject.SetActive(true);
+               // Debug.Log("////" +  player.lobbyPlayerId);
 
+//                Debug.Log("////" + AuthenticationService.Instance.PlayerId);
 
-                //LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
+                Debug.Log("////" + player.lobbyPlayerId.ToSafeString() == AuthenticationService.Instance.PlayerId);
 
-                /*lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
-                    LobbyManager.Instance.IsLobbyHost() &&
-                    player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
-                );
-                */
-
-                // LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
-                //changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
-                // lobbyNameText.text = lobby.Name;
-                //playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
-                //gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
-
-
-                //Show();
+                if (player.lobbyPlayerId.ToSafeString() == AuthenticationService.Instance.PlayerId)
+                    statPlayerSingleUI.ChangeBackground();
 
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 
@@ -118,14 +126,27 @@ public class StatisticsUI : NetworkBehaviour
 
     private void Hide()
     {
-        container.gameObject.SetActive(false);
+        if (!gamefinished)
+        {
+            container.gameObject.SetActive(false);
+            ScrollBar.SetActive(false);
+
+        }
     }
 
     private void Show()
     {
         container.gameObject.SetActive(true);
+        ScrollBar.SetActive(true);
+       // Debug.Log("show");
     }
 
-
+    public void FinishGame()
+    {
+        gamefinished = true;
+        Show();
+        container.transform.position = new Vector3(container.transform.position.x, container.transform.position.y - 50, 0);
+        respawnMsg.SetActive(false);
+    }
 
 }

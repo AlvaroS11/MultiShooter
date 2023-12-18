@@ -13,7 +13,10 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using Unity.Services.Vivox;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 using static LobbyManager;
+
 
 public class LobbyManager : MonoBehaviour {
 
@@ -24,7 +27,7 @@ public class LobbyManager : MonoBehaviour {
     public const string KEY_PLAYER_NAME = "PlayerName";
     public const string KEY_PLAYER_CHARACTER = "Character";
     public const string KEY_GAME_MODE = "GameMode";
-    public const string KEY_START_GAME = "StartGame";
+   // public const string KEY_START_GAME = "StartGame";
 
     public const string KEY_RELAY_CODE = "RelayCode";
 
@@ -78,13 +81,29 @@ public class LobbyManager : MonoBehaviour {
 
     public GameObject LobbyCanvas;
 
+
+    //Re join lobby
+    public bool joined = false;
+
     // public OnlineManager onlineManager;
 
 
 
     private void Awake() {
-        Instance = this;
-        DontDestroyOnLoad(this);
+
+        if (Instance == null)
+        {
+            // Si no hay instancia, esta será la instancia y no se destruirá al cambiar de escena
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+        else
+        {
+            // Si ya hay una instancia, destruye este objeto para evitar duplicados
+            Destroy(gameObject);
+        }
+
     }
 
     private void Update() {
@@ -112,10 +131,84 @@ public class LobbyManager : MonoBehaviour {
         };
 
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
-
-
-
     }
+
+    public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        //if()
+        if(OnlineManager.Instance.IsClient)
+            LoadScene(scene, mode);
+      //  StartCoroutine(LoadScene(scene, mode));
+        /*yield return new WaitForSeconds(1f);
+
+        if (Instance == null)
+        {
+            Destroy(gameObject);
+        }
+        Debug.Log(joined);
+        Debug.Log("onSceneLoaded");
+        Debug.Log(joinedLobby);
+      //  Debug.Log(GetJoinedLobby());
+       // Debug.Log(GetJoinedLobby().Players.Count);
+        Debug.Log(scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString());
+        Debug.Log(scene.name.ToString());
+        if (joinedLobby != null && scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString())
+        {
+            OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+            Debug.Log(joinedLobby.Players.Count);
+            Debug.Log("scene reLoad");
+            AuthenticateUI.Instance.gameObject.SetActive(false);
+            LobbyListUI.Instance.gameObject.SetActive(false);
+            Debug.Log(joinedLobby.Players.Count);
+            LobbyUI.Instance.UpdateLobby_Event(null, new LobbyEventArgs { lobby = joinedLobby });
+        }*/
+    }
+
+    void LoadScene(Scene scene, LoadSceneMode mode)
+    //   public IEnumerator LoadScene(Scene scene, LoadSceneMode mode)
+    {
+       // yield return new WaitForSeconds(0f);
+
+        if (Instance == null)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Debug.Log(joined);
+            Debug.Log("onSceneLoaded");
+            Debug.Log(joinedLobby);
+            //  Debug.Log(GetJoinedLobby());
+            // Debug.Log(GetJoinedLobby().Players.Count);
+            Debug.Log(scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString());
+            Debug.Log(scene.name.ToString());
+            if (joinedLobby != null && scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString())
+            {
+                //OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+                Debug.Log(joinedLobby.Players.Count);
+                Debug.Log("scene reLoad");
+                EditPlayerName.Instance.SetPlayerName(playerName);
+                AuthenticateUI.Instance.gameObject.SetActive(false);
+                LobbyListUI.Instance.gameObject.SetActive(false);
+                Debug.Log(joinedLobby.Players.Count);
+                Debug.Log("upadteEvent1");
+                //LobbyUI.Instance.UpdateLobby_Event(null, new LobbyEventArgs { lobby = joinedLobby });
+                //LobbyUI.Instance.CreatePlayersUI(joinedLobby);
+                Debug.Log("upadtedLobby");
+                LobbyUI.Instance.Show();
+                OnlineManager.Instance.ResetPreviousGameClientRpc();
+                StartCoroutine(OnlineManager.Instance.DelayJoin());
+
+            }
+        }
+    }
+
+
+    /* public void BackToLobby()
+     {
+         if(joinedLobby != null)
+         OnJoinedLobby.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+     }*/
 
     private void HandleRefreshLobbyList() {
         if (UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn) {
@@ -160,9 +253,10 @@ public class LobbyManager : MonoBehaviour {
                     joinedLobby = null;
                 }
 
-                OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+                if(SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString() )
+                    OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
 
-                if (joinedLobby.Data[KEY_START_GAME].Value != "0")
+               /* if (joinedLobby.Data[KEY_START_GAME].Value != "0")
                 {
                     //Unirnos al p2p y empezar
                     if (!IsLobbyHost()) //Host automatically joins relay
@@ -171,7 +265,7 @@ public class LobbyManager : MonoBehaviour {
                      //   SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
 
                     }
-
+                    Debug.Log("joined lobby is Null");
                     joinedLobby = null;
 
                    // OnGameStarted?
@@ -181,7 +275,7 @@ public class LobbyManager : MonoBehaviour {
                    // Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
                    // Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
 
-                }
+                }*/
 
 
             }
@@ -297,7 +391,6 @@ public class LobbyManager : MonoBehaviour {
             RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
 
-            Debug.Log("HOST STARTING GAME!!");
 
             return joinCode;
         }
@@ -341,7 +434,7 @@ public class LobbyManager : MonoBehaviour {
         string code = await CreateRelay();
 
         NetworkManager.Singleton.StartHost();
-
+        joined = true;
         Player player = CreatePlayer();
 
 
@@ -351,7 +444,7 @@ public class LobbyManager : MonoBehaviour {
             IsPrivate = isPrivate,
             Data = new Dictionary<string, DataObject> {
                 { KEY_GAME_MODE, new DataObject(DataObject.VisibilityOptions.Public, gameMode.ToString()) },
-                { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") },
+                //{ KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") },
                 { KEY_RELAY_CODE, new DataObject(DataObject.VisibilityOptions.Member, code)  },
            //     { KEY_PLAYER_CHARACTER, new DataObject(DataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) } // ESTA BIEN?? O DEBERÍA SER PLAYERDATAOBJECT
             }
@@ -408,7 +501,7 @@ public class LobbyManager : MonoBehaviour {
         });
 
         await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
-
+        joined = true;
 
         //TODO ADD IN EVENT OnJoinedLobby
         VivoxManager.Instance.StartVivoxLogin();
@@ -453,7 +546,6 @@ public class LobbyManager : MonoBehaviour {
         {
             try
             {
-                Debug.Log("StartGame");
                 SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
 
                 //Enviar mensaje para decir que hemos empezado
@@ -461,16 +553,14 @@ public class LobbyManager : MonoBehaviour {
                 {
                     Data = new Dictionary<string, DataObject>
                     {
-                        { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
+                      //  { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
                     }
                 });
                 
                 //Initialize Lobby Start Game Key-Value to 0, then to Relay code
                 joinedLobby = lobby;
                 // test with NetworkManager.Singleton.SceneManager.OnLoadComplete
-              //  OnlineManager.Instance.CreatePlayersServerRpc();
-                Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
-                
+              //  OnlineManager.Instance.CreatePlayersServerRpc();                
             }
             catch (LobbyServiceException e)
             {
@@ -497,8 +587,8 @@ public class LobbyManager : MonoBehaviour {
              try {
                  VivoxManager.Instance.LeaveVivox();
 
-                await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
-
+                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
+                 joined = false;
                  OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
                  joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
 

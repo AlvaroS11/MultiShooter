@@ -22,8 +22,7 @@ public static class SceneLoader
     public static void Load(Scene targetScene)
     {
         SceneLoader.targetScene = targetScene;
-
-   //     SceneManager.LoadScene(Scene.LoadingScene.ToString());
+        SceneManager.LoadScene(targetScene.ToString(), LoadSceneMode.Single);
     }
 
     public static void LoadNetwork(Scene targetScene)
@@ -31,8 +30,8 @@ public static class SceneLoader
         Debug.Log("LOAD NETWORK!" + targetScene + " " + LoadSceneMode.Single);
         // NetworkSceneManager.Sing ActiveSceneSynchronizationEnabled;
         NetworkManager.Singleton.SceneManager.ActiveSceneSynchronizationEnabled = true;
-       var status =  NetworkManager.Singleton.SceneManager.LoadScene(targetScene.ToString(), LoadSceneMode.Single);
-
+        var status =  NetworkManager.Singleton.SceneManager.LoadScene(targetScene.ToString(), LoadSceneMode.Single);
+       // var status = NetworkManager.Singleton.SceneManager.LoadScene(targetScene.ToString(), LoadSceneMode.Additive);
 
         if (status != SceneEventProgressStatus.Started)
         {

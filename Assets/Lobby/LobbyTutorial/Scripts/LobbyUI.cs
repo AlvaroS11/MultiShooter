@@ -46,6 +46,7 @@ public class LobbyUI : MonoBehaviour {
 
 
     private void Awake() {
+        
         Instance = this;
 
         playerSingleTemplate.gameObject.SetActive(false);
@@ -88,7 +89,7 @@ public class LobbyUI : MonoBehaviour {
 
         LobbyPlayers = new Dictionary<string, LobbyPlayerSingleUI>();
 
-        DontDestroyOnLoad(gameObject);
+       // DontDestroyOnLoad(gameObject);
     }
 
     private void Start() {
@@ -123,27 +124,13 @@ public class LobbyUI : MonoBehaviour {
         VivoxManager.Instance.LeaveVivox();
     }
 
-    private void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
+    public void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
 
-        //  UpdateLobby();
         string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
-
-
-        //if (!OnlineManager.Instance.gameStarted.Value)
-        //{
-            CreatePlayersUI();
-            Debug.Log("Caling change name");
+            CreatePlayersUI(e.lobby);
             OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
             OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
-        /*}
-        else
-        {
-            CreateStatisticsUI();
-        }
-        */
-
-
 
     }
 
@@ -175,17 +162,18 @@ public class LobbyUI : MonoBehaviour {
 
 
 
-    public void CreatePlayersUI()
+    public void CreatePlayersUI(Lobby lobby)
     {
-        Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
-        Debug.Log("createPlayersUI");
+        if(lobby == null)
+             lobby = LobbyManager.Instance.GetJoinedLobby();
+     //   Debug.Log("createPlayersUI");
         foreach (Player player in lobby.Players)
         {
          // Debug.Log(player.Id);
           //  Debug.Log(LobbyPlayers.Count);
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
-
+                Debug.Log("Create UI player " + player.Id);
                 Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
                 LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>();
 
@@ -208,12 +196,15 @@ public class LobbyUI : MonoBehaviour {
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
-
                 if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
                     startGameButton.gameObject.SetActive(true);
                 else
                     startGameButton.gameObject.SetActive(false);
 
+
+                //if (player.Id != AuthenticationService.Instance.PlayerId)
+                   // lobbyPlayerSingleUI.SetTeam(LobbyManager.Instance.GetTeam(player.Id));
+                    //lobbyPlayerSingleUI.SelectTeam();
                 Show();
 
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
@@ -350,7 +341,7 @@ public class LobbyUI : MonoBehaviour {
         gameObject.SetActive(false);
     }
 
-    private void Show() {
+    public void Show() {
         gameObject.SetActive(true);
     }
 

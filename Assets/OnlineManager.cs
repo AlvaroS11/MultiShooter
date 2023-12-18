@@ -12,6 +12,7 @@ using Unity.Collections;
 using UnityEngine.Jobs;
 using Unity.VisualScripting;
 using System.Linq;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -122,11 +123,21 @@ public class OnlineManager : NetworkBehaviour
 
 
 
+    private EndGame endGame;
+    public int MaxKills = 10;
+
+
 
 
     private void Awake()
     {
+        if (Instance != null)
+        {
+            Destroy(this);
+            return;
+        }
         Instance = this;
+
         playerReadyDictionary = new Dictionary<ulong, bool>();
         playerTeamDictionary = new Dictionary<string, int>();
         playerCharacterDictionary = new Dictionary<string, PlayerCharacter>();
@@ -155,7 +166,6 @@ public class OnlineManager : NetworkBehaviour
         LobbyManager.Instance.OnLeftLobby += StopClient;
         LobbyManager.Instance.OnJoinedLobby += StartClient;
         LobbyManager.Instance.OnKickedFromLobby += StopClient;
-
     }
 
     private void StartClient(object sender, System.EventArgs e)
@@ -166,7 +176,7 @@ public class OnlineManager : NetworkBehaviour
     private void StopClient(object sender, System.EventArgs e)
     {
         Debug.Log("STOPPING CLIENT!");
-        NetworkManager.Singleton.Shutdown();
+        //NetworkManager.Singleton.Shutdown();
     }
 
     public override void OnNetworkSpawn()
@@ -246,7 +256,7 @@ public class OnlineManager : NetworkBehaviour
     }
 
 
-        private IEnumerator DelayJoin()
+        public IEnumerator DelayJoin()
     {
         yield return new WaitForSeconds(1.5f);
         LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
@@ -302,7 +312,6 @@ public class OnlineManager : NetworkBehaviour
     public void ChangeNameServerRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
         //GetPlayerById(playerId);
-        Debug.Log("Change Name Server Rpc");
         ChangeNameClientRpc(playerId, name, clientId);
     }
 
@@ -310,7 +319,6 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     public void ChangeNameClientRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
-        Debug.Log("CALLED NAME CLIENT CHANGE " + playerId);
         int index = playerList.FindIndex(x => x.lobbyPlayerId == playerId);
         if (index >= 0)
         {
@@ -321,7 +329,6 @@ public class OnlineManager : NetworkBehaviour
         }
         else
         {
-            Debug.Log("UPDATED NAME :  " + name);
             PlayerInfo newPlayer = new PlayerInfo();
             newPlayer.lobbyPlayerId = playerId;
             // newPlayer.clientId = NetworkManager.Singleton.LocalClientId;
@@ -468,7 +475,6 @@ public class OnlineManager : NetworkBehaviour
             int nTeams = 0;
             while (SceneManager.GetActiveScene().name != "GameScene") { }
 
-
             spawnParent = GameObject.Find("SpawnPoints");
             System.Random rand = new System.Random();
 
@@ -479,7 +485,7 @@ public class OnlineManager : NetworkBehaviour
             foreach (PlayerInfo playerInfo in playerList)
             {
 
-                if(!teamScore.Contains(playerInfo.team))
+                if(!teamNames.Contains(playerInfo.team))
                 {
                     teamScore.Add(0);
                     teamNames.Add(playerInfo.team);
@@ -525,12 +531,26 @@ public class OnlineManager : NetworkBehaviour
             Debug.Log(LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().name);
 
             LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().InitializeStatisticsClientRpc();
+            endGame = LobbyAssets.Instance.endGame;
 
         }
         catch (Exception e)
         {
             Debug.LogException(e);
         }
+    }
+
+    [ClientRpc]
+    public void ResetPreviousGameClientRpc()
+    {
+        //if (!IsServer)
+          //  return;
+        teamNames.Clear();
+        teamScore.Clear();
+        spawnPoints.Clear();
+        playerManagers.Clear();
+        teamScoreTexts.Clear();
+
     }
 
     [ClientRpc]
@@ -557,7 +577,7 @@ public class OnlineManager : NetworkBehaviour
     {
 
         GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
-
+        playerManagers.Clear();
 
         int ownTeam = -1;
         foreach (GameObject playerObject in playerObjects)
@@ -571,6 +591,7 @@ public class OnlineManager : NetworkBehaviour
 
         foreach(PlayerManager playerManager in playerManagers)
         {
+
             if(ownTeam != playerManager.PlayerTeam.Value)
             {
                 playerManager.healthUI.healthBar.color = Color.red;
@@ -646,7 +667,7 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     private void StartTeamScoreClientRpc(int[] nTeams)
     {
-
+        teamScoreTexts.Clear();
         Transform container = Assets.Instance.teamContainer;
         scoreCounterPrefab = Assets.Instance.scoreCounterPrefab;
 
@@ -680,12 +701,13 @@ public class OnlineManager : NetworkBehaviour
         //TO DO ADD INITIALIZE NUMBER OF TEAMS
         teamScore[shooter]++;
 
-        Debug.Log("::::" + shooter + "  " + teamScore[shooter]);
-
-        Debug.Log("创创" + playerList[shooter].team);
-        Debug.Log("创创" + playerList[shooter].team);
 
         ChangeScoreClientRpc(shooter, teamScore[shooter], playerList[shooter].lobbyPlayerId, playerList[hitted].lobbyPlayerId);
+
+        if (teamScore[shooter] >= MaxKills)
+        {
+            endGame.ShowEndGameServer(teamNames[shooter]);
+        }
 
     }
 

@@ -56,5 +56,9 @@ public class EditPlayerName : MonoBehaviour {
         return playerName;
     }
 
+    public void SetPlayerName(string playerName)
+    {
+        this.playerName = playerName;
+    }
 
 }

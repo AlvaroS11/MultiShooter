@@ -12,6 +12,9 @@ public class PlayerSingleStat : LobbyPlayerSingleUI
     public bool isAlive = true;
     public TextMeshProUGUI killsDeaths;
 
+    public Image BackgroundImage;
+    public Color SelfColor;
+
    /* [SerializeField] public TextMeshProUGUI playerNameText;
     [SerializeField] public Image characterImage;
     [SerializeField] public Button kickPlayerButton;
@@ -121,7 +124,11 @@ public class PlayerSingleStat : LobbyPlayerSingleUI
         }
 
         userHandler.OnVolumeSlide(soundValue);
+    }
 
+    public void ChangeBackground()
+    {
+        BackgroundImage.color = SelfColor;
     }
 
 }

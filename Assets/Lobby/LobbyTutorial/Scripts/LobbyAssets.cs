@@ -27,7 +27,7 @@ public class LobbyAssets : MonoBehaviour {
     [SerializeField] public GameObject stats;
 
 
-
+    [SerializeField] public EndGame endGame;
 
     private void Awake() {
         Instance = this;
