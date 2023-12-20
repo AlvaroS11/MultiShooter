@@ -47,7 +47,10 @@ public class PlayerManager : NetworkBehaviour
     [HideInInspector]
     public LobbyManager.PlayerCharacter playerCharacterr;
 
+
+
     public int PlayerInfoIndex;
+    public ulong clientId;
 
     //  [SerializeField]
     [HideInInspector]
@@ -61,9 +64,6 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     private TextMeshProUGUI nameText;
 
-
-
-    public NavMeshAgent playerNavMesh;
 
     public bool firing; //Server only
 
@@ -894,7 +894,7 @@ public class PlayerManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void DamageTakenServerRpc(int dmg, int shooterIndex, int playerHittedIndex)
+        public void DamageTakenServerRpc(int dmg, int shooterIndex, int playerHittedIndex)
     {
         life.Value -= dmg;
         if (life.Value <= 0)

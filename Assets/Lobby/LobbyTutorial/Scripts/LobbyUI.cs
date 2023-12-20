@@ -126,11 +126,12 @@ public class LobbyUI : MonoBehaviour {
 
     public void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
 
+        Debug.Log("OnJoinedLobbyUpdate");
         string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
             CreatePlayersUI(e.lobby);
-            OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
-            OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
+        OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
+        OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
 
     }
 

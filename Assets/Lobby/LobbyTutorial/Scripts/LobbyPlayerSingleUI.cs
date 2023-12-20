@@ -157,8 +157,6 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
             }
             else
             {
-                Debug.Log("ADSA");
-
                 mutedMic.SetActive(true);
                 soundButton.image.sprite = soundMic;
             }

@@ -116,8 +116,6 @@ public class Bullet : MonoBehaviour {
 
                 if(!hitPlayerManager.isInmune.Value)
                     hitPlayerManager.DamageTakenServerRpc(bulletDmg, playerManager.PlayerInfoIndex, hitPlayerManager.PlayerInfoIndex);
-                
-                //QUITAR VIDA AL JUGADOR
             }
         }
     }

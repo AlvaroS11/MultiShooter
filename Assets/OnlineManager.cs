@@ -12,7 +12,6 @@ using Unity.Collections;
 using UnityEngine.Jobs;
 using Unity.VisualScripting;
 using System.Linq;
-using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class OnlineManager : NetworkBehaviour
 {//CHANGE NAME TO SPAWNER
@@ -176,7 +175,7 @@ public class OnlineManager : NetworkBehaviour
     private void StopClient(object sender, System.EventArgs e)
     {
         Debug.Log("STOPPING CLIENT!");
-        //NetworkManager.Singleton.Shutdown();
+        NetworkManager.Singleton.Shutdown();
     }
 
     public override void OnNetworkSpawn()
@@ -312,6 +311,7 @@ public class OnlineManager : NetworkBehaviour
     public void ChangeNameServerRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
         //GetPlayerById(playerId);
+        Debug.Log("change name serverRpc");
         ChangeNameClientRpc(playerId, name, clientId);
     }
 
@@ -341,6 +341,7 @@ public class OnlineManager : NetworkBehaviour
 
         if (LobbyUI.Instance != null)
         {
+            //Check
             LobbyUI.Instance.LobbyPlayers[playerId].UpdateNameUI(name);
         }
     }
@@ -445,8 +446,6 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     public void DeletePlayerLobbyIdClientRpc(string playerId)
     {
-        Debug.Log("removing player ");
-        Debug.Log("player id " + playerId);
         Debug.Log(playerList.Count);
         playerList.Remove(playerList.Find(x => x.lobbyPlayerId.ToSafeString() == playerId));
         LobbyUI.Instance.DeletePlayer(playerId);
@@ -480,6 +479,9 @@ public class OnlineManager : NetworkBehaviour
 
             nTeams = playerList.DistinctBy(dd => dd.team).Count();
 
+            ResetPreviousGame();
+            ResetPreviousGameClientRpc();
+
             int[] teamNames1 = new int[nTeams];
             int i = 0;
             foreach (PlayerInfo playerInfo in playerList)
@@ -510,6 +512,8 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerManager.PlayerName.Value = playerInfo.name;
                 newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
+                //newPlayerManager.clientId = playerInfo.clientId;
+                //newPlayerManager.PlayerInfoIndex = playerInfo.clientId
                 playerList.Find(x => x.clientId == playerInfo.clientId).playerObject = newPlayerGameObject;
                
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
@@ -522,7 +526,6 @@ public class OnlineManager : NetworkBehaviour
             TestClientRpc(teamNames1);
 
             setPlayerLifeBarsClientRpc();
-
 
             //NO SE ESTÁ LLAMANDO EN LOS CLIENTES!!
             Debug.Log(LobbyAssets.Instance.name);
@@ -547,10 +550,19 @@ public class OnlineManager : NetworkBehaviour
           //  return;
         teamNames.Clear();
         teamScore.Clear();
+        playerManagers.Clear();
+        teamScoreTexts.Clear();
+    }
+
+    public void ResetPreviousGame()
+    {
+        //if (!IsServer)
+        //  return;
+        teamNames.Clear();
+        teamScore.Clear();
         spawnPoints.Clear();
         playerManagers.Clear();
         teamScoreTexts.Clear();
-
     }
 
     [ClientRpc]

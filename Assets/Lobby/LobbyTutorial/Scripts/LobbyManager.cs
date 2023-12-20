@@ -196,7 +196,7 @@ public class LobbyManager : MonoBehaviour {
                 //LobbyUI.Instance.CreatePlayersUI(joinedLobby);
                 Debug.Log("upadtedLobby");
                 LobbyUI.Instance.Show();
-                OnlineManager.Instance.ResetPreviousGameClientRpc();
+              //  OnlineManager.Instance.ResetPreviousGameClientRpc();
                 StartCoroutine(OnlineManager.Instance.DelayJoin());
 
             }
@@ -242,10 +242,23 @@ public class LobbyManager : MonoBehaviour {
                 float lobbyPollTimerMax = 4f;
                 lobbyPollTimer = lobbyPollTimerMax;
 
-                if(IsPlayerInLobby())
-                joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+                if (IsPlayerInLobby())
+                {
+                    try
+                    {
+                        joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+                    }
+                    catch(LobbyServiceException e)
+                    {
+                        //The lobby has been eliminated or the Unity Services are down
+                        await LeaveLobby();
+                        Debug.LogWarning("Leaving lobby due to error: " + e.Message);
+                        return;
+                    }
+                }
 
-                else {
+                else
+                {
                     // Player was kicked out of this lobby
 
                     OnKickedFromLobby?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
@@ -582,27 +595,63 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
-     public async Task LeaveLobby() {
-         if (joinedLobby != null) {
-             try {
-                 VivoxManager.Instance.LeaveVivox();
+    /*public async Task LeaveLobby() {
+        if (joinedLobby != null) {
+            try {
+                VivoxManager.Instance.LeaveVivox();
 
-                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
-                 joined = false;
-                 OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
-                 joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+                await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
+                joined = false;
+                OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
+                joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
 
+               // OnKickPlayer?.Invoke(this, playerId);
+               //   ExternalPlayerLeft?.Invoke(this, AuthenticationService.Instance.PlayerId);
+
+               OnLeftLobby?.Invoke(this, EventArgs.Empty);
+
+
+            } catch (LobbyServiceException e) {
+                Debug.LogError(e);
+            }
+        }
+    }*/
+
+
+    public async Task LeaveLobby()
+    {
+        if (joinedLobby != null)
+        {
+            try
+            {
+                //If is server remove server
+                if (OnlineManager.Instance.IsServer)
+                    await LobbyService.Instance.DeleteLobbyAsync(joinedLobby.Id);
+                else
+                {
+                    await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
+                    joined = false;
+                    OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
+                    joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+                }
                 // OnKickPlayer?.Invoke(this, playerId);
                 //   ExternalPlayerLeft?.Invoke(this, AuthenticationService.Instance.PlayerId);
 
+            }
+            catch (LobbyServiceException e)
+            {
+                Debug.LogError(e);
+            }
+            finally
+            {
+                joined = false;
+                joinedLobby = null;
                 OnLeftLobby?.Invoke(this, EventArgs.Empty);
-
-
-             } catch (LobbyServiceException e) {
-                 Debug.Log(e);
-             }
-         }
-     }
+                VivoxManager.Instance.LeaveVivox();
+            }
+        }
+    }
+      
     
     public async void KickPlayer(string playerId) {
         if (IsLobbyHost()) {
@@ -660,24 +709,24 @@ public class LobbyManager : MonoBehaviour {
              }
          }
         */
-      //  OnlineManager.Instance.ChangeTeamServerRpc(playerId, int.Parse(team));
-    }
+    //  OnlineManager.Instance.ChangeTeamServerRpc(playerId, int.Parse(team));
+}
 
-    /*   [ServerRpc(RequireOwnership = false)]
-       public void ChangeTeamServerRpc(ServerRpcParams serverRpcParams = default)
-       {
+/*   [ServerRpc(RequireOwnership = false)]
+   public void ChangeTeamServerRpc(ServerRpcParams serverRpcParams = default)
+   {
 
-           //Crear una lista de los jugadores (mirar La lista de templates por ej)
-           try {
-               ulong clientId = serverRpcParams.Receive.SenderClientId;
+       //Crear una lista de los jugadores (mirar La lista de templates por ej)
+       try {
+           ulong clientId = serverRpcParams.Receive.SenderClientId;
 
-           }
        }
-    */
+   }
+*/
 
 
 
-    public int GetTeam(string playerId)
+public int GetTeam(string playerId)
     {
         if (playerId == AuthenticationService.Instance.PlayerId)
         {

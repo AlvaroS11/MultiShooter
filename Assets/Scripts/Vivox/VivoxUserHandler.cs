@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Services.Vivox;
 using VivoxUnity;
+using UnityEngine.Audio;
 
 /// <summary>
 /// Listens for changes to Vivox state for one user in the lobby.
@@ -27,14 +28,7 @@ public class VivoxUserHandler : MonoBehaviour
 
     public void Start()
     {
-        //   lobbyPlayer.DisableVoice(true);
         lobbyPlayer = GetComponent<LobbyPlayerSingleUI>();
-
-
-        foreach (var device in Microphone.devices)
-        {
-            Debug.Log("Name: " + device);
-        }
     }
 
     public void SetId(string id)
@@ -205,38 +199,46 @@ public class VivoxUserHandler : MonoBehaviour
 
     public void OnVolumeSlide(float volumeNormalized)
     {
-        if (m_channelSession == null || m_vivoxId == null) // Verify initialization, since SetId and OnChannelJoined are called at different times for local vs. remote clients.
+        try
         {
-            if (m_channelSession == null)
+            if (m_channelSession == null || m_vivoxId == null) // Verify initialization, since SetId and OnChannelJoined are called at different times for local vs. remote clients.
             {
-                OnChannelJoined(VivoxManager.Instance.m_VivoxSetup.GetChannel());
+                if (m_channelSession == null)
+                {
+                    OnChannelJoined(VivoxManager.Instance.m_VivoxSetup.GetChannel());
+                }
+                return;
+
             }
-            return;
-
-        }
 
 
-        int vol = (int)Mathf.Clamp(k_volumeMin + (k_volumeMax - k_volumeMin) * volumeNormalized, k_volumeMin, k_volumeMax); // Clamping as a precaution; if UserVolume somehow got above 1, listeners could be harmed.
-        bool isSelf = m_channelSession.Participants[m_vivoxId].IsSelf;
+            int vol = (int)Mathf.Clamp(k_volumeMin + (k_volumeMax - k_volumeMin) * volumeNormalized, k_volumeMin, k_volumeMax); // Clamping as a precaution; if UserVolume somehow got above 1, listeners could be harmed.
+            bool isSelf = m_channelSession.Participants[m_vivoxId].IsSelf;
 
-        if (volumeNormalized == 0)
+            // float vol2 = (float)Mathf.Log10(volumeNormalized)*20;
+
+            if (volumeNormalized == 0)
+            {
+                OnMuteToggle(true);
+                return;
+            }
+            else if (VivoxService.Instance.Client.AudioInputDevices.Muted)
+            {
+                OnMuteToggle(false);
+            }
+
+            if (isSelf)
+            {
+                VivoxService.Instance.Client.AudioInputDevices.VolumeAdjustment = vol;
+            }
+            else
+            {
+                m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment = vol;
+                Debug.Log(m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment);
+            }
+        }catch(VivoxApiException e)
         {
-            OnMuteToggle(true);
-            return;
-        }
-        else if (VivoxService.Instance.Client.AudioInputDevices.Muted)
-        {
-            OnMuteToggle(false);
-        }
-
-        if (isSelf)
-        {
-            VivoxService.Instance.Client.AudioInputDevices.VolumeAdjustment = vol;
-        }
-        else
-        {
-            m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment = vol;
-            Debug.Log(m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment);
+            Debug.LogError(e);
         }
     }
 
