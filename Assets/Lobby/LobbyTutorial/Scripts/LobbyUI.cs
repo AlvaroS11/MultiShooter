@@ -304,6 +304,7 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void ClearLobby() {
+        Debug.Log(container.name);
         foreach (Transform child in container) {
             if (child == playerSingleTemplate) continue;
 

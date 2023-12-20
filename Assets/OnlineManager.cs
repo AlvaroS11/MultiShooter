@@ -483,7 +483,7 @@ public class OnlineManager : NetworkBehaviour
             nTeams = playerList.DistinctBy(dd => dd.team).Count();
 
             ResetPreviousGame();
-            ResetPreviousGameClientRpc();
+            //ResetPreviousGameClientRpc();
 
             int[] teamNames1 = new int[nTeams];
             int i = 0;
@@ -538,7 +538,7 @@ public class OnlineManager : NetworkBehaviour
 
             LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().InitializeStatisticsClientRpc();
             endGame = LobbyAssets.Instance.endGame;
-
+            Time.timeScale = 1;
         }
         catch (Exception e)
         {
