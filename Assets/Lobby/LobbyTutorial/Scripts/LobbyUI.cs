@@ -102,7 +102,8 @@ public class LobbyUI : MonoBehaviour {
         //LobbyManager.Instance.ExternalPlayerLeft += LobbyExternalPlayerLeft;
 
 
-        Hide();
+        if(!LobbyManager.Instance.joined)
+            Hide();
     }
 
 
@@ -126,10 +127,9 @@ public class LobbyUI : MonoBehaviour {
 
     public void UpdateLobby_Event(object sender, LobbyManager.LobbyEventArgs e) {
 
-        Debug.Log("OnJoinedLobbyUpdate");
         string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
 
-            CreatePlayersUI(e.lobby);
+        CreatePlayersUI(e.lobby);
         OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
         OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
 
@@ -339,6 +339,7 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void Hide() {
+        Debug.Log("hide");
         gameObject.SetActive(false);
     }
 

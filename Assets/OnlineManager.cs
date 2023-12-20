@@ -159,7 +159,7 @@ public class OnlineManager : NetworkBehaviour
 
     private void Start()
     {
-        teamScore = new NetworkList<int>();
+        teamScore = new NetworkList<int>(readPerm: NetworkVariableReadPermission.Everyone, writePerm: NetworkVariableWritePermission.Server);
         teamNames = new NetworkList<int>(readPerm: NetworkVariableReadPermission.Everyone, writePerm: NetworkVariableWritePermission.Server);
 
         LobbyManager.Instance.OnLeftLobby += StopClient;
@@ -254,14 +254,11 @@ public class OnlineManager : NetworkBehaviour
         }
     }
 
-
-        public IEnumerator DelayJoin()
+    public IEnumerator DelayJoin()
     {
         yield return new WaitForSeconds(1.5f);
         LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
-
     }
-
 
     /*[ServerRpc(RequireOwnership = false)]
     public void GetDefNameServerRpc(string playerId)
@@ -272,15 +269,15 @@ public class OnlineManager : NetworkBehaviour
     */
 
 
-  /*  [ClientRpc]
-    public void GetDefNameClientRpc(string playerId)
-    {
-        //GetPlayerById(playerId);
-        //Debug.Log(playerId);
+    /*  [ClientRpc]
+      public void GetDefNameClientRpc(string playerId)
+      {
+          //GetPlayerById(playerId);
+          //Debug.Log(playerId);
 
-        ChangeNameServerRpc(playerId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
-    }
-  */
+          ChangeNameServerRpc(playerId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
+      }
+    */
 
     [ServerRpc(RequireOwnership = false)]
     public void GetTeamCharacterServerRpc(string playerId, ServerRpcParams serverRpcParams = default)
@@ -342,7 +339,13 @@ public class OnlineManager : NetworkBehaviour
         if (LobbyUI.Instance != null)
         {
             //Check
-            LobbyUI.Instance.LobbyPlayers[playerId].UpdateNameUI(name);
+            try
+            {
+                LobbyUI.Instance.LobbyPlayers[playerId].UpdateNameUI(name);
+            }catch(Exception e)
+            {
+                Debug.LogWarning("Cannot update name due to error: " + e);
+            }
         }
     }
 

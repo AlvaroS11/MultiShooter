@@ -111,6 +111,13 @@ public class LobbyManager : MonoBehaviour {
         //PERIODIC TASKS (5seconds)
         HandleLobbyHeartbeat();
         HandleLobbyPolling();
+
+        NetworkManager.Singleton.OnTransportFailure += HandleTransportFailure;
+    }
+
+    private void HandleTransportFailure()
+    {
+        LeaveLobby();
     }
 
     public async void Authenticate(string playerName) {
@@ -193,11 +200,12 @@ public class LobbyManager : MonoBehaviour {
                 Debug.Log(joinedLobby.Players.Count);
                 Debug.Log("upadteEvent1");
                 //LobbyUI.Instance.UpdateLobby_Event(null, new LobbyEventArgs { lobby = joinedLobby });
-                //LobbyUI.Instance.CreatePlayersUI(joinedLobby);
-                Debug.Log("upadtedLobby");
                 LobbyUI.Instance.Show();
-              //  OnlineManager.Instance.ResetPreviousGameClientRpc();
-                StartCoroutine(OnlineManager.Instance.DelayJoin());
+                LobbyUI.Instance.CreatePlayersUI(joinedLobby);
+                Debug.Log("upadteEvent2");
+                LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
+                //  OnlineManager.Instance.ResetPreviousGameClientRpc();
+                //StartCoroutine(DelayJoin());
 
             }
         }
