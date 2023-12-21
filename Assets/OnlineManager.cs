@@ -307,8 +307,6 @@ public class OnlineManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void ChangeNameServerRpc(string playerId, FixedString128Bytes name, ulong clientId)
     {
-        //GetPlayerById(playerId);
-        Debug.Log("change name serverRpc");
         ChangeNameClientRpc(playerId, name, clientId);
     }
 

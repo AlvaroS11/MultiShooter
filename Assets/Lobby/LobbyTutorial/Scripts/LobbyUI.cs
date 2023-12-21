@@ -120,8 +120,8 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void LobbyManager_OnLeftLobby(object sender, System.EventArgs e) {
-        ClearLobby();
-        Hide();
+        LobbyUI.Instance.Hide();
+        LobbyUI.Instance.ClearLobby();
         VivoxManager.Instance.LeaveVivox();
     }
 
@@ -286,6 +286,7 @@ public class LobbyUI : MonoBehaviour {
 
     private void AddUserHandler(VivoxUserHandler playerLobbyHandler)
     {
+        Debug.Log("adding userhandler");
         VivoxManager.Instance.m_vivoxUserHandlers.Add(playerLobbyHandler);
     }
 
@@ -304,16 +305,12 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void ClearLobby() {
-        Debug.Log(container.name);
         foreach (Transform child in container) {
             if (child == playerSingleTemplate) continue;
 
             Destroy(child.gameObject);
         }
-        ClearUserHandler();
-        //LobbyPlayers = null;
-        //LobbyPlayers.Clear();
-        //VivoxManager.Instance.m_vivoxUserHandlers.Clear();
+        LobbyUI.Instance.ClearUserHandler();
     }
 
     public void DeletePlayer(string idToDelete)
@@ -341,7 +338,7 @@ public class LobbyUI : MonoBehaviour {
 
     private void Hide() {
         Debug.Log("hide");
-        gameObject.SetActive(false);
+        LobbyUI.Instance.gameObject.SetActive(false);
     }
 
     public void Show() {

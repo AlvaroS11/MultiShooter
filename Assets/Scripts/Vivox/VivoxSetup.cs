@@ -136,37 +136,43 @@ public class VivoxSetup
     /// </summary>
     public void LeaveLobbyChannel()
     {
-        UnityEngine.Debug.Log("LEAVE LOBBY CHANNEL");
-        if (m_channelSession != null)
+        try
         {
-            // Special case: The EndConnect call requires a little bit of time before the connection actually completes, but the player might
-            // disconnect before then. If so, sending the Disconnect now will fail, and the played would stay connected to voice while no longer
-            // in the lobby. So, wait until the connection is completed before disconnecting in that case.
-            if (m_channelSession.ChannelState == ConnectionState.Connecting)
+            UnityEngine.Debug.Log("LEAVE LOBBY CHANNEL");
+            if (m_channelSession != null)
             {
-                UnityEngine.Debug.LogWarning(
-                    "Vivox channel is trying to disconnect while trying to complete its connection. Will wait until connection completes.");
-                HandleEarlyDisconnect();
-                return;
+                // Special case: The EndConnect call requires a little bit of time before the connection actually completes, but the player might
+                // disconnect before then. If so, sending the Disconnect now will fail, and the played would stay connected to voice while no longer
+                // in the lobby. So, wait until the connection is completed before disconnecting in that case.
+                if (m_channelSession.ChannelState == ConnectionState.Connecting)
+                {
+                    UnityEngine.Debug.LogWarning(
+                        "Vivox channel is trying to disconnect while trying to complete its connection. Will wait until connection completes.");
+                    HandleEarlyDisconnect();
+                    return;
+                }
+
+                ChannelId id = m_channelSession.Channel;
+                m_channelSession?.Disconnect(
+                    (result) =>
+                    {
+                        m_loginSession.DeleteChannelSession(id);
+                        m_channelSession = null;
+                    });
+
+                UnityEngine.Debug.Log("DISCONECCTING LOBBY CHANNEL");
+                //UnityEngine.MonoBehaviour.Destroy(UnityEngine.GameObject.Find("VivoxUnity.VxUnityInterop (Singleton)"));
+                // m_loginSession.Logout();
+                // UnityEngine.D UnityEngine.GameObject.Find("VivoxUnity.VxUnityInterop (Singleton)")
+
             }
 
-            ChannelId id = m_channelSession.Channel;
-            m_channelSession?.Disconnect(
-                (result) =>
-                {
-                    m_loginSession.DeleteChannelSession(id);
-                    m_channelSession = null;
-                });
-
-            UnityEngine.Debug.Log("DISCONECCTING LOBBY CHANNEL");
-            //UnityEngine.MonoBehaviour.Destroy(UnityEngine.GameObject.Find("VivoxUnity.VxUnityInterop (Singleton)"));
-            // m_loginSession.Logout();
-            // UnityEngine.D UnityEngine.GameObject.Find("VivoxUnity.VxUnityInterop (Singleton)")
-
+            foreach (VivoxUserHandler userHandler in m_userHandlers)
+                userHandler.OnChannelLeft();
+        }catch(Exception e)
+        {
+            UnityEngine.Debug.LogError("Vivox setup error: " + e);
         }
-
-        foreach (VivoxUserHandler userHandler in m_userHandlers)
-            userHandler.OnChannelLeft();
     }
 
     private void HandleEarlyDisconnect()

@@ -28,7 +28,7 @@ public class LobbyListUI : MonoBehaviour {
     }
 
     private void Start() {
-        LobbyManager.Instance.OnLobbyListChanged += LobbyManager_OnLobbyListChanged;
+        LobbyManager.Instance.OnLobbyListChanged += Instance.LobbyManager_OnLobbyListChanged;
         LobbyManager.Instance.OnJoinedLobby += LobbyManager_OnJoinedLobby;
         LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby;
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnKickedFromLobby;
@@ -55,14 +55,14 @@ public class LobbyListUI : MonoBehaviour {
     }
 
     private void UpdateLobbyList(List<Lobby> lobbyList) {
-        foreach (Transform child in container) {
-            if (child == lobbySingleTemplate) continue;
+        foreach (Transform child in Instance.container) {
+            if (child == Instance.lobbySingleTemplate) continue;
 
             Destroy(child.gameObject);
         }
 
         foreach (Lobby lobby in lobbyList) {
-            Transform lobbySingleTransform = Instantiate(lobbySingleTemplate, container);
+            Transform lobbySingleTransform = Instantiate(Instance.lobbySingleTemplate, Instance.container);
             lobbySingleTransform.gameObject.SetActive(true);
             LobbyListSingleUI lobbyListSingleUI = lobbySingleTransform.GetComponent<LobbyListSingleUI>();
             lobbyListSingleUI.UpdateLobby(lobby);
@@ -78,11 +78,11 @@ public class LobbyListUI : MonoBehaviour {
     }
 
     private void Hide() {
-        gameObject.SetActive(false);
+        Instance.gameObject.SetActive(false);
     }
 
     private void Show() {
-        gameObject.SetActive(true);
+        Instance.gameObject.SetActive(true);
     }
 
 }

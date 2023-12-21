@@ -12,7 +12,16 @@ public class VivoxManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Instance = this;
+        //   Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void Awake()
@@ -32,7 +41,6 @@ public class VivoxManager : MonoBehaviour
           //  return;
         m_VivoxSetup.Initialize(m_vivoxUserHandlers, OnVivoxLoginComplete);
 
-        Debug.Log("login vivox");
         void OnVivoxLoginComplete(bool didSucceed)
         {
             if (!didSucceed)
@@ -45,7 +53,6 @@ public class VivoxManager : MonoBehaviour
 
     public void StartVivoxJoin()
     {
-        Debug.Log("JOINNING CHANNEL");
         m_VivoxSetup.JoinLobbyChannel(LobbyManager.Instance.joinedLobby.Id, OnVivoxJoinComplete);
 
         void OnVivoxJoinComplete(bool didSucceed)
