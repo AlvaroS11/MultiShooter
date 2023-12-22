@@ -290,12 +290,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05f65c69794d9684db513e945a09dbb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 9
+  speed: 4
   floor:
     serializedVersion: 2
     m_Bits: 64
   gun: {fileID: 4823877238638251074}
-  MaxLife: 100
+  MaxLife: 80
   life:
     m_InternalValue: 100
   healthUI: {fileID: 4503105809650915091}
@@ -440,8 +440,8 @@ MonoBehaviour:
     m_InternalValue: 1
   playerCharacterr: 0
   PlayerInfoIndex: 0
+  clientId: 0
   nameText: {fileID: 7712183869564984056}
-  playerNavMesh: {fileID: 0}
   firing: 0
   isHealthing: 0
   healthDamageWait: 3

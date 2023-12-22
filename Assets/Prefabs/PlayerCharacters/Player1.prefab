@@ -287,7 +287,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05f65c69794d9684db513e945a09dbb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 9
+  speed: 3
   floor:
     serializedVersion: 2
     m_Bits: 64
@@ -437,8 +437,8 @@ MonoBehaviour:
     m_InternalValue: 1
   playerCharacterr: 0
   PlayerInfoIndex: 0
+  clientId: 0
   nameText: {fileID: 2108624803368915368}
-  playerNavMesh: {fileID: 0}
   firing: 0
   isHealthing: 0
   healthDamageWait: 3
@@ -521,7 +521,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineRenderer: {fileID: 1353681362587268395}
   bullet: {fileID: 6207266781759429056, guid: ee899dc49e5f5a44d9a9754d8bbcdc3b, type: 3}
-  coolDownSeconds: 1
+  coolDownSeconds: 2
   currentReload: 0
   isReady: 0
   straightAim: 1

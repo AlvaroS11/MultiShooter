@@ -268,11 +268,11 @@ public class PlayerManager : NetworkBehaviour
                 transform.position += transform.forward * 20f;
         }
 
-        while (networkTimer.ShouldTick())
+      /*  while (networkTimer.ShouldTick())
         {
             HandleClientTick();
             HandleServerTick();
-        }
+        }*/
 
         HandleInput();
     }
@@ -302,11 +302,11 @@ public class PlayerManager : NetworkBehaviour
 
     private void FixedUpdate()
     {
-       /* while (networkTimer.ShouldTick())
+       while (networkTimer.ShouldTick())
         {
             HandleClientTick();
             HandleServerTick();
-        }*/
+        }
 
         //Extraplolate(); ?
 
