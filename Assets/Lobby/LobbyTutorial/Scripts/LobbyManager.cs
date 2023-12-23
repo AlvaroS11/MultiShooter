@@ -77,6 +77,7 @@ public class LobbyManager : MonoBehaviour {
     private string playerName;
 
     private int maxPlayers;
+    private int maxKills;
 
 
     public GameObject LobbyCanvas;
@@ -447,10 +448,11 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
-    public async void CreateLobby(string lobbyName, int maxPlayers, bool isPrivate, GameMode gameMode) {
+    public async void CreateLobby(string lobbyName, int maxPlayers, bool isPrivate, GameMode gameMode, int maxKills) {
 
 
         this.maxPlayers = maxPlayers;
+        this.maxKills = maxKills;
 
         string code = await CreateRelay();
 
@@ -476,12 +478,11 @@ public class LobbyManager : MonoBehaviour {
         joinedLobby = lobby;
 
 
-        //  SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
-
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
 
         //TODO ADD IN EVENT OnJoinedLobby
         VivoxManager.Instance.StartVivoxLogin();
+        OnlineManager.Instance.maxKills.Value = maxKills;
 
         StartCoroutine(VivoxManager.Instance.WaitForJoin());
     }

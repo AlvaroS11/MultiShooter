@@ -25,6 +25,8 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private Transform container;
     [SerializeField] private TextMeshProUGUI lobbyNameText;
     [SerializeField] private TextMeshProUGUI playerCountText;
+    [SerializeField] private TextMeshProUGUI killsText;
+
     [SerializeField] private TextMeshProUGUI gameModeText;
     [SerializeField] private Button changeMarineButton;
     [SerializeField] private Button changeNinjaButton;
@@ -174,7 +176,6 @@ public class LobbyUI : MonoBehaviour {
           //  Debug.Log(LobbyPlayers.Count);
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
-                Debug.Log("Create UI player " + player.Id);
                 Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
                 LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>();
 
@@ -190,11 +191,13 @@ public class LobbyUI : MonoBehaviour {
                     LobbyManager.Instance.IsLobbyHost() &&
                     player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
                 );
+
                 lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
                 LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
                 changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
                 lobbyNameText.text = lobby.Name;
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
+
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
                 if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
@@ -221,6 +224,7 @@ public class LobbyUI : MonoBehaviour {
                 
             }
         }
+        killsText.text = "Kills: " + OnlineManager.Instance.maxKills.Value;
     }
 
 

@@ -14,7 +14,7 @@ using Unity.VisualScripting;
 using System.Linq;
 
 public class OnlineManager : NetworkBehaviour
-{//CHANGE NAME TO SPAWNER
+{
 
     public static OnlineManager Instance { get; private set; }
 
@@ -89,7 +89,9 @@ public class OnlineManager : NetworkBehaviour
     public int inmuneTime = 5;
 
     public NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    //public int maxKills = 10;
 
+    public NetworkVariable<int> maxKills = new NetworkVariable<int>(3, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
 
     public bool playersCreated = false;
@@ -123,7 +125,6 @@ public class OnlineManager : NetworkBehaviour
 
 
     private EndGame endGame;
-    public int MaxKills = 10;
 
 
 
@@ -717,7 +718,7 @@ public class OnlineManager : NetworkBehaviour
 
         ChangeScoreClientRpc(shooter, teamScore[shooter], playerList[shooter].lobbyPlayerId, playerList[hitted].lobbyPlayerId);
 
-        if (teamScore[shooter] >= MaxKills)
+        if (teamScore[shooter] >= maxKills.Value)
         {
             endGame.ShowEndGameServer(teamNames[shooter]);
         }
