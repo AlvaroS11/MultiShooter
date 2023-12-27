@@ -519,7 +519,7 @@ public class PlayerManager : NetworkBehaviour
 
                 //if (Input.GetMouseButton(0) && !gun.reloading)
 
-                if (Input.GetMouseButtonDown(0))
+                if (Input.GetMouseButtonDown(0)&& !gun.reloading)
                 {
                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
                 }
@@ -597,7 +597,7 @@ public class PlayerManager : NetworkBehaviour
                 if (previousMov >= 0.22)
                 {
 
-
+                    Debug.Log(lastAimedPos);
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
                     bodyAnimator.SetBool("firing", true);
@@ -621,19 +621,22 @@ public class PlayerManager : NetworkBehaviour
         var currentTick = networkTimer.CurrentTick;
         var bufferIndex = currentTick % k_bufferSize;
 
+        Vector3 inputVector = GetInput();
+        if(inputVector == Vector3.zero)
+            return;
         InputPayload inputPayload = new InputPayload()
         {
             tick = currentTick,
             timestamp = DateTime.Now,
             networkObjectId = NetworkObjectId,
             //inputVector = input.Move,
-            inputVector = GetInput(),
+            inputVector = inputVector,
             position = transform.position
         };
 
         clientInputBuffer.Add(inputPayload, bufferIndex);
 
-
+        
         SendToServerRpc(inputPayload);
 
         if (IsServer)

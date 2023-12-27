@@ -229,8 +229,6 @@ public class Weapon : NetworkBehaviour
 
     public virtual void AimWeapon()
     {
-        Debug.Log("Aiming Gun!!");
-
         lineRenderer.positionCount = 2;
 
 
@@ -242,9 +240,6 @@ public class Weapon : NetworkBehaviour
         lineRenderer.enabled = true;
         lineRenderer.SetPosition(0, transform.position);
         lineRenderer.SetPosition(1, point);
-
-        Debug.Log("****");
-        Debug.Log(lineRenderer.positionCount);
     }
 
     public virtual void AimWeapon(Vector3 dir)

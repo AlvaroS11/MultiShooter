@@ -29,7 +29,7 @@ public class GranadeLauncer : Weapon
         base.Start();
         int granadeLayer = gameObject.layer;
 
-        for (int i = 0; i < 32; i++)
+        for (int i = 0; i < 19; i++)
         {
             if(!Physics.GetIgnoreLayerCollision(granadeLayer, i))
             {
@@ -64,7 +64,8 @@ public class GranadeLauncer : Weapon
     public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)
     {
         if (!isReady) return;
-        bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
+        Vector3 bulletPos = new Vector3(transform.position.x, transform.position.y + 0.2f, transform.position.z);
+        bulletGameObject = Instantiate(bullet, bulletPos, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         //bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
@@ -138,10 +139,12 @@ public class GranadeLauncer : Weapon
 
     private void FireMobile(Vector3 dir)
     {
-        bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
+        Vector3 bulletPos = new Vector3(transform.position.x, transform.position.y + 0.2f, transform.position.z);
+
+        bulletGameObject = Instantiate(bullet, bulletPos, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
-        bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination, dir);
+        bulletGameObject.GetComponent<Granade>().ReleaseGrenadeMobile(grenadeForce, granadeInclination, dir);
     }
 
 

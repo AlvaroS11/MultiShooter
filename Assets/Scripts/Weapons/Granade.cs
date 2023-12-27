@@ -19,6 +19,16 @@ public class Granade : Bullet
 
     [SerializeField]
     private int effectTime;
+
+    public LayerMask floor;
+
+    public LineRenderer lineRenderer;
+
+    public int segments = 32;
+
+    public float distToGround = 0f;
+
+    private bool drawed; 
     void Start()
     {
         if (!NetworkManager.Singleton.IsServer) return;
@@ -33,7 +43,14 @@ public class Granade : Bullet
     // Update is called once per frame
     void Update()
     {
-        
+        if (IsGrounded() && !drawed)
+            DrawExplosionArea();
+    }
+
+     private bool IsGrounded()
+    {
+        //return Physics.Raycast(transform.position, -Vector3.up, distToGround + 0.1);
+        return transform.position.y <= distToGround;
     }
 
     public void ReleaseGrenade(float grenadeForce, float granadeInclination, Vector3? direction = null)
@@ -111,8 +128,9 @@ public class Granade : Bullet
             OnTriggerEnterServerRpc(collider, false);
 
         }
+        drawed = true;
+        lineRenderer.enabled = false;
 
-        Debug.Log("EXPLODE");
         StartCoroutine(DeleteObjectServerRcp(timeToDestroy, particle));
     }
 
@@ -121,6 +139,8 @@ public class Granade : Bullet
     {
         Debug.Log("Ienumerator");
         yield return new WaitForSeconds(seconds);
+        drawed = true;
+        lineRenderer.enabled = false;
         Debug.Log("DESTROYING " + gameObjectToDelete.name);
         Destroy(gameObjectToDelete);
         gameObjectToDelete.GetComponent<NetworkObject>().Despawn();
@@ -129,6 +149,42 @@ public class Granade : Bullet
 
 
         //StartCoroutine(WaitToDeleteServerRpc());
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("trigger enter");
+        GameObject hitObject = other.gameObject;
+        if (hitObject.layer == floor)
+        {
+            Debug.Log("layer is floor");
+            lineRenderer.enabled = true;
+            DrawExplosionArea();
+        }
+
+    }
+
+
+private void DrawExplosionArea()
+    {
+        Debug.Log(transform.position);
+            float x;
+            float y;
+            float z;
+
+            float angle = 360 / segments;
+
+            lineRenderer.positionCount = segments;
+            for (int i = 0; i < (segments + 1); i++)
+            {
+                x = transform.position.x + Mathf.Sin(Mathf.Deg2Rad * angle) * radius;
+                z = transform.position.z + Mathf.Cos(Mathf.Deg2Rad * angle) * radius;
+
+                lineRenderer.SetPosition(i, new Vector3(x, 0, z));
+
+                angle += (360f / segments);
+            }
+        drawed = true;
     }
 
 
