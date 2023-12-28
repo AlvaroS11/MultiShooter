@@ -225,12 +225,19 @@ MonoBehaviour:
   timeToExplode: 5
   radius: 5
   ExplosionParticleSystem: {fileID: 6145516831170175880, guid: a02ec7227384aa8408236690c7eb9cb2, type: 3}
-  effectTime: 0
   floor:
     serializedVersion: 2
     m_Bits: 0
   lineRenderer: {fileID: 7977168099136040373}
-  segments: 32
+  segments: 36
+  distToGround: -0.3
+  actualNSegments: 0
+  lineMaterials:
+  - {fileID: 2100000, guid: 35aa9c4ac42fa504b9d30873a7d6ab06, type: 2}
+  - {fileID: 2100000, guid: 503908aa3247b424da9b3190b16f4d96, type: 2}
+  - {fileID: 2100000, guid: 5a1870947f40bee4b91ebc39eb65c5a9, type: 2}
+  - {fileID: 2100000, guid: 9b0ac6df5029d964b9bd14ca93e976d7, type: 2}
+  - {fileID: 2100000, guid: 718123f67cb4d1e41800fbb476451f48, type: 2}
 --- !u!120 &7977168099136040373
 LineRenderer:
   serializedVersion: 2

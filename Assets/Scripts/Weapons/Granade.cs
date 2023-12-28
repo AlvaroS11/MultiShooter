@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using static UnityEngine.ParticleSystem;
-
+using System;
 
 public class Granade : Bullet
 {
@@ -17,18 +16,30 @@ public class Granade : Bullet
     [SerializeField]
     private GameObject ExplosionParticleSystem;
 
-    [SerializeField]
-    private int effectTime;
-
     public LayerMask floor;
 
     public LineRenderer lineRenderer;
 
     public int segments = 32;
 
-    public float distToGround = 0f;
+    public float distToGround = - 0.34f;
 
-    private bool drawed; 
+    public static DateTime previousTimeStamp = DateTime.Now.AddMilliseconds(-2000);
+
+    public int actualNSegments = 0;
+
+    private bool drawed;
+
+    private bool exploded;
+
+    private int lineIndex = 0;
+
+    private int segmentsIncrease;
+
+    [SerializeField]
+    private Material[] lineMaterials;
+
+
     void Start()
     {
         if (!NetworkManager.Singleton.IsServer) return;
@@ -38,16 +49,44 @@ public class Granade : Bullet
         bulletDmg = 20;
 
         playerManager = parent.GetComponent<PlayerManager>();
+
+        lineRenderer.enabled = false;
+        segmentsIncrease = segments / timeToExplode;
     }
 
     // Update is called once per frame
     void Update()
     {
+        CalculateTimeToExplode();
+
         if (IsGrounded() && !drawed)
-            DrawExplosionArea();
+        {
+            lineRenderer.enabled = true;
+            drawed = true;
+        }
     }
 
-     private bool IsGrounded()
+    void CalculateTimeToExplode()
+    {
+        TimeSpan timeSinceLastUpdate = DateTime.Now - previousTimeStamp;
+
+        if (timeSinceLastUpdate.TotalMilliseconds >= 1000 && !exploded)
+        {
+            actualNSegments += segmentsIncrease;
+            DrawExplosionArea();
+            previousTimeStamp = DateTime.Now;
+            if (lineIndex < lineMaterials.Length)
+            {
+                lineRenderer.material = lineMaterials[lineIndex];
+                lineIndex++;
+            }
+                
+            
+        }
+
+    }
+
+    private bool IsGrounded()
     {
         //return Physics.Raycast(transform.position, -Vector3.up, distToGround + 0.1);
         return transform.position.y <= distToGround;
@@ -107,7 +146,7 @@ public class Granade : Bullet
     [ServerRpc]
     public override IEnumerator WaitToDeleteServerRpc()
     {
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(timeToExplode);
 
         Explode();
     }
@@ -122,13 +161,11 @@ public class Granade : Bullet
 
         foreach (Collider collider in colliders)
         {
-            //Add force
-
-            //Damage
             OnTriggerEnterServerRpc(collider, false);
 
         }
-        drawed = true;
+        //drawed = true;
+        exploded = true;
         lineRenderer.enabled = false;
 
         StartCoroutine(DeleteObjectServerRcp(timeToDestroy, particle));
@@ -137,56 +174,32 @@ public class Granade : Bullet
     [ServerRpc]
     private IEnumerator DeleteObjectServerRcp(int seconds, GameObject gameObjectToDelete)
     {
-        Debug.Log("Ienumerator");
         yield return new WaitForSeconds(seconds);
         drawed = true;
         lineRenderer.enabled = false;
-        Debug.Log("DESTROYING " + gameObjectToDelete.name);
         Destroy(gameObjectToDelete);
         gameObjectToDelete.GetComponent<NetworkObject>().Despawn();
         Destroy(gameObject);
-
-
-
-        //StartCoroutine(WaitToDeleteServerRpc());
     }
 
-    private void OnTriggerEnter(Collider other)
+  private void DrawExplosionArea()
     {
-        Debug.Log("trigger enter");
-        GameObject hitObject = other.gameObject;
-        if (hitObject.layer == floor)
+        float x;
+        float z;
+
+        float angle = 360 / segments;
+
+        lineRenderer.positionCount = actualNSegments;
+        for (int i = 0; i < actualNSegments; i++)
         {
-            Debug.Log("layer is floor");
-            lineRenderer.enabled = true;
-            DrawExplosionArea();
+            x = transform.position.x + Mathf.Sin(Mathf.Deg2Rad * angle) * radius;
+            z = transform.position.z + Mathf.Cos(Mathf.Deg2Rad * angle) * radius;
+
+            lineRenderer.SetPosition(i, new Vector3(x, 0, z));
+
+            angle += (360f / segments);
         }
-
     }
-
-
-private void DrawExplosionArea()
-    {
-        Debug.Log(transform.position);
-            float x;
-            float y;
-            float z;
-
-            float angle = 360 / segments;
-
-            lineRenderer.positionCount = segments;
-            for (int i = 0; i < (segments + 1); i++)
-            {
-                x = transform.position.x + Mathf.Sin(Mathf.Deg2Rad * angle) * radius;
-                z = transform.position.z + Mathf.Cos(Mathf.Deg2Rad * angle) * radius;
-
-                lineRenderer.SetPosition(i, new Vector3(x, 0, z));
-
-                angle += (360f / segments);
-            }
-        drawed = true;
-    }
-
 
 
 
