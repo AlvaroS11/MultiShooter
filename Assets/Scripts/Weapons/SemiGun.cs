@@ -39,7 +39,7 @@ public class SemiGun : Weapon
         lineRenderer.enabled = true;
     }
 
-    [ServerRpc]
+  /*  [ServerRpc]
     public override void PlayerFireServerRpc()
     {
 
@@ -49,7 +49,7 @@ public class SemiGun : Weapon
         StartCoolDownServerRpc();
 
         //3 times
-    }
+    }*/
 
     [ServerRpc]
     public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)

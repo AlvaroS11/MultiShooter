@@ -41,6 +41,8 @@ public class Granade : Bullet
     [SerializeField]
     private Material[] lineMaterials;
 
+    public AudioSource audioSource;
+
 
     void Start()
     {
@@ -171,6 +173,7 @@ public class Granade : Bullet
         //drawed = true;
         exploded = true;
         lineRenderer.enabled = false;
+        audioSource.Play();
 
         StartCoroutine(DeleteObjectServerRcp(timeToDestroy, particle));
     }

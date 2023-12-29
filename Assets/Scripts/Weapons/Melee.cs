@@ -67,7 +67,7 @@ public class Melee : Weapon
         lineRenderer.enabled = true;
     }
 
-    [ServerRpc]
+    /*[ServerRpc]
     public override void PlayerFireServerRpc()
     {
 
@@ -76,7 +76,7 @@ public class Melee : Weapon
 
         //3 times
     }
-
+    */
     [ServerRpc]
     public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)
     {

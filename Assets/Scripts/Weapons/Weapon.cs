@@ -43,6 +43,8 @@ public class Weapon : NetworkBehaviour
 
     public bool reloading = false;
 
+    public AudioSource shotSound;
+
     protected virtual void Start()
     {
         isReady = true;
@@ -85,7 +87,7 @@ public class Weapon : NetworkBehaviour
        
     }
 
-    [ServerRpc]
+  /*  [ServerRpc]
     public virtual void PlayerFireServerRpc()
     {
         if (!isReady || !isActiveAndEnabled) return;
@@ -96,10 +98,11 @@ public class Weapon : NetworkBehaviour
        /* Debug.Log("instantiating bullet");
         Debug.Break();*/
 
-        bulletGameObject.transform.rotation = Quaternion.Euler(90, transform.rotation.eulerAngles.y, 0);
+       /* bulletGameObject.transform.rotation = Quaternion.Euler(90, transform.rotation.eulerAngles.y, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
         StartCoolDownServerRpc();
-    }
+        shotSound.Play();
+    }*/
 
     [ServerRpc]
     public virtual void PlayerFireServerRpc(Vector3 dir, ulong clientId)
@@ -142,6 +145,8 @@ public class Weapon : NetworkBehaviour
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
+        shotSound.Play();
+
     }
 
 
@@ -176,6 +181,8 @@ public class Weapon : NetworkBehaviour
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
+        shotSound.Play();
+
     }
 
 

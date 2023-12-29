@@ -24,6 +24,7 @@ public class GranadeLauncer : Weapon
     public float grenadeForce = 20f;
 
 
+
     protected override void Start()
     {
         base.Start();
@@ -46,7 +47,7 @@ public class GranadeLauncer : Weapon
 
 
 
-    [ServerRpc]
+  /*  [ServerRpc]
     public override void PlayerFireServerRpc()
     {
 
@@ -58,7 +59,8 @@ public class GranadeLauncer : Weapon
 
 
         bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
-    }
+        shotSound.Play();
+    }*/
 
     [ServerRpc]
     public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)
@@ -84,6 +86,7 @@ public class GranadeLauncer : Weapon
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
+        shotSound.Play();
     }
 
     [ServerRpc]
@@ -135,6 +138,9 @@ public class GranadeLauncer : Weapon
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
+        Debug.Log("shot granade");
+        Debug.Log(shotSound.clip.name);
+        shotSound.Play();
     }
 
     private void FireMobile(Vector3 dir)
