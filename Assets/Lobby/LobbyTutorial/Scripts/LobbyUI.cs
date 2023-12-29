@@ -200,15 +200,17 @@ public class LobbyUI : MonoBehaviour {
 
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
-                if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
-                    startGameButton.gameObject.SetActive(true);
-                else
-                    startGameButton.gameObject.SetActive(false);
+                startGameButton.gameObject.SetActive(true);
 
+                /* if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
+                     startGameButton.gameObject.SetActive(true);
+                 else
+                     startGameButton.gameObject.SetActive(false);
+                */
 
                 //if (player.Id != AuthenticationService.Instance.PlayerId)
-                   // lobbyPlayerSingleUI.SetTeam(LobbyManager.Instance.GetTeam(player.Id));
-                    //lobbyPlayerSingleUI.SelectTeam();
+                // lobbyPlayerSingleUI.SetTeam(LobbyManager.Instance.GetTeam(player.Id));
+                //lobbyPlayerSingleUI.SelectTeam();
                 Show();
 
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
@@ -265,11 +267,17 @@ public class LobbyUI : MonoBehaviour {
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
 
-                if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
+              /*  if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
                     startGameButton.gameObject.SetActive(true);
                 else
-                    startGameButton.gameObject.SetActive(false);
+                {
+                    startGameButton.gameObject.SetActive(true);
 
+                }*/
+              if(LobbyManager.Instance.IsLobbyHost())
+                {
+                    startGameButton.gameObject.SetActive(true);
+                }
                 Show();
 
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());

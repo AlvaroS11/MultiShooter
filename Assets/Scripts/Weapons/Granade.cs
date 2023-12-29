@@ -24,7 +24,9 @@ public class Granade : Bullet
 
     public float distToGround = - 0.34f;
 
-    public static DateTime previousTimeStamp = DateTime.Now.AddMilliseconds(-2000);
+    //public static DateTime previousTimeStamp = DateTime.Now.AddMilliseconds(-2000);
+
+    public DateTime previousTimeStamp = DateTime.Now;
 
     public int actualNSegments = 0;
 
@@ -57,12 +59,13 @@ public class Granade : Bullet
     // Update is called once per frame
     void Update()
     {
-        CalculateTimeToExplode();
+       /// CalculateTimeToExplode();
 
         if (IsGrounded() && !drawed)
         {
             lineRenderer.enabled = true;
-            drawed = true;
+            //drawed = true;
+            CalculateTimeToExplode();
         }
     }
 
@@ -70,11 +73,12 @@ public class Granade : Bullet
     {
         TimeSpan timeSinceLastUpdate = DateTime.Now - previousTimeStamp;
 
-        if (timeSinceLastUpdate.TotalMilliseconds >= 1000 && !exploded)
+        if (timeSinceLastUpdate.TotalMilliseconds >= 666 && !exploded)
         {
             actualNSegments += segmentsIncrease;
             DrawExplosionArea();
             previousTimeStamp = DateTime.Now;
+           // Debug.Break();
             if (lineIndex < lineMaterials.Length)
             {
                 lineRenderer.material = lineMaterials[lineIndex];

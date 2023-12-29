@@ -53,6 +53,7 @@ public class EndGame : NetworkBehaviour
             //Reset all in-game variables
             Debug.Log(LobbyManager.Instance.joinedLobby.Id);
             OnlineManager.Instance.playersCreated = false;
+            OnlineManager.Instance.playerList.Clear();
             Time.timeScale = 1;
             SceneLoader.Load(SceneLoader.Scene.LobbyScene);
 

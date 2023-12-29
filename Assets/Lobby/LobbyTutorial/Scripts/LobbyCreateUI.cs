@@ -111,6 +111,8 @@ public class LobbyCreateUI : MonoBehaviour
         publicPrivateText.text = isPrivate ? "Private" : "Public";
         maxPlayersText.text = maxPlayers.ToString();
         maxKillsText.text = maxKills.ToString();
+        //maxPlayersText.text = "Max Players: " + maxPlayers.ToString();
+        //maxKillsText.text = "Max Kills: " + maxKills.ToString();
         gameModeText.text = gameMode.ToString();
     }
 

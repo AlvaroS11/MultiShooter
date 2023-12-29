@@ -102,8 +102,6 @@ public class StatisticsUI : NetworkBehaviour
 
 //                Debug.Log("////" + AuthenticationService.Instance.PlayerId);
 
-                Debug.Log("////" + player.lobbyPlayerId.ToSafeString() == AuthenticationService.Instance.PlayerId);
-
                 if (player.lobbyPlayerId.ToSafeString() == AuthenticationService.Instance.PlayerId)
                     statPlayerSingleUI.ChangeBackground();
 

@@ -563,31 +563,59 @@ public class LobbyManager : MonoBehaviour {
     {
         //StartHost()
         //SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
+        Debug.Log(PopUp.Instance != null);
 
-        if (IsLobbyHost())
+        if (joinedLobby.Players.Count == joinedLobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
         {
-            try
-            {
-                SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
 
-                //Enviar mensaje para decir que hemos empezado
-                Lobby lobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
-                {
-                    Data = new Dictionary<string, DataObject>
-                    {
-                      //  { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
-                    }
-                });
-                
-                //Initialize Lobby Start Game Key-Value to 0, then to Relay code
-                joinedLobby = lobby;
-                // test with NetworkManager.Singleton.SceneManager.OnLoadComplete
-              //  OnlineManager.Instance.CreatePlayersServerRpc();                
-            }
-            catch (LobbyServiceException e)
+            ForceStart();
+        }
+        else if (IsLobbyHost() && PopUp.Instance != null)
+        {
+            PopUp.Instance.ShowPopUp("There are " + (joinedLobby.MaxPlayers - joinedLobby.Players.Count) + " free spaces \n" +
+                "Do you want to start the game?", true, PopUp.PopUpType.Info);
+
+            PopUp.OnButton1Click += OnCancelStart;
+            PopUp.OnButton2Click += OnConfirmStart;
+        }
+    }
+
+    private void OnCancelStart()
+    {
+      //  PopUp.Instance.gameObject.SetActive(false);
+        PopUp.OnButton2Click -= OnConfirmStart;
+        PopUp.OnButton1Click -= OnCancelStart;
+    }
+
+    private void OnConfirmStart()
+    {
+        //  PopUp.Instance.gameObject.SetActive(false);
+        ForceStart();
+        PopUp.OnButton2Click -= OnConfirmStart;
+        PopUp.OnButton1Click -= OnCancelStart;
+    }
+
+    private async void ForceStart()
+    {
+        try
+        {
+            SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
+
+            //Enviar mensaje para decir que hemos empezado
+            Lobby lobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
             {
-                Debug.Log(e);
-            }
+                Data = new Dictionary<string, DataObject>
+                {
+                    //  { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
+                }
+            });
+
+            joinedLobby = lobby;
+             
+        }
+        catch (LobbyServiceException e)
+        {
+            Debug.Log(e);
         }
     }
 
@@ -747,9 +775,7 @@ public int GetTeam(string playerId)
     }
 
     public async void UpdateLobbyGameMode(GameMode gameMode) {
-        try {
-            Debug.Log("UpdateLobbyGameMode " + gameMode);
-            
+        try {            
             Lobby lobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions {
                 Data = new Dictionary<string, DataObject> {
                     { KEY_GAME_MODE, new DataObject(DataObject.VisibilityOptions.Public, gameMode.ToString()) }
