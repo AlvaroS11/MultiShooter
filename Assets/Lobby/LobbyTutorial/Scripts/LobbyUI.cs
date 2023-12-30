@@ -27,7 +27,7 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI playerCountText;
     [SerializeField] private TextMeshProUGUI killsText;
 
-    [SerializeField] private TextMeshProUGUI gameModeText;
+    [SerializeField] public TextMeshProUGUI gameModeText;
     [SerializeField] private Button changeMarineButton;
     [SerializeField] private Button changeNinjaButton;
     [SerializeField] private Button changeZombieButton;
@@ -97,7 +97,7 @@ public class LobbyUI : MonoBehaviour {
     private void Start() {
         LobbyManager.Instance.OnJoinedLobby += SetUpLobby_Event;
         LobbyManager.Instance.OnJoinedLobbyUpdate += UpdateLobby_Event;
-        LobbyManager.Instance.OnLobbyGameModeChanged += UpdateLobby_Event2;
+       // LobbyManager.Instance.OnLobbyGameModeChanged += UpdateLobby_Event2;
         LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby; 
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnLeftLobby;
         LobbyManager.Instance.OnKickPlayer += LobbyManagerKickPlayer;
@@ -145,7 +145,7 @@ public class LobbyUI : MonoBehaviour {
     private void UpdateLobby_Event2(object sender, LobbyManager.LobbyEventArgs e)
     {
       //  Debug.Log("LOLLOBY GAME MODE CHANGE");
-       // UpdateLobby();
+       //UpdateLobby();
     }
 
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)
@@ -163,6 +163,23 @@ public class LobbyUI : MonoBehaviour {
         UpdateLobby(LobbyManager.Instance.GetJoinedLobby());
     }*/
 
+
+
+
+    /*[ClientRpc]
+    public void ChangeGameModeTextClientRpc(string gameMode, bool showTeam)
+    {
+        gameModeText.text = gameMode;
+
+        Debug.Log(gameMode);
+
+        foreach(var playerUI in LobbyPlayers)
+        {
+            playerUI.Value.selectTeamDropdown.gameObject.active = showTeam;
+
+          //  playerUI.Value.selectTeamDropdown.enabled = showTeam;
+        }
+    }*/
 
 
     public void CreatePlayersUI(Lobby lobby)
@@ -198,32 +215,19 @@ public class LobbyUI : MonoBehaviour {
                 lobbyNameText.text = lobby.Name;
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
 
-                gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
+                string gameMode = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
+                gameModeText.text = gameMode.Replace("_", " ");
 
                 startGameButton.gameObject.SetActive(true);
-
-                /* if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
-                     startGameButton.gameObject.SetActive(true);
-                 else
-                     startGameButton.gameObject.SetActive(false);
-                */
-
-                //if (player.Id != AuthenticationService.Instance.PlayerId)
-                // lobbyPlayerSingleUI.SetTeam(LobbyManager.Instance.GetTeam(player.Id));
-                //lobbyPlayerSingleUI.SelectTeam();
                 Show();
-
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 
-
-               /* if (LobbyManager.Instance.IsLobbyHost())
+                if (gameMode == GameMode.Free_for_all.ToString())
                 {
-                    string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
-                    OnlineManager.Instance.AddToList(PlayerLobbyId);
+                    lobbyPlayerSingleUI.selectTeamDropdown.gameObject.active = false;
                 }
-              */
-                //VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
-                
+
+
             }
         }
         killsText.text = "Kills: " + OnlineManager.Instance.maxKills.Value;
@@ -234,12 +238,10 @@ public class LobbyUI : MonoBehaviour {
     public void CreateStatisticsUI()
     {
         Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
-        Debug.Log("createPlayersUI");
         Debug.Log(lobby.Players.Count);
         foreach (Player player in lobby.Players)
         {
-            // Debug.Log(player.Id);
-            //  Debug.Log(LobbyPlayers.Count);
+
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
                 Debug.Log("client x");
@@ -345,7 +347,6 @@ public class LobbyUI : MonoBehaviour {
         Debug.Log(lobby.Players.Count);
         playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
         Debug.Log(lobby.Players.Count + "/" + lobby.MaxPlayers);
-
     }
 
     private void Hide() {

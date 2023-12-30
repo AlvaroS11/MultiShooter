@@ -79,13 +79,14 @@ public class LobbyCreateUI : MonoBehaviour
             switch (gameMode)
             {
                 default:
-                case LobbyManager.GameMode.CaptureTheFlag:
-                    gameMode = LobbyManager.GameMode.Conquest;
+               case LobbyManager.GameMode.Team_DeathMatch:
+                    gameMode = LobbyManager.GameMode.Free_for_all;
                     break;
-                case LobbyManager.GameMode.Conquest:
-                    gameMode = LobbyManager.GameMode.CaptureTheFlag;
+                case LobbyManager.GameMode.Free_for_all:
+                    gameMode = LobbyManager.GameMode.Team_DeathMatch;
                     break;
             }
+            LobbyManager.Instance.m_gameMode = gameMode;
             UpdateText();
         });
 
@@ -113,7 +114,7 @@ public class LobbyCreateUI : MonoBehaviour
         maxKillsText.text = maxKills.ToString();
         //maxPlayersText.text = "Max Players: " + maxPlayers.ToString();
         //maxKillsText.text = "Max Kills: " + maxKills.ToString();
-        gameModeText.text = gameMode.ToString();
+        gameModeText.text = gameMode.ToString().Replace("_", " ");
     }
 
     private void Hide()
@@ -129,8 +130,8 @@ public class LobbyCreateUI : MonoBehaviour
         isPrivate = false;
         maxPlayers = 4;
         maxKills = 3;
-        gameMode = LobbyManager.GameMode.CaptureTheFlag;
-
+        //gameMode = LobbyManager.GameMode.Team_DeathMatch;
+        gameMode = LobbyManager.Instance.m_gameMode;
         UpdateText();
     }
 

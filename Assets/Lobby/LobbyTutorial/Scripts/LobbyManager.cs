@@ -41,7 +41,7 @@ public class LobbyManager : MonoBehaviour {
     public event EventHandler<LobbyEventArgs> OnJoinedLobby;
     public event EventHandler<LobbyEventArgs> OnJoinedLobbyUpdate;
     public event EventHandler<LobbyEventArgs> OnKickedFromLobby;
-    public event EventHandler<LobbyEventArgs> OnLobbyGameModeChanged;
+   // public event EventHandler<LobbyEventArgs> OnLobbyGameModeChanged;
     public event EventHandler<String> OnKickPlayer;
     public event EventHandler<String> ExternalPlayerLeft;
 
@@ -57,8 +57,8 @@ public class LobbyManager : MonoBehaviour {
 
 
     public enum GameMode {
-        CaptureTheFlag,
-        Conquest
+        Team_DeathMatch,
+        Free_for_all
     }
 
     public enum PlayerCharacter {
@@ -88,6 +88,7 @@ public class LobbyManager : MonoBehaviour {
 
     // public OnlineManager onlineManager;
 
+    public GameMode m_gameMode;
 
 
     private void Awake() {
@@ -370,20 +371,22 @@ public class LobbyManager : MonoBehaviour {
             GameMode gameMode =
                 Enum.Parse<GameMode>(joinedLobby.Data[KEY_GAME_MODE].Value);
 
+            bool showTeam = true;
             switch (gameMode) {
                 default:
-                case GameMode.CaptureTheFlag:
-                    gameMode = GameMode.Conquest;
+                case GameMode.Team_DeathMatch:
+                    gameMode = GameMode.Free_for_all;
+                    showTeam = false;
                     break;
-                case GameMode.Conquest:
-                    gameMode = GameMode.CaptureTheFlag;
+                case GameMode.Free_for_all:
+                    gameMode = GameMode.Team_DeathMatch;
                     break;
             }
 
             UpdateLobbyGameMode(gameMode);
+            OnlineManager.Instance.ChangeGameModeTextClientRpc(gameMode.ToString().Replace("_", " "), showTeam);
         }
     }
-
 
     private async Task<Allocation> AllocateRelay(int maxPlayers)
     {
@@ -668,6 +671,7 @@ public class LobbyManager : MonoBehaviour {
                 {
                     await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
                     joined = false;
+                    m_gameMode = GameMode.Team_DeathMatch;
                     OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
                     joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
                 }
@@ -784,7 +788,9 @@ public int GetTeam(string playerId)
 
             joinedLobby = lobby;
 
-            OnLobbyGameModeChanged?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+            m_gameMode = gameMode;
+          //  OnLobbyGameModeChanged?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+
         } catch (LobbyServiceException e) {
             Debug.Log(e);
         }

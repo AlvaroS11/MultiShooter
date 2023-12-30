@@ -619,6 +619,17 @@ public class OnlineManager : NetworkBehaviour
 
     }
 
+    [ClientRpc]
+    public void ChangeGameModeTextClientRpc(string gameMode, bool showTeam)
+    {
+        LobbyUI.Instance.gameModeText.text = gameMode;
+
+        foreach (var playerUI in LobbyUI.Instance.LobbyPlayers)
+        {
+            playerUI.Value.selectTeamDropdown.gameObject.active = showTeam;
+        }
+    }
+
     /*[ClientRpc]
     public void setPlayerLifeBarsClientRpc(ulong clientId, int team)
     {

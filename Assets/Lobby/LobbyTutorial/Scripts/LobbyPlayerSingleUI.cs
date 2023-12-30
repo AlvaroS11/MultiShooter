@@ -16,7 +16,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     [SerializeField] public Image characterImage;
     [SerializeField] public Button kickPlayerButton;
 
-    [SerializeField] private TMP_Dropdown selectTeamDropdown;
+    [SerializeField] public TMP_Dropdown selectTeamDropdown;
 
     [SerializeField] public GameObject sound;
     [SerializeField] public Scrollbar soundBar;

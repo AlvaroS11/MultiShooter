@@ -8469,6 +8469,18 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: fb0475e08e67ac7489a1eb4f0a0b8eb7, type: 3}
+    - target: {fileID: 5192716285425567538, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.b
+      value: 0.1792453
+      objectReference: {fileID: 0}
+    - target: {fileID: 5192716285425567538, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.g
+      value: 0.1792453
+      objectReference: {fileID: 0}
+    - target: {fileID: 5192716285425567538, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.r
+      value: 0.1792453
+      objectReference: {fileID: 0}
     - target: {fileID: 6614197749533440493, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
       propertyPath: m_Name
       value: PlayerSingleTemplate
