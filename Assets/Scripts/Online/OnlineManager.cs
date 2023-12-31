@@ -472,7 +472,7 @@ public class OnlineManager : NetworkBehaviour
     {
         try
         {
-            //REVISAR ESTO!
+            //REVISAR ESTO! TO DO
             int nTeams = 0;
             while (SceneManager.GetActiveScene().name != "GameScene") { }
 
@@ -603,12 +603,27 @@ public class OnlineManager : NetworkBehaviour
                 ownTeam = playerManager.PlayerTeam.Value;
         }
 
-        foreach(PlayerManager playerManager in playerManagers)
+        if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
         {
-
-            if(ownTeam != playerManager.PlayerTeam.Value)
+            Debug.Log("Free for all lifeBars");
+            foreach (PlayerManager playerManager in playerManagers)
             {
-                playerManager.healthUI.healthBar.color = Color.red;
+                if (!playerManager.isOwnPlayer)
+                {
+                    playerManager.healthUI.healthBar.color = Color.red;
+                }
+            }
+        }
+        else
+        {
+            Debug.Log(LobbyManager.Instance.m_gameMode);
+            foreach (PlayerManager playerManager in playerManagers)
+            {
+
+                if (ownTeam != playerManager.PlayerTeam.Value)
+                {
+                    playerManager.healthUI.healthBar.color = Color.red;
+                }
             }
         }
 
@@ -623,6 +638,10 @@ public class OnlineManager : NetworkBehaviour
     public void ChangeGameModeTextClientRpc(string gameMode, bool showTeam)
     {
         LobbyUI.Instance.gameModeText.text = gameMode;
+        if (!showTeam)
+            LobbyManager.Instance.m_gameMode = GameMode.Free_for_all;
+        else
+            LobbyManager.Instance.m_gameMode = GameMode.Team_DeathMatch;
 
         foreach (var playerUI in LobbyUI.Instance.LobbyPlayers)
         {
@@ -731,9 +750,8 @@ public class OnlineManager : NetworkBehaviour
 
         if (teamScore[shooter] >= maxKills.Value)
         {
-            endGame.ShowEndGameServer(teamNames[shooter]);
+            endGame.ShowEndGameServer(teamNames[shooter], playerList[shooter].name.ToString());
         }
-
     }
 
     [ClientRpc]

@@ -129,9 +129,17 @@ public class Bullet : MonoBehaviour {
         {
             if(playerManager == null)
                 playerManager = parent.GetComponent<PlayerManager>();
-            Debug.Log(playerManager.PlayerTeam.Value);
-            Debug.Log(hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value);
-            return playerManager.PlayerTeam.Value != hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value;
+
+            Debug.Log(LobbyManager.Instance.m_gameMode.ToString());
+            if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
+            {
+                Debug.Log("free for all isEnemy");
+                if (!playerManager.isOwnPlayer)
+                    return true;
+                else
+                    return false;
+            }
+          return playerManager.PlayerTeam.Value != hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value;
         }
         catch(Exception e)
         {

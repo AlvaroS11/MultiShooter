@@ -68,14 +68,40 @@ public class EndGame : NetworkBehaviour
 
     
     //Called only by server to server
-    public void ShowEndGameServer(int winnerTeam)
+    public void ShowEndGameServer(int winnerTeam, string winnerName)
     {
-        ShowEndGameClientRpc(winnerTeam);
+        if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Team_DeathMatch)
+        {
+            ShowEndGameTeamClientRpc(winnerTeam);
+        }
+        else
+        {
+            ShowEndGameFreeClientRpc(winnerName);
+        }
+
         Time.timeScale = 0;
+        mobileUI.SetActive(false);
+#if UNITY_ANDROID
+        mobileUI.SetActive(false);    
+
+#endif
     }
 
     [ClientRpc]
-    public void ShowEndGameClientRpc(int winnerTeam) 
+    public void ShowEndGameFreeClientRpc(string winnerUser)
+    {
+        endGame.SetActive(true);
+        winnerTeamText.text = "Player " + winnerUser + "won the game!";
+        statisticsUI.SetActive(true);
+        // backToLobbyButton.gameObject.SetActive(true);
+        backToLobby.SetActive(true);
+        Reload.SetActive(false);
+        statisticsUI.GetComponent<StatisticsUI>().FinishGame();
+        scrollBar.SetActive(true);
+    }
+
+    [ClientRpc]
+    public void ShowEndGameTeamClientRpc(int winnerTeam) 
     {
         endGame.SetActive(true);
         winnerTeamText.text = "Team " + winnerTeam + "won the game!";
@@ -85,17 +111,5 @@ public class EndGame : NetworkBehaviour
         Reload.SetActive(false);
         statisticsUI.GetComponent<StatisticsUI>().FinishGame();
         scrollBar.SetActive(true);
-
-
-
-        Time.timeScale = 0;
-        mobileUI.SetActive(false);
-#if UNITY_ANDROID
-        mobileUI.SetActive(false);
-
-       // joystickLeft.SetActive(false);
-     //   joystickRight.SetActive(false);        
-
-#endif
     }
 }

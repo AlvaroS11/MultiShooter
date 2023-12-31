@@ -91,7 +91,13 @@ public class StatisticsUI : NetworkBehaviour
 
                 statPlayerSingleUI.SetId(player.lobbyPlayerId.ToSafeString());
                 statPlayerSingleUI.playerNameText.text = player.name.ToSafeString();
-                statPlayerSingleUI.team.text = player.team.ToSafeString();
+
+                if(LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
+                {
+                    statPlayerSingleUI.team.gameObject.active = false;
+                }
+                else
+                    statPlayerSingleUI.team.text = player.team.ToSafeString();
 
                 statPlayerSingleUI.characterImage.sprite = LobbyAssets.Instance.GetSprite(player.playerCharacter);
 
