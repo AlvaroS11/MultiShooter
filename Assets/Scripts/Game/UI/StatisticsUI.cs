@@ -56,7 +56,6 @@ public class StatisticsUI : NetworkBehaviour
         Hide();
     }
 
-    // Update is called once per frame
     void Update()
     {
 #if UNITY_STANDALONE_WIN
@@ -104,10 +103,7 @@ public class StatisticsUI : NetworkBehaviour
 
 
                 statPlayerSingleUI.gameObject.SetActive(true);
-               // Debug.Log("////" +  player.lobbyPlayerId);
-
-//                Debug.Log("////" + AuthenticationService.Instance.PlayerId);
-
+ 
                 if (player.lobbyPlayerId.ToSafeString() == AuthenticationService.Instance.PlayerId)
                     statPlayerSingleUI.ChangeBackground();
 

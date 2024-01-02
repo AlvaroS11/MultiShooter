@@ -28,6 +28,9 @@ public class LobbyAssets : MonoBehaviour {
 
 
     [SerializeField] public EndGame endGame;
+    [SerializeField] public GameObject messageGameObject;
+    [SerializeField] public TextMeshProUGUI messageText;
+
 
     private void Awake() {
         Instance = this;

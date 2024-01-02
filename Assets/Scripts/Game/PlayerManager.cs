@@ -374,63 +374,15 @@ public class PlayerManager : NetworkBehaviour
     //Server only preprares extrapolationState to be executed in Extrapolate()
     void HandleExtrapolation(StatePayload latest, float latency)
     {
-        /* Debug.Log("***");
-         Debug.Log(latency);
-         Debug.Log(extrapolationLimit);
-         Debug.Log(Time.fixedDeltaTime);
-         Debug.Log(latency < extrapolationLimit && latency > Time.fixedDeltaTime);  
-        */
 
         if (ShouldExtrapolate(latency))
         {
-            Debug.Log("shouldExtrapolate");
-            // Calculate the arc the object would traverse in degrees
-            /*   float axisLength = latency * latest.angularVelocity.magnitude * Mathf.Rad2Deg;
-               Quaternion angularRotation = Quaternion.AngleAxis(axisLength, latest.angularVelocity);
-
-               if (extrapolationState.position != default)
-               {
-                   latest = extrapolationState;
-               }
-
-               // Update position and rotation based on extrapolation
-               var posAdjustment = latest.velocity * (1 + latency * extrapolationMultiplier);
-               extrapolationState.position = posAdjustment;
-               extrapolationState.rotation = angularRotation * transform.rotation;
-               extrapolationState.velocity = latest.velocity;
-               extrapolationState.angularVelocity = latest.angularVelocity;
-              */
-
-            // Debug.Log("EXTRAPOLATING!!");
-
             if (extrapolationState.position != default)
             {
                 latest = extrapolationState;
             }
 
-            // Update position based on extrapolation
-            //var posAdjustment = latest.position + (Vector3.up * latency * extrapolationMultiplier); // Adjust as needed
-
-            //var posAdjustment = latest.position + (speed * latest.inputVector * latency * extrapolationMultiplier);
-
-
-            // NO ESTA HACIENDO NADA, EN EXTRAPOLATE LO HACEMOS CON EL IMPUT
-            /* var posAdjustment = transform.position;
-             if (latest.inputVector != Vector3.zero)
-                 posAdjustment = speed * (latest.inputVector.normalized * latency * extrapolationMultiplier);
-            */
-
-
-            //Debug.Log("posAdjustment : " + posAdjustment);
-            //var posAdjustment = speed * latest.inputVector;
-            // extrapolationState.position = posAdjustment;
-
-          //  var posAdjustment = speed * (latest.inputVector.normalized * latency * extrapolationMultiplier);
-            //extrapolationState.position = posAdjustment;
-
             extrapolationState.inputVector = latest.inputVector;
-
-
 
             //Allows Extrapolate method to continue
             extrapolationTimer.Start();
@@ -440,7 +392,7 @@ public class PlayerManager : NetworkBehaviour
         {
             extrapolationTimer.Stop();
 
-            //Reconciliation if lag is so strong
+            //Reconciliation if lag is strong
         }
     }
 
@@ -452,16 +404,11 @@ public class PlayerManager : NetworkBehaviour
 
     [ClientRpc]
     void SendToClientRpc(StatePayload statePayload)
-    {
-        //    Debug.Log($"Received state from server Tick {statePayload.tick} Server POS: {statePayload.position}");
-        //serverCube.transform.position = statePayload.position.With(y: 4);
-       
+    {  
         if (!IsOwner) return;
         lastServerState = statePayload;
         serverCube.transform.position = statePayload.position;
         DisplayPing(CalculateLatencyInMillis(lastServerState.timestamp));
-
-       
     }
 
     private Vector3 GetInput()
@@ -470,8 +417,6 @@ public class PlayerManager : NetworkBehaviour
 
 #if UNITY_STANDALONE_WIN
 
-
-        //Meter todo esto en una función
         Vector3 receivedInput = Vector3.zero;
         if (Input.GetKey("d"))
         {
@@ -497,7 +442,6 @@ public class PlayerManager : NetworkBehaviour
         }
         MoveCamera();
 
-        //Meter en una funcion
         if (Input.GetMouseButton(1))
         {
             Vector3 dest = Input.mousePosition;
@@ -719,53 +663,6 @@ public class PlayerManager : NetworkBehaviour
             inputVector = input.inputVector,
 
         };
-
-        /* return new StatePayload()
-         {
-             tick = input.tick,
-
-             networkObjectId = NetworkObjectId,
-             position = input.position,
-             //position = transform.position,
-             //rotation = transform.rotation,
-             inputVector = input.inputVector,
-
-         };
-        */
-    }
-
-
-
-    void Move(Vector3 inputVector)
-    {
-        /*float verticalInput = AdjustInput(input.Move.y);
-        float horizontalInput = AdjustInput(input.Move.x);
-
-        float motor = maxMotorTorque * verticalInput;
-        float steering = maxSteeringAngle * horizontalInput;
-
-        UpdateAxles(motor, steering);
-        UpdateBanking(horizontalInput);
-
-        kartVelocity = transform.InverseTransformDirection(rb.velocity);
-
-        if (IsGrounded)
-        {
-            HandleGroundedMovement(verticalInput, horizontalInput);
-        }
-        else
-        {
-            HandleAirborneMovement(verticalInput, horizontalInput);
-        }*/
-
-#if UNITY_ANDROID
-        MovePlayerPhoneServerRpc(inputVector);
-
-#elif UNITY_EDITOR_WIN
-        MovePlayerPc(inputVector);
-
-#endif
-
     }
 
 
@@ -812,9 +709,6 @@ public class PlayerManager : NetworkBehaviour
             PlayerInfo player1 = OnlineManager.Instance.playerList.Find(x => x.name == PlayerName.Value);
             player1.playerObject = gameObject;
             player1.clientId = NetworkManager.Singleton.LocalClientId;
-            Debug.Log("ddd" + NetworkManager.Singleton.LocalClientId);
-            // Debug.Log("ddd" + NetworkManager.Singleton.LocalClientId);
-
         }
         //        moveDestination = transform.position;
 
@@ -846,47 +740,11 @@ public class PlayerManager : NetworkBehaviour
 
     private void MoveCamera()
     {
-
-        //PREDICCIÓN SE PODRÍA HACER AQUÍ??
-        // if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-
         Initialized();
-
-
         _mainCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 15, transform.position.z - 5);
 
     }
 
-
-
-    [ServerRpc]
-    private void MovePlayerServerRpc(Vector3 mouseWorldCoordinates)
-    {
-        /* if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
-         {
-                mouseWorldCoordinates = hitData.point;
-                mouseWorldCoordinates.y = 0.5f;
-
-
-                transform.position = Vector3.MoveTowards(transform.position, mouseWorldCoordinates, Time.deltaTime * speed);
-
-                if (mouseWorldCoordinates != transform.position)
-                {
-                    Vector3 targetDirection = mouseWorldCoordinates - transform.position;
-                    transform.forward = -targetDirection;
-                }
-        */
-
-        //            playerNavMesh.SetDestination(hitData.point);
-
-        transform.position = Vector3.MoveTowards(transform.position, mouseWorldCoordinates, Time.deltaTime * speed);
-
-        if (mouseWorldCoordinates != transform.position)
-        {
-            Vector3 targetDirection = mouseWorldCoordinates - transform.position;
-            transform.forward = -targetDirection;
-        }
-    }
 
 
     [ServerRpc(RequireOwnership = false)]

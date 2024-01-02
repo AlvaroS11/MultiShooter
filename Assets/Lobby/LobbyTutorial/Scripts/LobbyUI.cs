@@ -54,22 +54,18 @@ public class LobbyUI : MonoBehaviour {
         playerSingleTemplate.gameObject.SetActive(false);
 
         changeMarineButton.onClick.AddListener(() => {
-            // LobbyManager.Instance.UpdatePlayerCharacter(LobbyManager.PlayerCharacter.Marine);
             OnlineManager.Instance.ChangeCharacterServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, LobbyManager.PlayerCharacter.Marine, NetworkManager.Singleton.LocalClientId);
         });
         changeNinjaButton.onClick.AddListener(() => {
-            //    LobbyManager.Instance.UpdatePlayerCharacter(LobbyManager.PlayerCharacter.Ninja);
             OnlineManager.Instance.ChangeCharacterServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, LobbyManager.PlayerCharacter.Ninja, NetworkManager.Singleton.LocalClientId);
 
         });
         changeZombieButton.onClick.AddListener(() => {
-            //  LobbyManager.Instance.UpdatePlayerCharacter(LobbyManager.PlayerCharacter.Zombie);
             OnlineManager.Instance.ChangeCharacterServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, LobbyManager.PlayerCharacter.Zombie, NetworkManager.Singleton.LocalClientId);
 
         });
 
         changeNoPredButton.onClick.AddListener(() => {
-            //  LobbyManager.Instance.UpdatePlayerCharacter(LobbyManager.PlayerCharacter.Zombie);
             OnlineManager.Instance.ChangeCharacterServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, LobbyManager.PlayerCharacter.NoPred, NetworkManager.Singleton.LocalClientId);
 
         });
@@ -109,12 +105,6 @@ public class LobbyUI : MonoBehaviour {
     }
 
 
- /*   private void LobbyExternalPlayerLeft(object sender, String id)
-    {
-        Debug.Log("DELETE PLAYER LOBBY UI");
-        DeletePlayer(id);
-    }
- */
 
     private void LobbyManagerKickPlayer(object sender, String id)
     {
@@ -137,49 +127,12 @@ public class LobbyUI : MonoBehaviour {
 
     }
 
-   /* private void InitializeUIParams(string)
-    {
-
-    }
-*/
-    private void UpdateLobby_Event2(object sender, LobbyManager.LobbyEventArgs e)
-    {
-      //  Debug.Log("LOLLOBY GAME MODE CHANGE");
-       //UpdateLobby();
-    }
-
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)
     {
        Debug.Log("SET UP EVENT");
-      /*  string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
-
-        OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
-      */
-
-     //   UpdateLobby();
     }
 
-    /*public void UpdateLobby() {
-        UpdateLobby(LobbyManager.Instance.GetJoinedLobby());
-    }*/
 
-
-
-
-    /*[ClientRpc]
-    public void ChangeGameModeTextClientRpc(string gameMode, bool showTeam)
-    {
-        gameModeText.text = gameMode;
-
-        Debug.Log(gameMode);
-
-        foreach(var playerUI in LobbyPlayers)
-        {
-            playerUI.Value.selectTeamDropdown.gameObject.active = showTeam;
-
-          //  playerUI.Value.selectTeamDropdown.enabled = showTeam;
-        }
-    }*/
 
 
     public void CreatePlayersUI(Lobby lobby)
@@ -270,13 +223,6 @@ public class LobbyUI : MonoBehaviour {
                 gameModeText.text = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
 
 
-              /*  if (lobby.Players.Count == lobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
-                    startGameButton.gameObject.SetActive(true);
-                else
-                {
-                    startGameButton.gameObject.SetActive(true);
-
-                }*/
               if(LobbyManager.Instance.IsLobbyHost())
                 {
                     startGameButton.gameObject.SetActive(true);
@@ -284,15 +230,6 @@ public class LobbyUI : MonoBehaviour {
                 Show();
 
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
-
-
-                /* if (LobbyManager.Instance.IsLobbyHost())
-                 {
-                     string PlayerLobbyId = AuthenticationService.Instance.PlayerId;
-                     OnlineManager.Instance.AddToList(PlayerLobbyId);
-                 }
-               */
-                //VivoxManager.Instance.m_vivoxUserHandlers.Add(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 
             }
         }
@@ -313,10 +250,6 @@ public class LobbyUI : MonoBehaviour {
         OnlineManager.Instance.ClearLobby();
     }
 
-    public void UpdateUITeam()
-    {
-
-    }
 
     private void ClearLobby() {
         foreach (Transform child in container) {

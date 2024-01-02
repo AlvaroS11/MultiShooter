@@ -126,7 +126,8 @@ public class OnlineManager : NetworkBehaviour
 
     private EndGame endGame;
 
-
+    private GameObject messageGameObject;
+    private TextMeshProUGUI messageText;
 
 
     private void Awake()
@@ -230,13 +231,16 @@ public class OnlineManager : NetworkBehaviour
                     if (IsServer && !playersCreated)
                     {
                         Debug.Log("All clients joined");
-
+                        messageGameObject = LobbyAssets.Instance.messageGameObject;
+                        messageText = LobbyAssets.Instance.messageText;
+                        messageText.text = "Waiting for players...";
+                        messageGameObject.SetActive(true);
                         CreatePlayersServerRpc();
-                        
+                        //messageGameObject.SetActive(false);
+
+                        ShowMessageClientRpc(false);
                         gameStarted.Value = true;
-                        //StatisticsUI.Instance.InitializeStatisticsClientRpc();
                         playersCreated = true;
-                       // LobbyUI.Instance.LobbyPlayers.Clear();                      
                     }
                     break;
                 }
@@ -259,6 +263,14 @@ public class OnlineManager : NetworkBehaviour
     {
         yield return new WaitForSeconds(1.5f);
         LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
+    }
+
+    [ClientRpc]
+    public void ShowMessageClientRpc(bool show)
+    {
+        if (messageGameObject == null)
+            messageGameObject = LobbyAssets.Instance.messageGameObject;
+        messageGameObject.SetActive(show);
     }
 
     /*[ServerRpc(RequireOwnership = false)]
@@ -465,7 +477,6 @@ public class OnlineManager : NetworkBehaviour
     }
 
 
-
     //Se tiene que llamar en el OnNetworkSpawn, se esta llamando antes que se prepare el playerTeamDictionary
     [ServerRpc]
     public void CreatePlayersServerRpc(ServerRpcParams serverRpcParams = default)
@@ -514,8 +525,7 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerManager.PlayerName.Value = playerInfo.name;
                 newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
-                //newPlayerManager.clientId = playerInfo.clientId;
-                //newPlayerManager.PlayerInfoIndex = playerInfo.clientId
+
                 playerList.Find(x => x.clientId == playerInfo.clientId).playerObject = newPlayerGameObject;
                
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
@@ -529,19 +539,18 @@ public class OnlineManager : NetworkBehaviour
 
             setPlayerLifeBarsClientRpc();
 
-            //NO SE ESTÁ LLAMANDO EN LOS CLIENTES!!
-            Debug.Log(LobbyAssets.Instance.name);
-            Debug.Log(LobbyAssets.Instance.stats.name);
-            Debug.Log(LobbyAssets.Instance.stats.GetComponent<StatisticsUI>());
-            Debug.Log(LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().name);
 
             LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().InitializeStatisticsClientRpc();
             endGame = LobbyAssets.Instance.endGame;
             Time.timeScale = 1;
+
+
         }
         catch (Exception e)
         {
             Debug.LogException(e);
+            messageGameObject.SetActive(true);
+            messageText.text = "Fatal error, please restart the game";
         }
     }
 
@@ -558,8 +567,6 @@ public class OnlineManager : NetworkBehaviour
 
     public void ResetPreviousGame()
     {
-        //if (!IsServer)
-        //  return;
         teamNames.Clear();
         teamScore.Clear();
         spawnPoints.Clear();
@@ -650,53 +657,7 @@ public class OnlineManager : NetworkBehaviour
         }
     }
 
-    /*[ClientRpc]
-    public void setPlayerLifeBarsClientRpc(ulong clientId, int team)
-    {
-
-
-
-        GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
-
-
-
-        foreach (GameObject playerObject in playerObjects)
-        {
-            playerManagers.Add(playerObject.GetComponent<PlayerManager>());
-            Debug.Log("dd");
-        }
-
-
-        Debug.Log(playerManagers.Count);
-
-
-        Debug.Log("CALL TO SET COLORS");
-        int ownTeam = -1;
-
-        foreach (PlayerManager playerManager in playerManagers)
-        {
-            if (playerManager.isOwnPlayer)
-                ownTeam = playerManager.PlayerTeam.Value;
-        }
-
-
-        if(ownTeam == -1)
-            throw new Exception("FALLO EL HASH");
-
-
-       // int ownTeam = playerManagers.Find(x => x.playerObject.GetComponent<PlayerManager>().isOwnPlayer).team;
-
-
-        if (ownTeam != team)
-        {
-            PlayerManager enemy = playerList.Find(x => x.clientId == clientId).playerObject.GetComponent<PlayerManager>();
-            enemy.healthUI.healthBar.color = Color.red;
-            Debug.Log("CHANGING COLORS!!");
-
-            //IGUAL QUE EN EL OTRO SOLO ESTÁ BIEN EL QUE SE UNE EL ÚLTIMO
-        }
-    }
-    */
+ 
 
     private void SetPlayerSpawns(int teamIndex)
     {
@@ -733,20 +694,12 @@ public class OnlineManager : NetworkBehaviour
         //team2 = GameObject.Find("Team2").GetComponent<TextMeshProUGUI>();
     }
 
-    /*[ClientRpc]
-    private void WaitToInitializeListClientRpc(int[] nTeams)
-    {
-        StartCoroutine(StartTeamScore(nTeams));
-    }
-    */
+
 
     [ServerRpc]
     public void ChangeScoreServerRpc(int shooter, int hitted) 
     {
-        //TO DO ADD INITIALIZE NUMBER OF TEAMS
         teamScore[shooter]++;
-
-
         ChangeScoreClientRpc(shooter, teamScore[shooter], playerList[shooter].lobbyPlayerId, playerList[hitted].lobbyPlayerId);
 
         if (teamScore[shooter] >= maxKills.Value)
@@ -760,41 +713,13 @@ public class OnlineManager : NetworkBehaviour
     {
         teamScoreTexts[shooter].text = "Team " + (teamNames[shooter]) + ": " + score;
 
-        // playerList[shooter].kills += 1;
-        //playerList[hitted].deaths += 1;
-
-
         PlayerInfo pShooter = playerList.Find(pl => pl.lobbyPlayerId == shooterId);
         pShooter.kills += 1;
         PlayerInfo pHitted = playerList.Find(pl => pl.lobbyPlayerId == hittedId);
         pHitted.deaths += 1;
 
-
-        Debug.Log("Team " + (shooter + 1) + ": " + score);
-        // Debug.Log()
-
-        Debug.Log("team");
-        Debug.Log(playerList[shooter]);
-
         pShooter.UpdateStats();
         pHitted.UpdateStats();
-        //playerList[shooter].UpdateStats();
-        //playerList[hitted].UpdateStats();
-
-
-
-        // playerList[team]
-
-        /* switch (team) {
-             case 0:
-                 team1.text = "Team 1: " + score.ToString();
-                 break;
-             case 1:
-                 team2.text = "Team 2: " + score.ToString();
-                 break;
-
-
-         }*/
     }
 
     //Server only
@@ -816,6 +741,7 @@ public class OnlineManager : NetworkBehaviour
         PlayerDeathClientRpc(playerInfo.name);
 
         StartCoroutine(WaitToRespawn(playerObj, playerInfo.name));
+
     }
 
     [ClientRpc]
@@ -825,7 +751,6 @@ public class OnlineManager : NetworkBehaviour
         GameObject playerObj = playerInfo.playerObject;
         playerObj.SetActive(false);
         RespawnMessage(playerObj.GetComponent<PlayerManager>());
-
     }
 
 
@@ -837,8 +762,6 @@ public class OnlineManager : NetworkBehaviour
         playerObj.SetActive(true);
         Assets.Instance.respawnMsg.SetActive(false);
         PlayerManager pManager = playerObj.GetComponent<PlayerManager>();
-      //  pManager.inmuneAnimation.Play();
-        //pManager.animator.SetBool("inmuneBool", true);
         pManager.bodyAnimator.SetBool("inmuneBool", true);
 
 
@@ -881,7 +804,9 @@ public class OnlineManager : NetworkBehaviour
         yield return new WaitForSeconds(timeToRespawn);
 
         PlayerAliveClientRpc(playerName);
-        player.GetComponent<PlayerManager>().isInmune.Value = true;
+        PlayerManager playerDead = player.GetComponent<PlayerManager>();
+        playerDead.isInmune.Value = true;
+        playerDead.life.Value = playerDead.MaxLife;
         StartCoroutine(InmuneTime(playerName));
     }
 
@@ -892,7 +817,6 @@ public class OnlineManager : NetworkBehaviour
 
         yield return new WaitForSeconds(inmuneTime);
         p1.isInmune.Value = false;
-        //p1.animator.SetBool("inmuneBool", false);
 
         p1.bodyAnimator.SetBool("inmuneBool", false);
 
@@ -908,246 +832,4 @@ public class OnlineManager : NetworkBehaviour
        // p1.animator.SetBool("inmuneBool", false);
         p1.bodyAnimator.SetBool("inmuneBool", false);
     }
-
 }
-
-
-/*
-[ServerRpc]
-public void GetServerValuesServerRpc(string playerId,ulong clientId)
-{
-    try
-    {
-        ClientRpcParams clientRpcParams = new ClientRpcParams
-        {
-            Send = new ClientRpcSendParams
-            {
-                TargetClientIds = new ulong[] { clientId }
-            }
-        };
-        GetServerValuesClientRpc(GetTeam(playerId), playerId, clientRpcParams);
-    }
-    catch (Exception e)
-    {
-        Debug.Log(e);
-    }
-    //HAY QUE INICIALIZAR PRIMERO LOS VALORES DE LOS DICCIONARIOS
-  //  return Tuple.Create(GetTeam(playerId), playerNameDictionary[playerId], playerCharacterDictionary[playerId]);
-}
-
-
-[ClientRpc]
-public void GetServerValuesClientRpc(int team, string playerId, ClientRpcParams clientRpcParams = default) //
-{
-    //Se está llamando en cliente?playerNameDictionary[playerId], playerCharacterDictionary[playerId]
-    //   
-    Debug.Log("CHANGING VALUES FOR : 0" + playerId);
-    Debug.Log("VALUES::  " + team + " " + EditPlayerName.Instance.GetPlayerName() + playerCharacterDictionary[playerId].ToString());
-    LobbyUI.Instance.LobbyPlayers[playerId].SetUpTemplate(team, EditPlayerName.Instance.GetPlayerName(), playerCharacterDictionary[playerId]);
-}
-*/
-
-
-
-
-/*
-
-
-
-
-}
-
-
-
-
-
-*/
-
-/*
-[ServerRpc]
-public void SetUpVariablesServerRpc(string team, string name, ServerRpcParams serverRpcParams = default)
-{
-    Debug.Log("AAAAAAAAAAAA");
-    //NO ESTÁ LLEGANDO
-
-    //Localmente funciona aquí
-    /* PlayerTeam = team;
-     PlayerName = name;
-    */
-//  playerTeamDictionary[serverRpcParams.Receive.SenderClientId] = int.Parse(team);
-/*
-  SetPlayerReadyServerRpc();
-}
-
-
-
-
-
-/*
-
-    [ClientRpc]
-    private void SetUpPlayerClientRpc()
-    {
-
-    }
-
-  /*  private void OnLoadEventCompleted(string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
-    {
-        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
-        {
-            Transform playerTransform = Instantiate(playerPrefab.transform);
-            playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-        }
-    }
-
-    */
-
-
-//     Transform playerTransform = Instantiate(playerPrefab, transform.position, transform.rotation);
-//   playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(NetworkManager.LocalClientId, true);
-
-
-
-
-/* [ServerRpc(RequireOwnership = false)]
- public void SpawnPlayerServerRpc(ulong clientId, LobbyManager.PlayerCharacter playerCharacter)
- {
-  //   ulong clientId = NetworkManager.Singleton.LocalClientId;
-  //   Debug.Log("SPAWNING PLAYER!!");
-    // Debug.Log(clientId);
-
-     GameObject prefab = LobbyAssets.Instance.GetPrefab(playerCharacter);
-     GameObject newPlayer = (GameObject)Instantiate(prefab);
-
-
-     Player lobbyPlayer = LobbyManager.Instance.GetPlayerById(PlayerLobbyId);
-
-
-
-
-     newPlayer.GetComponent<PlayerManager>().team = int.Parse(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
-
-     Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_NAME].Value);
-
-     Debug.Log(lobbyPlayer.Data[LobbyManager.KEY_PLAYER_TEAM].Value);
-
-     newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
-     newPlayer.SetActive(true);
-
-
-     LobbyManager.Instance.logPlayer();
-
- }
-*/
-
-/*
-
-    [ClientRpc]
-    public void SetTeamsClientRpc()
-    {
-
-    }
-
-
-    private void OnClientDisconnectCallback(ulong clientId)
-    {
-        //autoTestGamePausedState = true;
-        if (IsServer)
-        {
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
-        //    NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnLoadEventCompleted;
-          //  NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= SpawnPlayerServerRpc;
-
-        }
-    }
-
-
-    private void Update()
-    {
-        /*if (!IsServer)
-        {
-            return;
-        }
-
-        switch (state.Value)
-        {
-            case State.WaitingToStart:
-                break;
-            case State.CountdownToStart:
-                countdownToStartTimer.Value -= Time.deltaTime;
-                if (countdownToStartTimer.Value < 0f)
-                {
-                    state.Value = State.GamePlaying;
-                    gamePlayingTimer.Value = gamePlayingTimerMax;
-                }
-                break;
-            case State.GamePlaying:
-                gamePlayingTimer.Value -= Time.deltaTime;
-                if (gamePlayingTimer.Value < 0f)
-                {
-                    state.Value = State.GameOver;
-                }
-                break;
-            case State.GameOver:
-                break;
-        
-        }*/
-/*    }
-
-
-    private void GameInput_OnInteractAction(object sender, EventArgs e)
-    {
-  /*      if (state.Value == State.WaitingToStart)
-        {
-            isLocalPlayerReady = true;
-            OnLocalPlayerReadyChanged?.Invoke(this, EventArgs.Empty);
-
-            SetPlayerReadyServerRpc();
-        }
-  
-    }
-
-/*
-    [ServerRpc(RequireOwnership = false)]
-    private void SetPlayerReadyServerRpc(ServerRpcParams serverRpcParams = default)
-    {
-        playerReadyDictionary[serverRpcParams.Receive.SenderClientId] = true;
-
-        bool allClientsReady = true;
-        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
-        {
-            if (!playerReadyDictionary.ContainsKey(clientId) || !playerReadyDictionary[clientId])
-            {
-                // This player is NOT ready
-                allClientsReady = false;
-                break;
-            }
-        }
-
-        if (allClientsReady)
-        {
-            state.Value = State.CountdownToStart;
-            waiting = false;
-        }
-    }
-
-    private void TestGamePausedState()
-    {
-      /*  foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
-        {
-            if (playerPausedDictionary.ContainsKey(clientId) && playerPausedDictionary[clientId])
-            {
-                // This player is paused
-                isGamePaused.Value = true;
-                return;
-            }
-        }
-
-        // All players are unpaused
-        isGamePaused.Value = false;
-      */
-
-//}
-
-
-//}
