@@ -186,11 +186,17 @@ public class LobbyUI : MonoBehaviour {
     {
         if(lobby == null)
              lobby = LobbyManager.Instance.GetJoinedLobby();
-     //   Debug.Log("createPlayersUI");
+        string gameMode = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
+        if (gameMode == LobbyManager.GameMode.Team_DeathMatch.ToString())
+            LobbyManager.Instance.m_gameMode = LobbyManager.GameMode.Team_DeathMatch;
+        else
+            LobbyManager.Instance.m_gameMode = LobbyManager.GameMode.Free_for_all;
+
+
+        gameModeText.text = gameMode.Replace("_", " ");
         foreach (Player player in lobby.Players)
         {
-         // Debug.Log(player.Id);
-          //  Debug.Log(LobbyPlayers.Count);
+
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
                 Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
@@ -202,8 +208,6 @@ public class LobbyUI : MonoBehaviour {
                 playerSingleTransform.gameObject.SetActive(true);
 
 
-                //LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
-
                 lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
                     LobbyManager.Instance.IsLobbyHost() &&
                     player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
@@ -214,11 +218,8 @@ public class LobbyUI : MonoBehaviour {
                 changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
                 lobbyNameText.text = lobby.Name;
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
-
-                string gameMode = lobby.Data[LobbyManager.KEY_GAME_MODE].Value;
-                gameModeText.text = gameMode.Replace("_", " ");
-
-                startGameButton.gameObject.SetActive(true);
+                if(LobbyManager.Instance.IsLobbyHost())
+                    startGameButton.gameObject.SetActive(true);
                 Show();
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 
@@ -300,7 +301,6 @@ public class LobbyUI : MonoBehaviour {
 
     private void AddUserHandler(VivoxUserHandler playerLobbyHandler)
     {
-        Debug.Log("adding userhandler");
         VivoxManager.Instance.m_vivoxUserHandlers.Add(playerLobbyHandler);
     }
 

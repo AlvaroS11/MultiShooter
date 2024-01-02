@@ -643,6 +643,7 @@ public class OnlineManager : NetworkBehaviour
         else
             LobbyManager.Instance.m_gameMode = GameMode.Team_DeathMatch;
 
+        Debug.Log(LobbyManager.Instance.m_gameMode.ToString());
         foreach (var playerUI in LobbyUI.Instance.LobbyPlayers)
         {
             playerUI.Value.selectTeamDropdown.gameObject.active = showTeam;

@@ -133,11 +133,7 @@ public class Bullet : MonoBehaviour {
             Debug.Log(LobbyManager.Instance.m_gameMode.ToString());
             if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
             {
-                Debug.Log("free for all isEnemy");
-                if (!playerManager.isOwnPlayer)
-                    return true;
-                else
-                    return false;
+                return true;
             }
           return playerManager.PlayerTeam.Value != hitPlayer.GetComponent<PlayerManager>().PlayerTeam.Value;
         }

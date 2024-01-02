@@ -361,18 +361,11 @@ public class PlayerManager : NetworkBehaviour
             if (!IsOwner && extrapolationState.inputVector != Vector3.zero)
                 Debug.Log("not zero");
 
-           // Debug.Log(extrapolationState.position);
-           // transform.position += extrapolationState.position;
-
-            //a mas latencia más habrá que preveer
             if (extrapolationState.inputVector != Vector3.zero)
             {
                 transform.position += extrapolationState.inputVector * Time.deltaTime * speed * ping / 10000 * extrapolationMultiplier;
             }
-            //MovePlayerPc(extrapolationState.inputVector);
 
-
-            //MovePlayerPc(extrapolationState.inputVector);
 
         }
     }
