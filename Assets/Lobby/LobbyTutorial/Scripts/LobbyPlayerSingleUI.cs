@@ -195,12 +195,13 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     public void UpdateCharacterUI(LobbyManager.PlayerCharacter playerCharacter)
     {
-        characterImage.sprite = LobbyAssets.Instance.GetSprite(playerCharacter);
+        characterImage.sprite = GameAssets.Instance.GetSprite(playerCharacter);
     }
 
     public void UpdateNameUI(FixedString128Bytes name)
     {
         playerNameText.text = name.ToSafeString();
+        //Remove letters after "_"
     }
 
     private void KickPlayer() {

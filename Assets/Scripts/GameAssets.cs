@@ -4,11 +4,11 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LobbyAssets : MonoBehaviour {
+public class GameAssets : MonoBehaviour {
 
 
 
-    public static LobbyAssets Instance { get; private set; }
+    public static GameAssets Instance { get; private set; }
 
 
     [SerializeField] private Sprite marineSprite;

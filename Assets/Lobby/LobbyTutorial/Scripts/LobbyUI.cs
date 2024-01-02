@@ -275,11 +275,8 @@ public class LobbyUI : MonoBehaviour {
             }
         }
 
-        //Lobby lobby = await LobbyService.Instance.GetLobbyAsync(LobbyManager.Instance.joinedLobby.Id);
         Lobby lobby = LobbyManager.Instance.GetJoinedLobby();
-        Debug.Log(lobby.Players.Count);
         playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
-        Debug.Log(lobby.Players.Count + "/" + lobby.MaxPlayers);
     }
 
     private void Hide() {

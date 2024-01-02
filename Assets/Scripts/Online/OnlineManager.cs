@@ -231,8 +231,8 @@ public class OnlineManager : NetworkBehaviour
                     if (IsServer && !playersCreated)
                     {
                         Debug.Log("All clients joined");
-                        messageGameObject = LobbyAssets.Instance.messageGameObject;
-                        messageText = LobbyAssets.Instance.messageText;
+                        messageGameObject = GameAssets.Instance.messageGameObject;
+                        messageText = GameAssets.Instance.messageText;
                         messageText.text = "Waiting for players...";
                         messageGameObject.SetActive(true);
                         CreatePlayersServerRpc();
@@ -269,7 +269,7 @@ public class OnlineManager : NetworkBehaviour
     public void ShowMessageClientRpc(bool show)
     {
         if (messageGameObject == null)
-            messageGameObject = LobbyAssets.Instance.messageGameObject;
+            messageGameObject = GameAssets.Instance.messageGameObject;
         messageGameObject.SetActive(show);
     }
 
@@ -509,7 +509,7 @@ public class OnlineManager : NetworkBehaviour
                     i++;
                 }
 
-                GameObject prefabInstance = LobbyAssets.Instance.GetPrefab(playerInfo.playerCharacter);
+                GameObject prefabInstance = GameAssets.Instance.GetPrefab(playerInfo.playerCharacter);
 
                 int ran = rand.Next(1, 2);
                 int clampledTeam = Mathf.Clamp(playerInfo.team, 0, teamScore.Count - 1)*2; //real team spawn from 1 to n of teams
@@ -540,8 +540,8 @@ public class OnlineManager : NetworkBehaviour
             setPlayerLifeBarsClientRpc();
 
 
-            LobbyAssets.Instance.stats.GetComponent<StatisticsUI>().InitializeStatisticsClientRpc();
-            endGame = LobbyAssets.Instance.endGame;
+            GameAssets.Instance.stats.GetComponent<StatisticsUI>().InitializeStatisticsClientRpc();
+            endGame = GameAssets.Instance.endGame;
             Time.timeScale = 1;
 
 

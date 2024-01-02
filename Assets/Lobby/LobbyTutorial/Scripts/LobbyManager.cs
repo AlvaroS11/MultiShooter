@@ -123,9 +123,21 @@ public class LobbyManager : MonoBehaviour {
     }
 
     public async void Authenticate(string playerName) {
-        this.playerName = playerName;
+
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        var stringChars = new char[8];
+        var random = new System.Random();
+
+        for (int i = 0; i < stringChars.Length; i++)
+        {
+            stringChars[i] = chars[random.Next(chars.Length)];
+        }
+        var finalString = new String(stringChars);
+
+        this.playerName = playerName +"_" + finalString;
+        Debug.Log(this.playerName);
         InitializationOptions initializationOptions = new InitializationOptions();
-        initializationOptions.SetProfile(playerName);
+        initializationOptions.SetProfile(this.playerName);
 
 
 
@@ -464,6 +476,8 @@ public class LobbyManager : MonoBehaviour {
         Player player = CreatePlayer();
 
 
+        Debug.Log(player.Id);
+
         CreateLobbyOptions options = new CreateLobbyOptions
         {
             Player = player,
@@ -520,6 +534,8 @@ public class LobbyManager : MonoBehaviour {
 
     public async void JoinLobby(Lobby lobby) {
         Player player = CreatePlayer();
+
+        Debug.Log(player.Id);
 
         joinedLobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id, new JoinLobbyByIdOptions {
             Player = player

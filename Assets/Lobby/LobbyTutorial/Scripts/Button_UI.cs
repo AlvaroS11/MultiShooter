@@ -141,17 +141,6 @@ using UnityEngine.EventSystems;
         }
 
 
-
-
-
-
-
-
-
-        /*
-         * Class for temporarily intercepting a button action
-         * Useful for Tutorial disabling specific buttons
-         * */
         public class InterceptActionHandler {
 
             private Action removeInterceptFunc;

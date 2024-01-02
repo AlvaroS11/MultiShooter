@@ -250,7 +250,7 @@ public class PlayerManager : NetworkBehaviour
         _mainCamera = Camera.main;
         CanvasDeath.SetActive(false);
         isOwnPlayer = true;
-        pingText = LobbyAssets.Instance.pingText;
+        pingText = GameAssets.Instance.pingText;
 
     }
 
@@ -538,6 +538,11 @@ public class PlayerManager : NetworkBehaviour
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
                     bodyAnimator.SetBool("firing", true);
+                }
+                else
+                {
+                    //Test vibration
+                    Handheld.Vibrate();
                 }
 
 

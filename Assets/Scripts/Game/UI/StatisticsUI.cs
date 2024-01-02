@@ -98,7 +98,7 @@ public class StatisticsUI : NetworkBehaviour
                 else
                     statPlayerSingleUI.team.text = player.team.ToSafeString();
 
-                statPlayerSingleUI.characterImage.sprite = LobbyAssets.Instance.GetSprite(player.playerCharacter);
+                statPlayerSingleUI.characterImage.sprite = GameAssets.Instance.GetSprite(player.playerCharacter);
 
 
 

@@ -109,8 +109,7 @@ public class VivoxUserHandler : MonoBehaviour
         var username = participant.Account.DisplayName;
 
         bool isThisUser = username == m_id;
-        Debug.Log(username);
-        Debug.Log(m_id);
+
         try
         {
             if (isThisUser)
