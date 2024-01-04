@@ -849,6 +849,10 @@ PrefabInstance:
       propertyPath: player
       value: 
       objectReference: {fileID: 5637160186041061786}
+    - target: {fileID: 2868855128195378256, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
+      propertyPath: verticalOffset
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4077966794219295413, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

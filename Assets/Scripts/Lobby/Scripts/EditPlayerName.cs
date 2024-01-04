@@ -5,6 +5,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
+using System.Text;
+using UnityEngine.Windows;
 
 public class EditPlayerName : MonoBehaviour {
 
@@ -59,6 +61,11 @@ public class EditPlayerName : MonoBehaviour {
     public void SetPlayerName(string playerName)
     {
         this.playerName = playerName;
+
+        int index = playerName.IndexOf("_");
+        if (index >= 0)
+            this.playerName = playerName.Substring(0, index);
     }
+
 
 }

@@ -68,6 +68,7 @@ public class Bullet : MonoBehaviour {
         obstacleLayer = LayerMask.NameToLayer("Obstacle");
         playerLayer = LayerMask.NameToLayer("Player");
     }
+
     [ServerRpc]
     public void SetParent(GameObject parent)
     {

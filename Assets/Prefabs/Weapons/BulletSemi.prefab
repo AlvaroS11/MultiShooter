@@ -179,7 +179,11 @@ MonoBehaviour:
   obstacle:
     serializedVersion: 2
     m_Bits: 128
+  playerLayer: 0
   bulletDmg: 10
+  playerManager: {fileID: 0}
+  timeToDestroy: 5
+  shouldFollow: 0
 --- !u!54 &6647565444119315045
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -26,6 +26,8 @@ public class StatisticsUI : NetworkBehaviour
 
     public GameObject respawnMsg;
 
+    public GameObject menu;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -36,13 +38,13 @@ public class StatisticsUI : NetworkBehaviour
             {
                 ScrollBar.SetActive(true);
                 container.gameObject.SetActive(true);
-
+                menu.SetActive(true);
             }
             else
             {
                 ScrollBar.SetActive(!container.gameObject.activeSelf);
                 container.gameObject.SetActive(!container.gameObject.activeSelf);
-
+                menu.SetActive(container.gameObject.activeSelf);
             }
         });
 

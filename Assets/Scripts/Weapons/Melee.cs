@@ -1,8 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using System.Drawing;
+using UnityEngine.Windows;
 
 public class Melee : Weapon
 {
@@ -11,39 +10,26 @@ public class Melee : Weapon
 
     [SerializeField]
     private float timeBetweenBullets = 1f;
-    // Start is called before the first frame update
-
 
     [SerializeField]
-    private BoxCollider boxHit;
+    private float meleeRangeMultiplier = 2f;
+
+
     protected override void Start()
     {
         base.Start();
-
-        boxHit.enabled = false;
     }
-
     
 
-    // Update is called once per frame
     protected override void Update()
     {
         base.Update();
     }
 
-    /*public override void AimWeapon()
-    {
-        //base.AimWeapon();
-        lineRenderer.enabled = true;
-
-
-    }
-    */
 
 
     public override void AimWeapon(Vector3 dir)
     {
-        //base.AimWeapon();
         lineRenderer.enabled = true;
 
         Vector3 targetDirection = dir - transform.position;
@@ -51,10 +37,34 @@ public class Melee : Weapon
         
         lineRenderer.positionCount = 2;
 
-       //da Vector3 point = targetDirection.normalized * 2;
-        Vector3 point = transform.position + targetDirection.normalized*2;
+        Vector3 point = transform.position + targetDirection.normalized*meleeRangeMultiplier;
         lineRenderer.SetPosition(0, transform.position);
         lineRenderer.SetPosition(1, point);
+    }
+
+
+    public override Vector3 AimWeaponMobile(Vector3 dir)
+    {
+        dir = dir.normalized;
+
+        //Debug.Log(dir);
+
+        Vector3 targetDirection = dir + transform.position;
+        lineRenderer.positionCount = 2;
+
+        Vector3 startVel = dir * bullet.GetComponent<Bullet>().speed;
+        Vector3 bulletAimPos = startVel * meleeRangeMultiplier/2;
+
+        Vector3 point = targetDirection + bulletAimPos;
+
+
+        //Vector3 point = transform.position + targetDirection.normalized * meleeRangeMultiplier;
+
+        lineRenderer.enabled = true;
+        lineRenderer.SetPosition(0, transform.position);
+        lineRenderer.SetPosition(1, point);
+
+        return point;   
     }
 
     public override void StopAim()
@@ -67,30 +77,17 @@ public class Melee : Weapon
         lineRenderer.enabled = true;
     }
 
-    /*[ServerRpc]
-    public override void PlayerFireServerRpc()
-    {
-
-        if (!isReady) return;
-        StartCoolDownServerRpc();
-
-        //3 times
-    }
-    */
     [ServerRpc]
     public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)
     {
         if (!isReady) return;
 
-
-        Debug.Log("FIRING");
         Vector3 targetDirection = dir - transform.position;
+
         transform.forward = targetDirection;
 
-        //Start animation and set player rotation until animation finishes
-
         GetComponent<PlayerManager>().firing = true;
-        StartCoroutine(FiringAnimation());
+        FiringAnimClientRpc();
 
 
         StartCoroutine(Fire());
@@ -108,11 +105,17 @@ public class Melee : Weapon
     }
 
 
-   /* public void Fire()
+    [ClientRpc]
+    private void FiringAnimClientRpc()
     {
-        boxHit.enabled = true;
+        StartCoroutine(FiringAnimation());
+    }
 
-    }*/
+    [ServerRpc]
+    public override void PlayerFireServerMobileServerRpc(Vector3 dir, ulong clientId)
+    {
+        PlayerFireServerRpc(dir, clientId);
+    }
 
     private IEnumerator Fire()
     {
@@ -120,7 +123,7 @@ public class Melee : Weapon
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
         bulletGameObject.GetComponent<Bullet>().playerManager = GetComponent<PlayerManager>();
         yield return new WaitForSeconds(1);
-
+        
         Destroy(bulletGameObject);
     }
 

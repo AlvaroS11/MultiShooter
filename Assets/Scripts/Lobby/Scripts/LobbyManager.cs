@@ -156,33 +156,8 @@ public class LobbyManager : MonoBehaviour {
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        //if()
         if(OnlineManager.Instance.IsClient)
             LoadScene(scene, mode);
-      //  StartCoroutine(LoadScene(scene, mode));
-        /*yield return new WaitForSeconds(1f);
-
-        if (Instance == null)
-        {
-            Destroy(gameObject);
-        }
-        Debug.Log(joined);
-        Debug.Log("onSceneLoaded");
-        Debug.Log(joinedLobby);
-      //  Debug.Log(GetJoinedLobby());
-       // Debug.Log(GetJoinedLobby().Players.Count);
-        Debug.Log(scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString());
-        Debug.Log(scene.name.ToString());
-        if (joinedLobby != null && scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString())
-        {
-            OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
-            Debug.Log(joinedLobby.Players.Count);
-            Debug.Log("scene reLoad");
-            AuthenticateUI.Instance.gameObject.SetActive(false);
-            LobbyListUI.Instance.gameObject.SetActive(false);
-            Debug.Log(joinedLobby.Players.Count);
-            LobbyUI.Instance.UpdateLobby_Event(null, new LobbyEventArgs { lobby = joinedLobby });
-        }*/
     }
 
     void LoadScene(Scene scene, LoadSceneMode mode)
@@ -582,11 +557,9 @@ public class LobbyManager : MonoBehaviour {
     {
         //StartHost()
         //SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
-        Debug.Log(PopUp.Instance != null);
 
         if (joinedLobby.Players.Count == joinedLobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
         {
-
             ForceStart();
         }
         else if (IsLobbyHost() && PopUp.Instance != null)
@@ -623,6 +596,8 @@ public class LobbyManager : MonoBehaviour {
             //Enviar mensaje para decir que hemos empezado
             Lobby lobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
             {
+                IsLocked = true,
+                IsPrivate = true,
                 Data = new Dictionary<string, DataObject>
                 {
                     //  { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
@@ -713,7 +688,7 @@ public class LobbyManager : MonoBehaviour {
     public async void KickPlayer(string playerId) {
         if (IsLobbyHost()) {
             try {
-                Debug.Log("HECHANDO!!");
+                Debug.Log("ECHANDO!!");
                 Debug.Log(joinedLobby.Players.Count);
                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, playerId);
                 joinedLobby.Players.Remove(joinedLobby.Players.Find(x => x.Id == playerId));

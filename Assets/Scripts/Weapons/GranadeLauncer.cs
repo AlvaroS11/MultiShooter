@@ -138,8 +138,6 @@ public class GranadeLauncer : Weapon
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
-        Debug.Log("shot granade");
-        Debug.Log(shotSound.clip.name);
         shotSound.Play();
     }
 

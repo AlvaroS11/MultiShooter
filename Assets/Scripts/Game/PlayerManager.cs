@@ -17,28 +17,15 @@ public class PlayerManager : NetworkBehaviour
     private Camera _mainCamera;
     public LayerMask floor;
 
-    //  public GameObject Bullet;
-
     public Weapon gun;
 
     public int MaxLife = 100;
 
-    //[HideInInspector]
     public NetworkVariable<int> life = new NetworkVariable<int>();
 
     public UIPlayer healthUI;
 
-    private Transform playerPrefab;
-
-    // public NetworkVariable<int> team = new NetworkVariable<int>();
-    // public int team;
-
-
-    /* public string PlayerLobbyId;
-     public string PlayerName;
-     public int PlayerTeam;
-    */
-    // public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+   
     [HideInInspector]
     public NetworkVariable<FixedString128Bytes> PlayerName = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     [HideInInspector]
@@ -46,7 +33,6 @@ public class PlayerManager : NetworkBehaviour
 
     [HideInInspector]
     public LobbyManager.PlayerCharacter playerCharacterr;
-
 
 
     public int PlayerInfoIndex;
@@ -66,6 +52,8 @@ public class PlayerManager : NetworkBehaviour
 
 
     public bool firing; //Server only
+    public bool localFiring; //Client prediction only
+
 
     public bool isHealthing;
 
@@ -84,19 +72,15 @@ public class PlayerManager : NetworkBehaviour
     private GameObject CanvasDeath;
 
 
-    // public Animation inmuneAnimation;
     public Animator animator;
 
-    //[SerializeField]
     public NetworkVariable<bool> isInmune = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public bool isOwnPlayer = false;
 
 
-    // [SerializeField]
     private bool aiming;
 
-    //[SerializeField]
     private Vector3 lastAimedPos;
 
     public GameObject body;
@@ -133,12 +117,10 @@ public class PlayerManager : NetworkBehaviour
         public int tick;
         public ulong networkObjectId;
         public Vector3 position;
-        //public Quaternion rotation;
         public Vector3 inputVector;
         public DateTime timestamp;
 
-        //public Vector3 velocity;
-        //public Vector3 angularVelocity;
+
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
@@ -147,8 +129,6 @@ public class PlayerManager : NetworkBehaviour
             serializer.SerializeValue(ref position);
             serializer.SerializeValue(ref inputVector);
             serializer.SerializeValue(ref timestamp);
-            //serializer.SerializeValue(ref velocity);
-            //serializer.SerializeValue(ref angularVelocity);
         }
     }
 
@@ -293,7 +273,10 @@ public class PlayerManager : NetworkBehaviour
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
                 //return moveDestination;
+                Vector3 targetDirection = moveDestination - transform.position;
+                    transform.forward = targetDirection;
                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+                localFiring = true;
             }
         }
 
@@ -307,8 +290,6 @@ public class PlayerManager : NetworkBehaviour
             HandleClientTick();
             HandleServerTick();
         }
-
-        //Extraplolate(); ?
 
     }
 
@@ -358,8 +339,6 @@ public class PlayerManager : NetworkBehaviour
         //Debug.Log(extrapolationTimer.is)
         if (IsServer && extrapolationTimer.IsRunning)
         {
-            if (!IsOwner && extrapolationState.inputVector != Vector3.zero)
-                Debug.Log("not zero");
 
             if (extrapolationState.inputVector != Vector3.zero)
             {
@@ -458,7 +437,14 @@ public class PlayerManager : NetworkBehaviour
 
                 if (Input.GetMouseButtonDown(0)&& !gun.reloading)
                 {
+                    Vector3 targetDirection = moveDestination - transform.position;
+                    //transform.forward = targetDirection;
+                   // bodyAnimator.SetBool("firing", true);
+                    //Debug.Break();
                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+                    localFiring = true;
+                  //  StartCoroutine(StopLocalFiring());
+
                 }
             }
             else
@@ -533,16 +519,15 @@ public class PlayerManager : NetworkBehaviour
             {
                 if (previousMov >= 0.22)
                 {
-
-                    Debug.Log(lastAimedPos);
+                    Vector3 targetDirection = lastAimedPos - transform.position;
+                    transform.forward = targetDirection;
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
-                    bodyAnimator.SetBool("firing", true);
+                    localFiring = true;
                 }
                 else
                 {
-                    //Test vibration
-                    Handheld.Vibrate();
+                    //Handheld.Vibrate();
                 }
 
 
@@ -662,9 +647,7 @@ public class PlayerManager : NetworkBehaviour
             tick = input.tick,
 
             networkObjectId = NetworkObjectId,
-           // position = input.position,
             position = transform.position,
-            //rotation = transform.rotation,
             inputVector = input.inputVector,
 
         };
@@ -678,7 +661,7 @@ public class PlayerManager : NetworkBehaviour
         transform.position += input.normalized * Time.deltaTime * speed;
 
 
-        if (!firing && input != Vector3.zero)
+        if (!firing && input != Vector3.zero && !localFiring)
         {
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;
@@ -768,8 +751,6 @@ public class PlayerManager : NetworkBehaviour
         }
         else
         {
-            //StopCoroutine(WaitToHealth());
-            //  StopCoroutine(HealthByTime());
             StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
 
 
@@ -788,7 +769,6 @@ public class PlayerManager : NetworkBehaviour
 
     private IEnumerator HealthByTime()
     {
-        Debug.Log("HEALTHING!!");
         yield return new WaitForSeconds(healthInterval);
         life.Value += healthBySecond.Value;
 

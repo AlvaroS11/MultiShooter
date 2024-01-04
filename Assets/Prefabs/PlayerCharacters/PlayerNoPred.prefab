@@ -175,6 +175,7 @@ MonoBehaviour:
   straightAim: 1
   reloadBar: {fileID: 0}
   reloading: 0
+  shotSound: {fileID: 0}
   releasePosition: {fileID: 5637160186041061786}
   LinePoints: 42
   timeBetweenPoint: 0.136

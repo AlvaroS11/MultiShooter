@@ -45,8 +45,11 @@ public class Weapon : NetworkBehaviour
 
     public AudioSource shotSound;
 
+
+    private PlayerManager playerManager;
     protected virtual void Start()
     {
+        playerManager = GetComponent<PlayerManager>();
         isReady = true;
 
         // float bulletSpeed = bullet.GetComponent<Bullet>().speed;
@@ -56,7 +59,6 @@ public class Weapon : NetworkBehaviour
 
         if (IsOwner)
         {
-            Debug.Log(Assets.Instance);
             reloadBar = Assets.Instance.reloadBar;
         }
     }
@@ -77,32 +79,18 @@ public class Weapon : NetworkBehaviour
             if (reloading)
             {
                 currentReload -= Time.deltaTime;
-                //Debug.Log(currentReload);
                 if(currentReload >= 0)
                     reloadBar.fillAmount = 1 - (currentReload / coolDownSeconds);
                 else
+                {
                     reloading = false;
+                    playerManager.localFiring = false;
+                }
+                    
             }
         }
        
     }
-
-  /*  [ServerRpc]
-    public virtual void PlayerFireServerRpc()
-    {
-        if (!isReady || !isActiveAndEnabled) return;
-        bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
-        Bullet bulletInstance = bulletGameObject.GetComponent<Bullet>();
-        bulletInstance.SetParent(gameObject);
-        bulletInstance.playerManager = GetComponent<PlayerManager>();
-       /* Debug.Log("instantiating bullet");
-        Debug.Break();*/
-
-       /* bulletGameObject.transform.rotation = Quaternion.Euler(90, transform.rotation.eulerAngles.y, 0);
-        bulletGameObject.GetComponent<NetworkObject>().Spawn();
-        StartCoolDownServerRpc();
-        shotSound.Play();
-    }*/
 
     [ServerRpc]
     public virtual void PlayerFireServerRpc(Vector3 dir, ulong clientId)
@@ -129,12 +117,9 @@ public class Weapon : NetworkBehaviour
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
-        /*Debug.Log("instantiating bullet");
-        Debug.Break();*/
+
         GetComponent<PlayerManager>().firing = true;
         
-
-        // StartCoroutine(CoolDownServerRpc());
         StartCoolDownServerRpc();
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
@@ -170,7 +155,6 @@ public class Weapon : NetworkBehaviour
 
         GetComponent<PlayerManager>().firing = true;
 
-        // StartCoroutine(CoolDownServerRpc());
         StartCoolDownServerRpc();
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
@@ -225,6 +209,8 @@ public class Weapon : NetworkBehaviour
         pManager.bodyAnimator.SetBool("firing", true);
         yield return new WaitForSeconds(2);
         pManager.firing = false;
+        pManager.bodyAnimator.SetBool("firing", false);
+        pManager.localFiring = false;
     }
 
 
