@@ -171,31 +171,14 @@ public class LobbyManager : MonoBehaviour {
         }
         else
         {
-            Debug.Log(joined);
-            Debug.Log("onSceneLoaded");
-            Debug.Log(joinedLobby);
-            //  Debug.Log(GetJoinedLobby());
-            // Debug.Log(GetJoinedLobby().Players.Count);
-            Debug.Log(scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString());
-            Debug.Log(scene.name.ToString());
             if (joinedLobby != null && scene.name.ToString() == SceneLoader.Scene.LobbyScene.ToString())
             {
-                //OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
-                Debug.Log(joinedLobby.Players.Count);
-                Debug.Log("scene reLoad");
                 EditPlayerName.Instance.SetPlayerName(playerName);
                 AuthenticateUI.Instance.gameObject.SetActive(false);
                 LobbyListUI.Instance.gameObject.SetActive(false);
-                Debug.Log(joinedLobby.Players.Count);
-                Debug.Log("upadteEvent1");
-                //LobbyUI.Instance.UpdateLobby_Event(null, new LobbyEventArgs { lobby = joinedLobby });
                 LobbyUI.Instance.Show();
                 LobbyUI.Instance.CreatePlayersUI(joinedLobby);
-                Debug.Log("upadteEvent2");
                 LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
-                //  OnlineManager.Instance.ResetPreviousGameClientRpc();
-                //StartCoroutine(DelayJoin());
-
             }
         }
     }
@@ -265,27 +248,6 @@ public class LobbyManager : MonoBehaviour {
 
                 if(SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString() )
                     OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
-
-               /* if (joinedLobby.Data[KEY_START_GAME].Value != "0")
-                {
-                    //Unirnos al p2p y empezar
-                    if (!IsLobbyHost()) //Host automatically joins relay
-                    {
-                        // await JoinRelay(joinedLobby.Data[KEY_START_GAME].Value);
-                     //   SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
-
-                    }
-                    Debug.Log("joined lobby is Null");
-                    joinedLobby = null;
-
-                   // OnGameStarted?
-                }
-                else
-                {
-                   // Debug.Log(joinedLobby.Data[KEY_START_GAME].Value);
-                   // Debug.Log(joinedLobby.Data[KEY_PLAYER_CHARACTER].Value);
-
-                }*/
 
 
             }
@@ -524,6 +486,27 @@ public class LobbyManager : MonoBehaviour {
         VivoxManager.Instance.StartVivoxJoin();
 
         OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = lobby });
+    }
+
+    public async void JoinLobbyByCode(string code)
+    {
+        Player player = CreatePlayer();
+
+        Debug.Log(player.Id);
+
+        joinedLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(code, new JoinLobbyByCodeOptions
+        {
+            Player = player
+        });
+
+        await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
+        joined = true;
+
+        //TODO ADD IN EVENT OnJoinedLobby
+        VivoxManager.Instance.StartVivoxLogin();
+        VivoxManager.Instance.StartVivoxJoin();
+
+        OnJoinedLobby?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
     }
 
     public async void UpdatePlayerName(string playerName) {

@@ -39,6 +39,8 @@ public class LobbyUI : MonoBehaviour {
 
     [SerializeField] public GameObject JoiningLobbyGameObject;
     [SerializeField] public TextMeshProUGUI JoiningLobbyText;
+    [SerializeField] public TextMeshProUGUI codeText;
+
 
 
     public bool dropDownExpanded;
@@ -125,6 +127,7 @@ public class LobbyUI : MonoBehaviour {
         OnlineManager.Instance.ChangeNameServerRpc(PlayerLobbyId, EditPlayerName.Instance.GetPlayerName(), NetworkManager.Singleton.LocalClientId);
         OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
 
+        codeText.text = "Code: " + LobbyManager.Instance.joinedLobby.LobbyCode;
     }
 
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)
@@ -171,8 +174,9 @@ public class LobbyUI : MonoBehaviour {
                 changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
                 lobbyNameText.text = lobby.Name;
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
-                if(LobbyManager.Instance.IsLobbyHost())
-                    startGameButton.gameObject.SetActive(true);
+
+                startGameButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
+
                 Show();
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 

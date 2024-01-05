@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,6 +17,9 @@ public class LobbyListUI : MonoBehaviour {
     [SerializeField] private Transform container;
     [SerializeField] private Button refreshButton;
     [SerializeField] private Button createLobbyButton;
+    [SerializeField] private TMP_InputField inputCode;
+    [SerializeField] private Button joinByCodeButton;
+
 
 
     private void Awake() {
@@ -25,6 +29,7 @@ public class LobbyListUI : MonoBehaviour {
 
         refreshButton.onClick.AddListener(RefreshButtonClick);
         createLobbyButton.onClick.AddListener(CreateLobbyButtonClick);
+        joinByCodeButton.onClick.AddListener(JoinByCode);
     }
 
     private void Start() {
@@ -75,6 +80,11 @@ public class LobbyListUI : MonoBehaviour {
 
     private void CreateLobbyButtonClick() {
         LobbyCreateUI.Instance.Show();
+    }
+
+    private void JoinByCode()
+    {
+        LobbyManager.Instance.JoinLobbyByCode(inputCode.text);
     }
 
     private void Hide() {
