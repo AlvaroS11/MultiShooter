@@ -44,6 +44,11 @@ public class Granade : Bullet
     public AudioSource audioSource;
 
 
+    //To Do add blink to granade
+    public Material firstBlinkMaterial;
+    public Material secondBlinkMaterial;
+
+
     void Start()
     {
         if (!NetworkManager.Singleton.IsServer) return;

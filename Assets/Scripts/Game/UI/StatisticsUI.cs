@@ -43,8 +43,8 @@ public class StatisticsUI : NetworkBehaviour
             else
             {
                 ScrollBar.SetActive(!container.gameObject.activeSelf);
+                menu.SetActive(!menu.activeSelf);
                 container.gameObject.SetActive(!container.gameObject.activeSelf);
-                menu.SetActive(container.gameObject.activeSelf);
             }
         });
 
@@ -131,6 +131,7 @@ public class StatisticsUI : NetworkBehaviour
         {
             container.gameObject.SetActive(false);
             ScrollBar.SetActive(false);
+            menu.SetActive(false);
 
         }
     }
@@ -139,6 +140,7 @@ public class StatisticsUI : NetworkBehaviour
     {
         container.gameObject.SetActive(true);
         ScrollBar.SetActive(true);
+        menu.SetActive(true);
        // Debug.Log("show");
     }
 

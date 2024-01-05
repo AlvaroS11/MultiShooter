@@ -64,6 +64,7 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     private int healthInterval = 1;
 
+ //   [HideInInspector]
     public NetworkVariable<int> healthBySecond = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
 
@@ -74,6 +75,7 @@ public class PlayerManager : NetworkBehaviour
 
     public Animator animator;
 
+    [HideInInspector]
     public NetworkVariable<bool> isInmune = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public bool isOwnPlayer = false;
@@ -89,6 +91,8 @@ public class PlayerManager : NetworkBehaviour
 
     private float previousMov;
 
+//    [SerializeField]
+    public AudioSource noAmmoSound;
 
     static float ping;
 
@@ -164,10 +168,6 @@ public class PlayerManager : NetworkBehaviour
 
     [Header("Ping")]
     [SerializeField] static TextMeshProUGUI pingText;
-
-
-
-
 
     public static DateTime previousTimeStamp = DateTime.Now;
 
@@ -262,7 +262,9 @@ public class PlayerManager : NetworkBehaviour
         if (!IsClient || !IsOwner) return;
 #if UNITY_STANDALONE_WIN
 
-        if (Input.GetMouseButtonDown(0) && !gun.reloading)
+        if (Input.GetMouseButtonDown(0)&& localFiring)
+                    noAmmoSound.Play();
+        else if (Input.GetMouseButtonDown(0) && !gun.reloading)
         {
             Vector3 dest = Input.mousePosition;
 
@@ -433,9 +435,10 @@ public class PlayerManager : NetworkBehaviour
                 moveDestination.y = 0.5f;
                 gun.AimWeapon(moveDestination);
 
-                //if (Input.GetMouseButton(0) && !gun.reloading)
 
-                if (Input.GetMouseButtonDown(0)&& !gun.reloading)
+                if (Input.GetMouseButtonDown(0)&& localFiring)
+                    noAmmoSound.Play();
+                else if (Input.GetMouseButtonDown(0)&& !gun.reloading)
                 {
                     Vector3 targetDirection = moveDestination - transform.position;
                     //transform.forward = targetDirection;
@@ -444,8 +447,8 @@ public class PlayerManager : NetworkBehaviour
                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
                     localFiring = true;
                   //  StartCoroutine(StopLocalFiring());
-
                 }
+
             }
             else
                 gun.StopAim();
@@ -453,10 +456,10 @@ public class PlayerManager : NetworkBehaviour
         else
             gun.StopAim();
 
-        //Meter en una funcion
-
-        //if (Input.GetMouseButton(0) && !gun.reloading)
-        if (Input.GetMouseButtonDown(0) && !gun.reloading)
+        if (Input.GetMouseButtonDown(0)&& localFiring)
+                    noAmmoSound.Play();
+               
+        else if (Input.GetMouseButtonDown(0) && !gun.reloading)
         {
             Vector3 dest = Input.mousePosition;
 
@@ -470,7 +473,7 @@ public class PlayerManager : NetworkBehaviour
                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
             }
         }
-        // return Vector3.zero;
+
 
         return receivedInput;
 
@@ -519,11 +522,20 @@ public class PlayerManager : NetworkBehaviour
             {
                 if (previousMov >= 0.22)
                 {
-                    Vector3 targetDirection = lastAimedPos - transform.position;
-                    transform.forward = targetDirection;
-                    gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
-                    aiming = false;
-                    localFiring = true;
+                    //  if (!localFiring)
+                    //{
+                    if (localFiring)
+                        noAmmoSound.Play();
+                        Vector3 targetDirection = lastAimedPos - transform.position;
+                        transform.forward = targetDirection;
+                        gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
+                        aiming = false;
+                        localFiring = true;
+                /*    }
+                    else
+                    {
+                        noAmmoSound.Play();
+                    }*/
                 }
                 else
                 {
