@@ -102,6 +102,7 @@ public class Melee : Weapon
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
+        shotSound.Play();
     }
 
 

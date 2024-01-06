@@ -128,6 +128,31 @@ public class LobbyUI : MonoBehaviour {
         OnlineManager.Instance.GetTeamCharacterServerRpc(PlayerLobbyId);
 
         codeText.text = "Code: " + LobbyManager.Instance.joinedLobby.LobbyCode;
+
+        EnableDisableStartButton();
+    }
+
+    public void EnableDisableStartButton()
+    {
+        if (LobbyManager.Instance.IsLobbyHost())
+        {
+            if (OnlineManager.Instance.playerList.Count < LobbyManager.Instance.GetJoinedLobby().Players.Count)
+            {
+                startGameButton.enabled = false;
+                startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Syncing players...";
+                // startGameButton.GetComponent<Image>().color = new Color(0.48f, 0.48f, 0.48f);
+                startGameButton.GetComponent<Image>().enabled = false;
+
+            }
+            else
+            {
+                startGameButton.enabled = true;
+                startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Start";
+                startGameButton.GetComponent<Image>().enabled = true;
+                //startGameButton.GetComponent<Image>().color = new Color(0.17f, 0.17f, 0.17f);
+
+            }
+        }
     }
 
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)

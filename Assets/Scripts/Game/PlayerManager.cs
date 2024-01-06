@@ -248,22 +248,21 @@ public class PlayerManager : NetworkBehaviour
                 transform.position += transform.forward * 20f;
         }
 
-      /*  while (networkTimer.ShouldTick())
-        {
-            HandleClientTick();
-            HandleServerTick();
-        }*/
-
         HandleInput();
     }
 
+    //Manage shooting in every frame ignoring client tick
     private void HandleInput()
     {
         if (!IsClient || !IsOwner) return;
 #if UNITY_STANDALONE_WIN
 
         if (Input.GetMouseButtonDown(0)&& localFiring)
-                    noAmmoSound.Play();
+        {
+            noAmmoSound.Play();
+            Debug.Log(localFiring);
+            Debug.Log(gun.reloading);
+        }
         else if (Input.GetMouseButtonDown(0) && !gun.reloading)
         {
             Vector3 dest = Input.mousePosition;
@@ -274,9 +273,8 @@ public class PlayerManager : NetworkBehaviour
             {
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
-                //return moveDestination;
                 Vector3 targetDirection = moveDestination - transform.position;
-                    transform.forward = targetDirection;
+                transform.forward = targetDirection;
                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
                 localFiring = true;
             }
@@ -423,6 +421,7 @@ public class PlayerManager : NetworkBehaviour
         }
         MoveCamera();
 
+        //Aiming
         if (Input.GetMouseButton(1))
         {
             Vector3 dest = Input.mousePosition;
@@ -436,17 +435,14 @@ public class PlayerManager : NetworkBehaviour
                 gun.AimWeapon(moveDestination);
 
 
+                //Aiming and shooting
                 if (Input.GetMouseButtonDown(0)&& localFiring)
                     noAmmoSound.Play();
                 else if (Input.GetMouseButtonDown(0)&& !gun.reloading)
                 {
                     Vector3 targetDirection = moveDestination - transform.position;
-                    //transform.forward = targetDirection;
-                   // bodyAnimator.SetBool("firing", true);
-                    //Debug.Break();
                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
                     localFiring = true;
-                  //  StartCoroutine(StopLocalFiring());
                 }
 
             }
@@ -456,9 +452,9 @@ public class PlayerManager : NetworkBehaviour
         else
             gun.StopAim();
 
+        //Just shooting
         if (Input.GetMouseButtonDown(0)&& localFiring)
-                    noAmmoSound.Play();
-               
+                    noAmmoSound.Play();       
         else if (Input.GetMouseButtonDown(0) && !gun.reloading)
         {
             Vector3 dest = Input.mousePosition;
@@ -469,8 +465,8 @@ public class PlayerManager : NetworkBehaviour
             {
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
-                //return moveDestination;
                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+                localFiring = true;
             }
         }
 

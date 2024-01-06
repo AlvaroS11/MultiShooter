@@ -24,6 +24,8 @@ public class AudioController : MonoBehaviour
 
     public void Start()
     {
-        audioMixer.SetFloat("Master", PlayerPrefs.GetFloat("masterVolume"));
+        float audio = PlayerPrefs.GetFloat("masterVolume");
+        audioMixer.SetFloat("Master", audio);
+        slider.value = audio;
     }
 }

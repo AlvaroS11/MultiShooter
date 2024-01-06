@@ -160,10 +160,10 @@ public class LobbyManager : MonoBehaviour {
             LoadScene(scene, mode);
     }
 
-    void LoadScene(Scene scene, LoadSceneMode mode)
+    async void LoadScene(Scene scene, LoadSceneMode mode)
     //   public IEnumerator LoadScene(Scene scene, LoadSceneMode mode)
     {
-       // yield return new WaitForSeconds(0f);
+        // yield return new WaitForSeconds(0f);
 
         if (Instance == null)
         {
@@ -179,6 +179,10 @@ public class LobbyManager : MonoBehaviour {
                 LobbyUI.Instance.Show();
                 LobbyUI.Instance.CreatePlayersUI(joinedLobby);
                 LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
+                joinedLobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
+                {
+                    IsLocked = false,
+                });
             }
         }
     }
@@ -246,8 +250,12 @@ public class LobbyManager : MonoBehaviour {
                     joinedLobby = null;
                 }
 
-                if(SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString() )
+
+                if (SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString())
+                {
                     OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
+                    LobbyUI.Instance.EnableDisableStartButton();
+                }
 
 
             }
@@ -580,7 +588,7 @@ public class LobbyManager : MonoBehaviour {
             Lobby lobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
             {
                 IsLocked = true,
-                IsPrivate = true,
+               // IsPrivate = true,
                 Data = new Dictionary<string, DataObject>
                 {
                     //  { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
