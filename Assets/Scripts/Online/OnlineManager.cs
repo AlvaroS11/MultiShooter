@@ -39,10 +39,6 @@ public class OnlineManager : NetworkBehaviour
     public string PlayerTeam;
     public string playerCharacterr;
 
-    public bool waiting = true;
-
-
-    private Dictionary<ulong, bool> playerReadyDictionary;
 
     public Dictionary<string, int> playerTeamDictionary;
 
@@ -139,7 +135,6 @@ public class OnlineManager : NetworkBehaviour
         }
         Instance = this;
 
-        playerReadyDictionary = new Dictionary<ulong, bool>();
         playerTeamDictionary = new Dictionary<string, int>();
         playerCharacterDictionary = new Dictionary<string, PlayerCharacter>();
         playerNameDictionary = new Dictionary<string, string>();
@@ -176,15 +171,12 @@ public class OnlineManager : NetworkBehaviour
 
     private void StopClient(object sender, System.EventArgs e)
     {
-        Debug.Log("STOPPING CLIENT!");
         NetworkManager.Singleton.Shutdown();
     }
 
     public override void OnNetworkSpawn()
     {
         PlayerLobbyId = AuthenticationService.Instance.PlayerId;
-
-        Debug.Log("NETWORK SPAWN!! ");
 
         StartCoroutine(DelayJoin());
 
@@ -236,6 +228,8 @@ public class OnlineManager : NetworkBehaviour
                         messageText.text = "Waiting for players...";
                         messageGameObject.SetActive(true);
                         CreatePlayersServerRpc();
+                        SetStatustClientRpc(true);
+
                         //messageGameObject.SetActive(false);
 
                         ShowMessageClientRpc(false);
@@ -257,6 +251,12 @@ public class OnlineManager : NetworkBehaviour
                     break;
                 }
         }
+    }
+
+    [ClientRpc]
+    public void SetStatustClientRpc(bool started)
+    {
+        playersCreated = started;
     }
 
     public IEnumerator DelayJoin()
@@ -483,7 +483,6 @@ public class OnlineManager : NetworkBehaviour
     {
         try
         {
-            //REVISAR ESTO! TO DO
             int nTeams = 0;
             while (SceneManager.GetActiveScene().name != "GameScene") { }
 
@@ -531,7 +530,6 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerGameObject.GetComponent<NetworkObject>().SpawnAsPlayerObject(playerInfo.clientId, true);
             }
             Debug.Log(teamScore.Count);
-            //WaitToInitializeListClientRpc(nTeams);
 
             StartTeamScoreClientRpc(teamNames1);
 
@@ -543,8 +541,6 @@ public class OnlineManager : NetworkBehaviour
             GameAssets.Instance.stats.GetComponent<StatisticsUI>().InitializeStatisticsClientRpc();
             endGame = GameAssets.Instance.endGame;
             Time.timeScale = 1;
-
-
         }
         catch (Exception e)
         {

@@ -28,36 +28,12 @@ public class Bullet : MonoBehaviour {
 
     private void Start()
     {
-       /* if (!NetworkManager.Singleton.IsServer) return;
-        StartCoroutine(WaitToDeleteServerRpc());
-        obstacleLayer = LayerMask.NameToLayer("Obstacle");
-        playerLayer = LayerMask.NameToLayer("Player");
-
-
-        if(playerManager == null)
-        {
-            playerManager = parent.GetComponent<PlayerManager>();
-            Debug.Log("playermanager was null");
-        }
-
-        Debug.Log("parent is " + playerManager.gameObject.name);
-        //Calculate range with speed and timeToDestroy*/
-
         SetUp();
     }
    
     private void Awake()
     {
         SetUp();
-
-
-      /*  if (playerManager == null)
-        {
-            playerManager = parent.GetComponent<PlayerManager>();
-            Debug.Log("playermanager was null");
-        }*/
-
-        //Debug.Log("parent is " + playerManager.gameObject.name);
     }
 
 
@@ -83,14 +59,6 @@ public class Bullet : MonoBehaviour {
             transform.Translate(Vector3.up * speed * Time.deltaTime);
         else
             transform.position = parent.transform.position;
-     //   if(direction == Vector3.zero)
-        //    Debug.Log(direction);
-      //  else
-      //      direction = transform.up.normalized;
-        //if(IsOwner)
-        // MoveServerRpc();
-        // transform.Translate((direction * speed * Time.deltaTime));   
-        //  Vector3.MoveTowards(transform.position, transform.forward, speed*Time.deltaTime);
     }
 
 
@@ -98,7 +66,6 @@ public class Bullet : MonoBehaviour {
     {
         if (!NetworkManager.Singleton.IsServer) return;
         OnTriggerEnterServerRpc(other);
-        Debug.Log("COLLISION ");
     }
 
     [ServerRpc]
@@ -107,12 +74,10 @@ public class Bullet : MonoBehaviour {
         GameObject hitObject = other.gameObject;
         if (hitObject.layer == obstacleLayer || (hitObject.layer == playerLayer && hitObject != parent && IsEnemy(hitObject)) )
         {
-            Debug.Log("entra1");
             if(destroyBullet)
                 Destroy(gameObject);
             if (hitObject.layer == playerLayer)
             {
-                Debug.Log("entra2");
                 PlayerManager hitPlayerManager = hitObject.GetComponent<PlayerManager>();
 
                 if(!hitPlayerManager.isInmune.Value)
@@ -123,9 +88,6 @@ public class Bullet : MonoBehaviour {
 
     protected virtual bool IsEnemy(GameObject hitPlayer)
     {
-        //  if(hitPlayer.layer == playerLayer)
-        //     if(hitPlayer.GetComponent<PlayerManager>().PlayerTeam != this.playerTeam)
-        //return playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam; 
         try
         {
             if(playerManager == null)
@@ -144,29 +106,6 @@ public class Bullet : MonoBehaviour {
             Debug.LogError(parent.GetComponent<PlayerManager>().name);
             return false;
         }
-
-
-
-        Debug.Log(playerManager.PlayerTeam != hitPlayer.GetComponent<PlayerManager>().PlayerTeam);
-        return true;
-    }
-
-
-    [ServerRpc]
-    private void MoveServerRpc()
-    {
-        transform.Translate(speed * Time.deltaTime * direction);
-
-        if (transform.position == direction)
-            Debug.Log("--------");
-
-    }
-
-    [ServerRpc]
-    public void BulletDirectionServerRpc(Vector3 newDirection)
-    {
-
-        direction = newDirection.normalized;
     }
 
 

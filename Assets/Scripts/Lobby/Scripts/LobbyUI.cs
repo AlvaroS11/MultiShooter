@@ -106,6 +106,15 @@ public class LobbyUI : MonoBehaviour {
             Hide();
     }
 
+    private void OnDestroy()
+    {
+        LobbyManager.Instance.OnJoinedLobby -= SetUpLobby_Event;
+        LobbyManager.Instance.OnJoinedLobbyUpdate -= UpdateLobby_Event;
+        LobbyManager.Instance.OnLeftLobby -= LobbyManager_OnLeftLobby;
+        LobbyManager.Instance.OnKickedFromLobby -= LobbyManager_OnLeftLobby;
+        LobbyManager.Instance.OnKickPlayer -= LobbyManagerKickPlayer;
+    }
+
 
 
     private void LobbyManagerKickPlayer(object sender, String id)
@@ -129,35 +138,52 @@ public class LobbyUI : MonoBehaviour {
 
         codeText.text = "Code: " + LobbyManager.Instance.joinedLobby.LobbyCode;
 
-        EnableDisableStartButton();
+        EnableDisableStartButton(LobbyManager.Instance.IsLobbyHost());
     }
 
-    public void EnableDisableStartButton()
+    public void EnableDisableStartButton(bool autoShow = true)
     {
         if (LobbyManager.Instance.IsLobbyHost())
         {
             if (OnlineManager.Instance.playerList.Count < LobbyManager.Instance.GetJoinedLobby().Players.Count)
             {
-                startGameButton.enabled = false;
-                startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Syncing players...";
-                // startGameButton.GetComponent<Image>().color = new Color(0.48f, 0.48f, 0.48f);
-                startGameButton.GetComponent<Image>().enabled = false;
+                Instance.startGameButton.enabled = false;
+                Instance.startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Syncing players...";
+                Instance.startGameButton.GetComponent<Image>().enabled = false;
 
             }
             else
             {
-                startGameButton.enabled = true;
-                startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Start";
-                startGameButton.GetComponent<Image>().enabled = true;
-                //startGameButton.GetComponent<Image>().color = new Color(0.17f, 0.17f, 0.17f);
+                Instance.startGameButton.enabled = true;
+                Instance.startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Start";
+                Instance.startGameButton.GetComponent<Image>().enabled = true;
 
             }
+            Instance.LobbyPlayers[OnlineManager.Instance.PlayerLobbyId].SetTeamClickable(true);
+        }
+        else
+        {
+            if ((OnlineManager.Instance.playerList.Find(x => x.name.Length == 0) != null || !autoShow))
+            {
+                Instance.startGameButton.enabled = false;
+                Instance.startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Waiting for players to join...";
+                Instance.startGameButton.GetComponent<Image>().enabled = false;
+                Instance.LobbyPlayers[OnlineManager.Instance.PlayerLobbyId].SetTeamClickable(false);
+            }
+            else
+            {
+                Instance.startGameButton.enabled = false;
+                Instance.startGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Waiting for host to start";
+                Instance.startGameButton.GetComponent<Image>().enabled = false;
+                Instance.LobbyPlayers[OnlineManager.Instance.PlayerLobbyId].SetTeamClickable(true);
+            }
+
         }
     }
 
     private void SetUpLobby_Event(object sender, LobbyManager.LobbyEventArgs e)
     {
-       Debug.Log("SET UP EVENT");
+       //Debug.Log("SET UP EVENT");
     }
 
 
@@ -180,7 +206,7 @@ public class LobbyUI : MonoBehaviour {
 
             if (!LobbyPlayers.ContainsKey(player.Id))
             {
-                Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
+                Transform playerSingleTransform = Instantiate(Instance.playerSingleTemplate, Instance.container);
                 LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<LobbyPlayerSingleUI>();
 
 
@@ -194,13 +220,15 @@ public class LobbyUI : MonoBehaviour {
                     player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
                 );
 
-                lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
+                //lobbyPlayerSingleUI.SetTeamClickable(player.Id == AuthenticationService.Instance.PlayerId);
+
+                lobbyPlayerSingleUI.SetTeamClickable(false);
                 LobbyPlayers.Add(player.Id, lobbyPlayerSingleUI);
                 changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
                 lobbyNameText.text = lobby.Name;
                 playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
 
-                startGameButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
+                //startGameButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
 
                 Show();
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
@@ -213,6 +241,7 @@ public class LobbyUI : MonoBehaviour {
 
             }
         }
+        EnableDisableStartButton(false);
         killsText.text = "Kills: " + OnlineManager.Instance.maxKills.Value;
     }
 
@@ -309,12 +338,11 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void Hide() {
-        Debug.Log("hide");
         LobbyUI.Instance.gameObject.SetActive(false);
     }
 
     public void Show() {
-        gameObject.SetActive(true);
+        Instance.gameObject.SetActive(true);
     }
 
 }

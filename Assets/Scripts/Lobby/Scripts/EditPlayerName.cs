@@ -50,7 +50,6 @@ public class EditPlayerName : MonoBehaviour {
 
     private void EditPlayerName_OnNameChanged(object sender, EventArgs e) {
         // LobbyManager.Instance.UpdatePlayerName(GetPlayerName());
-        Debug.Log("EditPlayer");
         OnlineManager.Instance.ChangeNameServerRpc(LobbyManager.Instance.GetPlayerOrCreate().Id, GetPlayerName(), NetworkManager.Singleton.LocalClientId);
     }
 

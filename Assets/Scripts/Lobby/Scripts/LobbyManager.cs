@@ -95,14 +95,12 @@ public class LobbyManager : MonoBehaviour {
 
         if (Instance == null)
         {
-            // Si no hay instancia, esta será la instancia y no se destruirá al cambiar de escena
             Instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
-            // Si ya hay una instancia, destruye este objeto para evitar duplicados
             Destroy(gameObject);
         }
 
@@ -135,7 +133,6 @@ public class LobbyManager : MonoBehaviour {
         var finalString = new String(stringChars);
 
         this.playerName = playerName +"_" + finalString;
-        Debug.Log(this.playerName);
         InitializationOptions initializationOptions = new InitializationOptions();
         initializationOptions.SetProfile(this.playerName);
 
@@ -183,28 +180,14 @@ public class LobbyManager : MonoBehaviour {
                 {
                     IsLocked = false,
                 });
+
+                LobbyUI.Instance.EnableDisableStartButton(false);
+                OnlineManager.Instance.SetStatustClientRpc(false);
+
             }
         }
     }
 
-
-    /* public void BackToLobby()
-     {
-         if(joinedLobby != null)
-         OnJoinedLobby.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
-     }*/
-
-    private void HandleRefreshLobbyList() {
-        if (UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn) {
-            refreshLobbyListTimer -= Time.deltaTime;
-            if (refreshLobbyListTimer < 0f) {
-                float refreshLobbyListTimerMax = 5f;
-                refreshLobbyListTimer = refreshLobbyListTimerMax;
-
-                RefreshLobbyList();
-            }
-        }
-    }
 
     private async void HandleLobbyHeartbeat() {
         if (IsLobbyHost()) {
@@ -364,8 +347,6 @@ public class LobbyManager : MonoBehaviour {
     {
         try
         {
-
-
             Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxPlayers); //pass players
 
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
@@ -420,18 +401,13 @@ public class LobbyManager : MonoBehaviour {
         joined = true;
         Player player = CreatePlayer();
 
-
-        Debug.Log(player.Id);
-
         CreateLobbyOptions options = new CreateLobbyOptions
         {
             Player = player,
             IsPrivate = isPrivate,
             Data = new Dictionary<string, DataObject> {
                 { KEY_GAME_MODE, new DataObject(DataObject.VisibilityOptions.Public, gameMode.ToString()) },
-                //{ KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") },
                 { KEY_RELAY_CODE, new DataObject(DataObject.VisibilityOptions.Member, code)  },
-           //     { KEY_PLAYER_CHARACTER, new DataObject(DataObject.VisibilityOptions.Public, PlayerCharacter.Marine.ToString()) } // ESTA BIEN?? O DEBERÍA SER PLAYERDATAOBJECT
             }
         };
 
@@ -500,8 +476,6 @@ public class LobbyManager : MonoBehaviour {
     {
         Player player = CreatePlayer();
 
-        Debug.Log(player.Id);
-
         joinedLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(code, new JoinLobbyByCodeOptions
         {
             Player = player
@@ -546,9 +520,6 @@ public class LobbyManager : MonoBehaviour {
 
     public async void StartGame()
     {
-        //StartHost()
-        //SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
-
         if (joinedLobby.Players.Count == joinedLobby.MaxPlayers && LobbyManager.Instance.IsLobbyHost())
         {
             ForceStart();
@@ -589,10 +560,6 @@ public class LobbyManager : MonoBehaviour {
             {
                 IsLocked = true,
                // IsPrivate = true,
-                Data = new Dictionary<string, DataObject>
-                {
-                    //  { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "1") }
-                }
             });
 
             joinedLobby = lobby;
@@ -617,28 +584,6 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
-    /*public async Task LeaveLobby() {
-        if (joinedLobby != null) {
-            try {
-                VivoxManager.Instance.LeaveVivox();
-
-                await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
-                joined = false;
-                OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
-                joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
-
-               // OnKickPlayer?.Invoke(this, playerId);
-               //   ExternalPlayerLeft?.Invoke(this, AuthenticationService.Instance.PlayerId);
-
-               OnLeftLobby?.Invoke(this, EventArgs.Empty);
-
-
-            } catch (LobbyServiceException e) {
-                Debug.LogError(e);
-            }
-        }
-    }*/
-
 
     public async Task LeaveLobby()
     {
@@ -657,8 +602,7 @@ public class LobbyManager : MonoBehaviour {
                     OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
                     joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
                 }
-                // OnKickPlayer?.Invoke(this, playerId);
-                //   ExternalPlayerLeft?.Invoke(this, AuthenticationService.Instance.PlayerId);
+                
 
             }
             catch (LobbyServiceException e)
@@ -679,16 +623,9 @@ public class LobbyManager : MonoBehaviour {
     public async void KickPlayer(string playerId) {
         if (IsLobbyHost()) {
             try {
-                Debug.Log("ECHANDO!!");
-                Debug.Log(joinedLobby.Players.Count);
                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, playerId);
                 joinedLobby.Players.Remove(joinedLobby.Players.Find(x => x.Id == playerId));
                 OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(playerId);
-
-                ///await LobbyService.Instance.UpdateLobbyAsync(joinedLobby.Id)
-                
-                Debug.Log(joinedLobby.Players.Count);
-               // joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
 
                 OnKickPlayer?.Invoke(this, playerId);
 
@@ -698,56 +635,6 @@ public class LobbyManager : MonoBehaviour {
             }
         }
     }
-
-    public void ChangeTeam(string playerId, string team)
-    {
-        /* if(playerId == AuthenticationService.Instance.PlayerId)
-         {
-             try
-             {
-                 UpdatePlayerOptions options = new UpdatePlayerOptions();
-
-                 options.Data = new Dictionary<string, PlayerDataObject>() {
-                     {
-                         KEY_PLAYER_TEAM, new PlayerDataObject(
-                             visibility: PlayerDataObject.VisibilityOptions.Public,
-                             value: team)
-                     }
-                 };
-
-                 //string playerId = AuthenticationService.Instance.PlayerId;
-
-                 Lobby lobby = await LobbyService.Instance.UpdatePlayerAsync(joinedLobby.Id, playerId, options);
-                 joinedLobby = lobby;
-
-                 Debug.Log("*******");
-                 Debug.Log(GetPlayerOrCreate().Data[LobbyManager.KEY_PLAYER_TEAM].Value);
-
-                 OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = joinedLobby });
-
-             }
-             catch (LobbyServiceException e)
-             {
-                 Debug.Log(e);
-             }
-         }
-        */
-    //  OnlineManager.Instance.ChangeTeamServerRpc(playerId, int.Parse(team));
-}
-
-/*   [ServerRpc(RequireOwnership = false)]
-   public void ChangeTeamServerRpc(ServerRpcParams serverRpcParams = default)
-   {
-
-       //Crear una lista de los jugadores (mirar La lista de templates por ej)
-       try {
-           ulong clientId = serverRpcParams.Receive.SenderClientId;
-
-       }
-   }
-*/
-
-
 
 public int GetTeam(string playerId)
     {

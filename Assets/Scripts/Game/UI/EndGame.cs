@@ -38,18 +38,10 @@ public class EndGame : NetworkBehaviour
     private GameObject scrollBar;
 
 
-    /*  [SerializeField]
-      private GameObject joystickLeft;
-
-      [SerializeField]
-      private GameObject joystickRight;
-    */
     void Start()
     {
         backToLobbyButton.onClick.AddListener(() =>
         {
-            Debug.Log("BACK TO LOBBY");
-            //Destroy(OnlineManager.Instance);
             //Reset all in-game variables
             Debug.Log(LobbyManager.Instance.joinedLobby.Id);
             OnlineManager.Instance.playersCreated = false;
@@ -60,7 +52,6 @@ public class EndGame : NetworkBehaviour
         });
     }
 
-    // Update is called once per frame
     void Update()
     {
         
@@ -106,7 +97,6 @@ public class EndGame : NetworkBehaviour
         endGame.SetActive(true);
         winnerTeamText.text = "Team " + winnerTeam + "won the game!";
         statisticsUI.SetActive(true);
-        // backToLobbyButton.gameObject.SetActive(true);
         backToLobby.SetActive(true);
         Reload.SetActive(false);
         statisticsUI.GetComponent<StatisticsUI>().FinishGame();

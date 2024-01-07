@@ -85,7 +85,6 @@ public class Granade : Bullet
             actualNSegments += segmentsIncrease;
             DrawExplosionArea();
             previousTimeStamp = DateTime.Now;
-           // Debug.Break();
             if (lineIndex < lineMaterials.Length)
             {
                 lineRenderer.material = lineMaterials[lineIndex];

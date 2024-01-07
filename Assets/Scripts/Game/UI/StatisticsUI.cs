@@ -81,11 +81,8 @@ public class StatisticsUI : NetworkBehaviour
     {
         try
         {
-        Debug.Log("INITIALIZING STATISTICS");
             foreach (PlayerInfo player in OnlineManager.Instance.playerList)
             {
-                Debug.Log("statistic`+");
-                Debug.Log(player);
                 Transform playerSingleTransform = Instantiate(playerSingleStats, container);
                 PlayerSingleStat statPlayerSingleUI = playerSingleTransform.gameObject.GetComponent<PlayerSingleStat>();
 
@@ -141,7 +138,6 @@ public class StatisticsUI : NetworkBehaviour
         container.gameObject.SetActive(true);
         ScrollBar.SetActive(true);
         menu.SetActive(true);
-       // Debug.Log("show");
     }
 
     public void FinishGame()

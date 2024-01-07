@@ -82,7 +82,6 @@ public class VivoxManager : MonoBehaviour
 
     public void LeaveVivox()
     {
-        Debug.Log("LEAVING VIVOX!");
         m_VivoxSetup.LeaveLobbyChannel();
     }
 }

@@ -36,8 +36,6 @@ public class VivoxSetup
             }
 
         }
-        UnityEngine.Debug.Log("ISERROR IN INITIALIZE");
-
         m_isMidInitialize = true;
 
         m_userHandlers = userHandlers;
@@ -74,7 +72,6 @@ public class VivoxSetup
     /// <param name="onComplete">Called whether the channel is successfully joined or not.</param>
     public void JoinLobbyChannel(string lobbyId, Action<bool> onComplete)
     {
-        UnityEngine.Debug.Log("ISERROR IN JOINLOBBY");
 
         if (!m_hasInitialized || m_loginSession.State != LoginState.LoggedIn)
         {
@@ -83,7 +80,6 @@ public class VivoxSetup
             return;
         }
 
-        UnityEngine.Debug.Log("ISERROR IN JOINLOBBY");
 
         ChannelType channelType = ChannelType.NonPositional;
         Channel channel = new Channel(lobbyId + "_voice", channelType, null);
@@ -108,7 +104,6 @@ public class VivoxSetup
 
                 m_channelSession.EndConnect(result);
                 onComplete?.Invoke(true);
-                UnityEngine.Debug.Log(m_userHandlers.Count);
                 if(m_userHandlers.Count == 0)
                 {
                     m_userHandlers = VivoxManager.Instance.m_vivoxUserHandlers;
@@ -138,7 +133,6 @@ public class VivoxSetup
     {
         try
         {
-            UnityEngine.Debug.Log("LEAVE LOBBY CHANNEL");
             if (m_channelSession != null)
             {
                 // Special case: The EndConnect call requires a little bit of time before the connection actually completes, but the player might
@@ -160,11 +154,6 @@ public class VivoxSetup
                         m_channelSession = null;
                     });
 
-                UnityEngine.Debug.Log("DISCONECCTING LOBBY CHANNEL");
-                //UnityEngine.MonoBehaviour.Destroy(UnityEngine.GameObject.Find("VivoxUnity.VxUnityInterop (Singleton)"));
-                // m_loginSession.Logout();
-                // UnityEngine.D UnityEngine.GameObject.Find("VivoxUnity.VxUnityInterop (Singleton)")
-
             }
 
             foreach (VivoxUserHandler userHandler in m_userHandlers)
@@ -177,8 +166,6 @@ public class VivoxSetup
 
     private void HandleEarlyDisconnect()
     {
-        UnityEngine.Debug.Log("HANDLE EARLY DISCONNECT");
-        UnityEngine.Debug.Log(m_channelSession.ChannelState);
         DisconnectOnceConnected();
     }
 

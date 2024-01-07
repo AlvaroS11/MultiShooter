@@ -23,7 +23,7 @@ public class VivoxUserHandler : MonoBehaviour
 
     public static float NormalizedVolumeDefault
     {
-        get { Debug.Log((0f - k_volumeMin) / (k_volumeMax - k_volumeMin)); return (0f - k_volumeMin) / (k_volumeMax - k_volumeMin); }
+        get { return (0f - k_volumeMin) / (k_volumeMax - k_volumeMin); }
     }
 
     public void Start()
@@ -44,10 +44,6 @@ public class VivoxUserHandler : MonoBehaviour
         {
             foreach (var participant in m_channelSession.Participants)
             {
-                Debug.Log(m_id == participant.Account.DisplayName);
-                //Al volver a entrar no sse pone el microfono
-                Debug.Log(participant.Account.DisplayName);
-                Debug.Log(m_id);
                 if (m_id == participant.Account.DisplayName)
                 {
                     m_vivoxId = participant.Key;
@@ -67,25 +63,6 @@ public class VivoxUserHandler : MonoBehaviour
         m_channelSession.Participants.AfterKeyAdded += OnParticipantAdded;
         m_channelSession.Participants.BeforeKeyRemoved += BeforeParticipantRemoved;
         m_channelSession.Participants.AfterValueUpdated += OnParticipantValueUpdated;
-
-        Debug.Log("^^^^");
-        Debug.Log(channelSession == null);
-        Debug.Log(channelSession.Participants);
-
-        //NO ESTÁ LLEGANDO, PARTICIPANTS ES 0?
-        /*foreach (var participant in m_channelSession.Participants)
-        {
-            Debug.Log("**");
-            Debug.Log(m_id);
-            Debug.Log(participant.Account.DisplayName);
-            if (m_id == participant.Account.DisplayName)
-            {
-//                m_vivoxId = participant.Key;
-                lobbyPlayer.IsLocalPlayer = participant.IsSelf;
-                lobbyPlayer.MuteUnMute(true);
-                break;
-            }
-        }*/
     }
 
     public void OnChannelLeft() // Called when we leave the lobby.
@@ -99,9 +76,7 @@ public class VivoxUserHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// To be called whenever a new Participant is added to the channel, using the events from Vivox's custom dictionary.
-    /// </summary>
+
     private void OnParticipantAdded(object sender, KeyEventArg<string> keyEventArg)
     {
         var source = (VivoxUnity.IReadOnlyDictionary<string, IParticipant>)sender;
@@ -114,20 +89,14 @@ public class VivoxUserHandler : MonoBehaviour
         {
             if (isThisUser)
             {
-                m_vivoxId = keyEventArg.Key; // Since we couldn't construct the Vivox ID earlier, retrieve it here.
+                m_vivoxId = keyEventArg.Key;
                 lobbyPlayer.IsLocalPlayer = participant.IsSelf;
 
-                Debug.Log("*****");
-                Debug.Log(participant.IsSelf);
-                Debug.Log(lobbyPlayer.IsLocalPlayer);
-                Debug.Log(lobbyPlayer.gameObject.name);
                 if (lobbyPlayer == null)
                 {
-                    Debug.Log("WAS NULL!");
                     lobbyPlayer = GetComponent<LobbyPlayerSingleUI>();
 
                 }
-                Debug.Log(lobbyPlayer.gameObject.name);
                 if (!participant.IsMutedForAll)
                     lobbyPlayer.ChangeVolume(0);
 
@@ -216,7 +185,7 @@ public class VivoxUserHandler : MonoBehaviour
 
             // float vol2 = (float)Mathf.Log10(volumeNormalized)*20;
 
-            if (volumeNormalized == 0)
+            if (volumeNormalized <= 0)
             {
                 OnMuteToggle(true);
                 return;
@@ -233,7 +202,6 @@ public class VivoxUserHandler : MonoBehaviour
             else
             {
                 m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment = vol;
-                Debug.Log(m_channelSession.Participants[m_vivoxId].LocalVolumeAdjustment);
             }
         }catch(VivoxApiException e)
         {

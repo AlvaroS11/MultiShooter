@@ -109,7 +109,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
     public void SetTeamClickable(bool visible)
     {
         //If not owner, disable Team selector
-        selectTeamDropdown.enabled = visible;
+        this.selectTeamDropdown.enabled = visible;
     }
 
     public virtual void DisableVoice(bool shouldResetUi)
@@ -146,13 +146,11 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     public virtual void ChangeVolume(float soundVal)
     {
-        //Debug.Log("changing sound " + playerId + soundVal);
         soundValue = soundVal;
         if (soundVal == 0)
         {
             if (!IsLocalPlayer)
             {
-                //Debug.Log("*");
                 soundButton.image.sprite = mutedSprite;
             }
             else
@@ -165,8 +163,6 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
         {
         if (!IsLocalPlayer)
             {
-                //Debug.Log("*");
-
                 soundButton.image.sprite = soundSprite;
 
         }
@@ -212,7 +208,6 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
     public bool isSelf()
     {
-        Debug.Log(playerId);
         return playerId == AuthenticationService.Instance.PlayerId;
     }
 
