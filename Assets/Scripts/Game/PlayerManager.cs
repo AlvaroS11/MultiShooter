@@ -101,17 +101,14 @@ public class PlayerManager : NetworkBehaviour
     {
         public int tick;
         public DateTime timestamp;
-        public ulong networkObjectId;
+     //   public ulong networkObjectId;
         public Vector3 inputVector;
-        public Vector3 position;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref tick);
             serializer.SerializeValue(ref timestamp);
-            serializer.SerializeValue(ref networkObjectId);
             serializer.SerializeValue(ref inputVector);
-            serializer.SerializeValue(ref position);
         }
     }
 
@@ -119,9 +116,8 @@ public class PlayerManager : NetworkBehaviour
     public struct StatePayload : INetworkSerializable
     {
         public int tick;
-        public ulong networkObjectId;
         public Vector3 position;
-        public Vector3 inputVector;
+        public Vector3 inputVector; // needed to know the direction in case of extrapolation and reconcialiation
         public DateTime timestamp;
 
 
@@ -129,7 +125,7 @@ public class PlayerManager : NetworkBehaviour
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref tick);
-            serializer.SerializeValue(ref networkObjectId);
+       //     serializer.SerializeValue(ref networkObjectId);
             serializer.SerializeValue(ref position);
             serializer.SerializeValue(ref inputVector);
             serializer.SerializeValue(ref timestamp);
@@ -336,7 +332,6 @@ public class PlayerManager : NetworkBehaviour
 
     void Extrapolate()
     {
-        //Debug.Log(extrapolationTimer.is)
         if (IsServer && extrapolationTimer.IsRunning)
         {
 
@@ -344,8 +339,6 @@ public class PlayerManager : NetworkBehaviour
             {
                 transform.position += extrapolationState.inputVector * Time.deltaTime * speed * ping / 10000 * extrapolationMultiplier;
             }
-
-
         }
     }
 
@@ -563,10 +556,10 @@ public class PlayerManager : NetworkBehaviour
         {
             tick = currentTick,
             timestamp = DateTime.Now,
-            networkObjectId = NetworkObjectId,
+          //  networkObjectId = NetworkObjectId,
             //inputVector = input.Move,
             inputVector = inputVector,
-            position = transform.position
+         //   position = transform.position
         };
 
         clientInputBuffer.Add(inputPayload, bufferIndex);
@@ -642,7 +635,7 @@ public class PlayerManager : NetworkBehaviour
     [ServerRpc]
     void SendToServerRpc(InputPayload input)
     {
-        clientCube.transform.position = input.position;
+       // clientCube.transform.position = input.position;
         serverInputQueue.Enqueue(input);
     }
 
@@ -654,7 +647,7 @@ public class PlayerManager : NetworkBehaviour
         {
             tick = input.tick,
 
-            networkObjectId = NetworkObjectId,
+      //      networkObjectId = NetworkObjectId,
             position = transform.position,
             inputVector = input.inputVector,
 
