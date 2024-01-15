@@ -632,6 +632,7 @@ public class LobbyManager : MonoBehaviour {
             }
             catch (LobbyServiceException e) {
                 Debug.Log(e);
+                LobbyUI.Instance.DeletePlayer(playerId);
             }
         }
     }

@@ -25,7 +25,8 @@ public class PlayerManager : NetworkBehaviour
 
     public UIPlayer healthUI;
 
-   
+    [HideInInspector]
+    public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     [HideInInspector]
     public NetworkVariable<FixedString128Bytes> PlayerName = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     [HideInInspector]
@@ -55,7 +56,7 @@ public class PlayerManager : NetworkBehaviour
     public bool localFiring; //Client prediction only
 
 
-    public bool isHealthing;
+    //public bool isHealthing;
 
 
     [SerializeField]
@@ -101,7 +102,6 @@ public class PlayerManager : NetworkBehaviour
     {
         public int tick;
         public DateTime timestamp;
-     //   public ulong networkObjectId;
         public Vector3 inputVector;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -695,7 +695,7 @@ public class PlayerManager : NetworkBehaviour
 
         if (!IsServer)
         {
-            PlayerInfo player1 = OnlineManager.Instance.playerList.Find(x => x.name == PlayerName.Value);
+            PlayerInfo player1 = OnlineManager.Instance.playerList.Find(x => x.lobbyPlayerId == PlayerLobbyId.Value);
             player1.playerObject = gameObject;
             player1.clientId = NetworkManager.Singleton.LocalClientId;
         }
@@ -735,6 +735,7 @@ public class PlayerManager : NetworkBehaviour
     }
 
 
+    private bool stopHealth = false;
 
     [ServerRpc(RequireOwnership = false)]
         public void DamageTakenServerRpc(int dmg, int shooterIndex, int playerHittedIndex)
@@ -743,6 +744,7 @@ public class PlayerManager : NetworkBehaviour
         if (life.Value <= 0)
         {
             Debug.Log("DAMAGE TO 0" + life.Value);
+            Debug.Log("Client ID" + OnlineManager.Instance.playerList[playerHittedIndex].clientId);
             //Manage player
             OnlineManager.Instance.PlayerDeath(OnlineManager.Instance.playerList[playerHittedIndex].clientId);
 
@@ -752,9 +754,9 @@ public class PlayerManager : NetworkBehaviour
         }
         else
         {
-            StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
-
-
+            //  StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
+            stopHealth = true;
+           // StopCoroutine(HealthByTime());
             StartCoroutine(WaitToHealth());
         }
         healthUI.TakeDamageClientRpc(life.Value);
@@ -765,17 +767,30 @@ public class PlayerManager : NetworkBehaviour
     private IEnumerator WaitToHealth()
     {
         yield return new WaitForSeconds(healthDamageWait);
+        stopHealth = false;
         StartCoroutine(HealthByTime());
     }
 
     private IEnumerator HealthByTime()
     {
+        if (stopHealth)
+        {
+            //  stopHealth = false;
+            yield break;
+        }
+
         yield return new WaitForSeconds(healthInterval);
+
+        if (stopHealth)
+        {
+          //  stopHealth = false;
+            yield break;
+        }
         life.Value += healthBySecond.Value;
 
         if (life.Value >= MaxLife)
             life.Value = MaxLife;
-        else if (life.Value < MaxLife)
+        else if (life.Value < MaxLife && !stopHealth)
             StartCoroutine(HealthByTime());
 
         healthUI.TakeDamageClientRpc(life.Value);

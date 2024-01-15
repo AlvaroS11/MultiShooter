@@ -498,7 +498,14 @@ public class OnlineManager : NetworkBehaviour
             int i = 0;
             foreach (PlayerInfo playerInfo in playerList)
             {
-
+                if(LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
+                {
+                    teamScore.Add(0);
+                    teamNames.Add(playerInfo.team);
+                  //  teamNames1[i] = playerInfo.team;
+                    SetPlayerSpawns(Mathf.Min( teamScore.Count - 1, 8)); //8 is MaxPlayers
+                    i++;
+                }
                 if(!teamNames.Contains(playerInfo.team))
                 {
                     teamScore.Add(0);
@@ -522,6 +529,8 @@ public class OnlineManager : NetworkBehaviour
 
                 newPlayerManager.PlayerTeam.Value = playerInfo.team;
                 newPlayerManager.PlayerName.Value = playerInfo.name;
+                newPlayerManager.PlayerLobbyId.Value = playerInfo.lobbyPlayerId;
+
                 newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
 
@@ -695,6 +704,7 @@ public class OnlineManager : NetworkBehaviour
     [ServerRpc]
     public void ChangeScoreServerRpc(int shooter, int hitted) 
     {
+        Debug.Log("change score, index: " + shooter);
         teamScore[shooter]++;
         ChangeScoreClientRpc(shooter, teamScore[shooter], playerList[shooter].lobbyPlayerId, playerList[hitted].lobbyPlayerId);
 
@@ -707,7 +717,8 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     public void ChangeScoreClientRpc(int shooter, int score, FixedString128Bytes shooterId, FixedString128Bytes hittedId )
     {
-        teamScoreTexts[shooter].text = "Team " + (teamNames[shooter]) + ": " + score;
+        if(LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Team_DeathMatch)
+            teamScoreTexts[shooter].text = "Team " + (teamNames[shooter]) + ": " + score;
 
         PlayerInfo pShooter = playerList.Find(pl => pl.lobbyPlayerId == shooterId);
         pShooter.kills += 1;
@@ -734,16 +745,17 @@ public class OnlineManager : NetworkBehaviour
         playerObj.transform.position = randomSpawn.position;
 
         playerObj.SetActive(false);
-        PlayerDeathClientRpc(playerInfo.name);
+        PlayerDeathClientRpc(playerInfo.lobbyPlayerId);
 
-        StartCoroutine(WaitToRespawn(playerObj, playerInfo.name));
+        StartCoroutine(WaitToRespawn(playerObj, playerInfo.clientId));
 
     }
 
     [ClientRpc]
-    public void PlayerDeathClientRpc(FixedString128Bytes playerName)
+    //public void PlayerDeathClientRpc(FixedString128Bytes playerName)
+    public void PlayerDeathClientRpc(FixedString128Bytes lobbyPlayerId)
     {
-        PlayerInfo playerInfo = playerList.Find(x => x.name == playerName);
+        PlayerInfo playerInfo = playerList.Find(x => x.lobbyPlayerId == lobbyPlayerId);
         GameObject playerObj = playerInfo.playerObject;
         playerObj.SetActive(false);
         RespawnMessage(playerObj.GetComponent<PlayerManager>());
@@ -751,9 +763,9 @@ public class OnlineManager : NetworkBehaviour
 
 
     [ClientRpc]
-    public void PlayerAliveClientRpc(FixedString128Bytes playerName, bool active = true)
+    public void PlayerAliveClientRpc(FixedString128Bytes lobbyPlayerId, bool active = true)
     {
-        PlayerInfo playerInfo = playerList.Find(x => x.name == playerName);
+        PlayerInfo playerInfo = playerList.Find(x => x.lobbyPlayerId == lobbyPlayerId);
         GameObject playerObj = playerInfo.playerObject;
         playerObj.SetActive(true);
         Assets.Instance.respawnMsg.SetActive(false);
@@ -795,21 +807,21 @@ public class OnlineManager : NetworkBehaviour
     }
 
     //Server only
-    private IEnumerator WaitToRespawn(GameObject player, FixedString128Bytes playerName)
+    private IEnumerator WaitToRespawn(GameObject player, ulong clientId)
     {
         yield return new WaitForSeconds(timeToRespawn);
 
-        PlayerAliveClientRpc(playerName);
+        PlayerAliveClientRpc(playerList.Find(x => x.clientId == clientId).lobbyPlayerId);
         PlayerManager playerDead = player.GetComponent<PlayerManager>();
         playerDead.isInmune.Value = true;
         playerDead.life.Value = playerDead.MaxLife;
-        StartCoroutine(InmuneTime(playerName));
+        StartCoroutine(InmuneTime(clientId));
     }
 
     //Server only
-    private IEnumerator InmuneTime(FixedString128Bytes playerName)
+    private IEnumerator InmuneTime(ulong clientId)
     {
-        PlayerManager p1 = playerList.Find(x => x.name == playerName).playerObject.GetComponent<PlayerManager>();
+        PlayerManager p1 = playerList.Find(x => x.clientId == clientId).playerObject.GetComponent<PlayerManager>();
 
         yield return new WaitForSeconds(inmuneTime);
         p1.isInmune.Value = false;
@@ -817,14 +829,14 @@ public class OnlineManager : NetworkBehaviour
         p1.bodyAnimator.SetBool("inmuneBool", false);
 
 
-        PlayerStopInmuneClientRpc(playerName);
+        PlayerStopInmuneClientRpc(playerList.Find(x => x.clientId == clientId).lobbyPlayerId);
 
     }
 
     [ClientRpc]
-    public void PlayerStopInmuneClientRpc(FixedString128Bytes playerName)
+    public void PlayerStopInmuneClientRpc(FixedString128Bytes lobbyPlayerId)
     {
-        PlayerManager p1 = playerList.Find(x => x.name == playerName).playerObject.GetComponent<PlayerManager>();
+        PlayerManager p1 = playerList.Find(x => x.lobbyPlayerId == lobbyPlayerId).playerObject.GetComponent<PlayerManager>();
        // p1.animator.SetBool("inmuneBool", false);
         p1.bodyAnimator.SetBool("inmuneBool", false);
     }

@@ -20,16 +20,6 @@ public class UIPlayer : NetworkBehaviour
 
         setPlayersData();
     }
-
-
-
- /*   [ServerRpc]
-    public void InitializeClientsHUDServerRpc()
-    {
-        setPlayerDataClientRpc();
-    }
- */
-    //Sends the player data to the other players
    
     public void setPlayersData()
     {
@@ -37,12 +27,9 @@ public class UIPlayer : NetworkBehaviour
         {
             maxLife = playerController.MaxLife;
             healthAmount = maxLife;
-            //CUANDO UN CLIENTE SE CONECTA, NO ESTÁ COGIENDO LOS MAX LIFES DE LOS CLIENTES YA CONECTADOS,
-            //DADO QUE NO SE HA EJECUTADO ESTE MÉTODO DESDE DICHOS CLIENTES, SE EJECUTÓ ANTERIORMENTE
         }
         catch
         {
-            Debug.LogWarning("PLAYING WITH NO PREDICTION CLIENT ");
             maxLife = 100;
             healthAmount = maxLife;
         }
@@ -65,14 +52,4 @@ public class UIPlayer : NetworkBehaviour
         healthAmount = (float) life;
         healthBar.fillAmount = healthAmount / maxLife;
     }
-
-  /*  [ClientRpc]
-    public void HealClientRpc(float healingAmount)
-    {
-        healthAmount = playerController.life.Value;
-        healthAmount = Mathf.Clamp(healthAmount, 0, maxLife);
-        healthBar.fillAmount = healthAmount / maxLife;
-
-    }
-  */
 }
