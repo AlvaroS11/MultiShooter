@@ -65,7 +65,7 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     private int healthInterval = 1;
 
- //   [HideInInspector]
+    //   [HideInInspector]
     public NetworkVariable<int> healthBySecond = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
 
@@ -92,7 +92,7 @@ public class PlayerManager : NetworkBehaviour
 
     private float previousMov;
 
-//    [SerializeField]
+    //    [SerializeField]
     public AudioSource noAmmoSound;
 
     static float ping;
@@ -125,7 +125,7 @@ public class PlayerManager : NetworkBehaviour
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref tick);
-       //     serializer.SerializeValue(ref networkObjectId);
+            //     serializer.SerializeValue(ref networkObjectId);
             serializer.SerializeValue(ref position);
             serializer.SerializeValue(ref inputVector);
             serializer.SerializeValue(ref timestamp);
@@ -281,7 +281,7 @@ public class PlayerManager : NetworkBehaviour
 
     private void FixedUpdate()
     {
-       while (networkTimer.ShouldTick())
+        while (networkTimer.ShouldTick())
         {
             HandleClientTick();
             HandleServerTick();
@@ -313,15 +313,34 @@ public class PlayerManager : NetworkBehaviour
     }
 
 
-    static float CalculateLatencyInMillis(DateTime timeStamp) {
+    private Vector3 previousPos = Vector3.zero;
+    public void AntiCheat()
+    {
+        if(previousPos == Vector3.zero) 
+            previousPos = transform.position;
+
+        //CHEAT DETECTED
+        if (Vector3.Distance(previousPos, transform.position) > 2)
+        {
+                SwitchAuthorityMode(AuthorityMode.Server);
+                transform.position = previousPos;
+                SwitchAuthorityMode(AuthorityMode.Client);
+        }
+
+        previousPos = transform.position;
+    }
+
+
+    static float CalculateLatencyInMillis(DateTime timeStamp)
+    {
         ping = (DateTime.Now - timeStamp).Milliseconds;
         return ping;
 
-        }
+    }
 
     static void DisplayPing(float actualPing)
     {
-        if((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
+        if ((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
         {
             pingText.text = "Ping: " + ((int)actualPing).ToString();
             previousTimeStamp = DateTime.Now;
@@ -356,7 +375,7 @@ public class PlayerManager : NetworkBehaviour
 
             extrapolationState.inputVector = latest.inputVector;
 
-            //Allows Extrapolate method to continue
+            //Allows Extrapolate method to start
             extrapolationTimer.Start();
 
         }
@@ -376,7 +395,7 @@ public class PlayerManager : NetworkBehaviour
 
     [ClientRpc]
     void SendToClientRpc(StatePayload statePayload)
-    {  
+    {
         if (!IsOwner) return;
         lastServerState = statePayload;
         serverCube.transform.position = statePayload.position;
@@ -515,16 +534,16 @@ public class PlayerManager : NetworkBehaviour
                     //{
                     if (localFiring)
                         noAmmoSound.Play();
-                        Vector3 targetDirection = lastAimedPos - transform.position;
-                        transform.forward = targetDirection;
-                        gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
-                        aiming = false;
-                        localFiring = true;
-                /*    }
-                    else
-                    {
-                        noAmmoSound.Play();
-                    }*/
+                    Vector3 targetDirection = lastAimedPos - transform.position;
+                    transform.forward = targetDirection;
+                    gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
+                    aiming = false;
+                    localFiring = true;
+                    /*    }
+                        else
+                        {
+                            noAmmoSound.Play();
+                        }*/
                 }
                 else
                 {
@@ -556,15 +575,15 @@ public class PlayerManager : NetworkBehaviour
         {
             tick = currentTick,
             timestamp = DateTime.Now,
-          //  networkObjectId = NetworkObjectId,
+            //  networkObjectId = NetworkObjectId,
             //inputVector = input.Move,
             inputVector = inputVector,
-         //   position = transform.position
+            //   position = transform.position
         };
 
         clientInputBuffer.Add(inputPayload, bufferIndex);
 
-        
+
         SendToServerRpc(inputPayload);
 
         if (IsServer)
@@ -587,7 +606,7 @@ public class PlayerManager : NetworkBehaviour
 
     void HandleServerReconciliation()
     {
-        
+
         if (!ShouldReconcile()) return;
 
         float positionError;
@@ -595,7 +614,7 @@ public class PlayerManager : NetworkBehaviour
 
         bufferIndex = lastServerState.tick % k_bufferSize;
         if (bufferIndex - 1 < 0) return; // Not enough information to reconcile
-        
+
         StatePayload rewindState = IsHost ? serverStateBuffer.Get(bufferIndex - 1) : lastServerState; // Host RPCs execute immediately, so we can use the last server state
         StatePayload clientState = IsHost ? clientStateBuffer.Get(bufferIndex - 1) : clientStateBuffer.Get(bufferIndex);
         positionError = Vector3.Distance(rewindState.position, clientState.position);
@@ -635,7 +654,7 @@ public class PlayerManager : NetworkBehaviour
     [ServerRpc]
     void SendToServerRpc(InputPayload input)
     {
-       // clientCube.transform.position = input.position;
+        // clientCube.transform.position = input.position;
         serverInputQueue.Enqueue(input);
     }
 
@@ -647,7 +666,7 @@ public class PlayerManager : NetworkBehaviour
         {
             tick = input.tick,
 
-      //      networkObjectId = NetworkObjectId,
+            //      networkObjectId = NetworkObjectId,
             position = transform.position,
             inputVector = input.inputVector,
 
@@ -738,7 +757,7 @@ public class PlayerManager : NetworkBehaviour
     private bool stopHealth = false;
 
     [ServerRpc(RequireOwnership = false)]
-        public void DamageTakenServerRpc(int dmg, int shooterIndex, int playerHittedIndex)
+    public void DamageTakenServerRpc(int dmg, int shooterIndex, int playerHittedIndex)
     {
         life.Value -= dmg;
         if (life.Value <= 0)
@@ -756,7 +775,7 @@ public class PlayerManager : NetworkBehaviour
         {
             //  StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
             stopHealth = true;
-           // StopCoroutine(HealthByTime());
+            // StopCoroutine(HealthByTime());
             StartCoroutine(WaitToHealth());
         }
         healthUI.TakeDamageClientRpc(life.Value);
@@ -783,7 +802,7 @@ public class PlayerManager : NetworkBehaviour
 
         if (stopHealth)
         {
-          //  stopHealth = false;
+            //  stopHealth = false;
             yield break;
         }
         life.Value += healthBySecond.Value;

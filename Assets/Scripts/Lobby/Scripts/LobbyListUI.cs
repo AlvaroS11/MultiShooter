@@ -19,6 +19,8 @@ public class LobbyListUI : MonoBehaviour {
     [SerializeField] private Button createLobbyButton;
     [SerializeField] private TMP_InputField inputCode;
     [SerializeField] private Button joinByCodeButton;
+    [SerializeField] private Button exitGameButton;
+
 
 
 
@@ -30,6 +32,7 @@ public class LobbyListUI : MonoBehaviour {
         refreshButton.onClick.AddListener(RefreshButtonClick);
         createLobbyButton.onClick.AddListener(CreateLobbyButtonClick);
         joinByCodeButton.onClick.AddListener(JoinByCode);
+        exitGameButton.onClick.AddListener(LeaveGame);
     }
 
     private void Start() {
@@ -37,6 +40,11 @@ public class LobbyListUI : MonoBehaviour {
         LobbyManager.Instance.OnJoinedLobby += LobbyManager_OnJoinedLobby;
         LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby;
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnKickedFromLobby;
+    }
+
+    private void LeaveGame()
+    {
+        Application.Quit();
     }
 
     private void LobbyManager_OnKickedFromLobby(object sender, LobbyManager.LobbyEventArgs e) {

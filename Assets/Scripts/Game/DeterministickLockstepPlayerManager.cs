@@ -27,6 +27,8 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
 
 
     [HideInInspector]
+    public NetworkVariable<FixedString128Bytes> PlayerLobbyId = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    [HideInInspector]
     public NetworkVariable<FixedString128Bytes> PlayerName = new NetworkVariable<FixedString128Bytes>("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     [HideInInspector]
     public NetworkVariable<int> PlayerTeam = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -101,7 +103,6 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
     {
         public int tick;
         public DateTime timestamp;
-        //   public ulong networkObjectId;
         public Vector3 inputVector;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -253,7 +254,7 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
         if (!IsClient || !IsOwner) return;
 #if UNITY_STANDALONE_WIN
 
-        if (Input.GetMouseButtonDown(0) && localFiring)
+        if (Input.GetMouseButtonDown(0)&& localFiring)
         {
             noAmmoSound.Play();
             Debug.Log(localFiring);
@@ -520,16 +521,16 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
                     //{
                     if (localFiring)
                         noAmmoSound.Play();
-                        Vector3 targetDirection = lastAimedPos - transform.position;
-                        transform.forward = targetDirection;
-                        gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
-                        aiming = false;
-                        localFiring = true;
-                /*    }
-                    else
-                    {
-                        noAmmoSound.Play();
-                    }*/
+                    Vector3 targetDirection = lastAimedPos - transform.position;
+                    transform.forward = targetDirection;
+                    gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
+                    aiming = false;
+                    localFiring = true;
+                    /*    }
+                        else
+                        {
+                            noAmmoSound.Play();
+                        }*/
                 }
                 else
                 {
@@ -551,69 +552,101 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
 
         if (!IsClient) return;
 
+
+        var currentTick = networkTimer.CurrentTick;
+        var bufferIndex = currentTick % k_bufferSize;
+
+        //  Vector3 inputVector = GetInput();
+        Vector3 inputVector = Vector3.zero;
         if (IsOwner)
-        {
-            var currentTick = networkTimer.CurrentTick;
-            var bufferIndex = currentTick % k_bufferSize;
-
-            Vector3 inputVector = GetInput();
-
-            InputPayload inputPayload = new InputPayload()
-            {
-                tick = currentTick,
-                timestamp = DateTime.Now,
-                inputVector = inputVector,
-            };
-
-            clientInputBuffer.Add(inputPayload, bufferIndex);
-
-
-            SendToServerRpc(inputPayload);
-
-            if (IsServer)
-                return;
-            StatePayload statePayload = ProcessMovement(inputPayload);
-            clientStateBuffer.Add(statePayload, bufferIndex);
-
-            HandleServerReconciliation();
-
-        }
+            inputVector = GetInput();
         else
         {
-            var currentTick = networkTimer.CurrentTick;
-            var bufferIndex = currentTick % k_bufferSize;
-
-            Vector3 inputVector = lastServerState.inputVector;
+            inputVector = lastServerState.inputVector;
             if (inputVector == Vector3.zero)
                 return;
-            InputPayload inputPayload = new InputPayload()
-            {
-                tick = currentTick,
-                timestamp = DateTime.Now,
-                inputVector = inputVector,
-            };
-
-            clientInputBuffer.Add(inputPayload, bufferIndex);
-
-
-            // SendToServerRpc(inputPayload);
-
-            if (IsServer)
-                return;
-            StatePayload statePayload = ProcessMovement(inputPayload);
-            clientStateBuffer.Add(statePayload, bufferIndex);
-
-            HandleServerReconciliation();
-
         }
 
+        //if (inputVector == Vector3.zero && !IsOwner)
+        //  return;
+
+        InputPayload inputPayload = new InputPayload()
+        {
+            tick = currentTick,
+            timestamp = DateTime.Now,
+            inputVector = inputVector,
+        };
+
+        clientInputBuffer.Add(inputPayload, bufferIndex);
+
+        if (IsOwner)
+            SendToServerRpc(inputPayload);
+
+        if (IsServer)
+            return;
+        StatePayload statePayload = ProcessMovement(inputPayload);
+        clientStateBuffer.Add(statePayload, bufferIndex);
+
+        HandleServerReconciliation();
 
 
 
+        /* if (IsOwner)
+         {
+             var currentTick = networkTimer.CurrentTick;
+             var bufferIndex = currentTick % k_bufferSize;
+
+             Vector3 inputVector = GetInput();
+
+             InputPayload inputPayload = new InputPayload()
+             {
+                 tick = currentTick,
+                 timestamp = DateTime.Now,
+                 inputVector = inputVector,
+             };
+
+             clientInputBuffer.Add(inputPayload, bufferIndex);
 
 
+             SendToServerRpc(inputPayload);
+
+             if (IsServer)
+                 return;
+             StatePayload statePayload = ProcessMovement(inputPayload);
+             clientStateBuffer.Add(statePayload, bufferIndex);
+
+             HandleServerReconciliation();
+
+         }
+         else
+         {
+             var currentTick = networkTimer.CurrentTick;
+             var bufferIndex = currentTick % k_bufferSize;
+
+             Vector3 inputVector = lastServerState.inputVector;
+             if (inputVector == Vector3.zero)
+                 return;
+             InputPayload inputPayload = new InputPayload()
+             {
+                 tick = currentTick,
+                 timestamp = DateTime.Now,
+                 inputVector = inputVector,
+             };
+
+             clientInputBuffer.Add(inputPayload, bufferIndex);
 
 
+             // SendToServerRpc(inputPayload);
+
+             if (IsServer)
+                 return;
+             StatePayload statePayload = ProcessMovement(inputPayload);
+             clientStateBuffer.Add(statePayload, bufferIndex);
+
+             HandleServerReconciliation();
+
+         }
+        */
     }
 
     bool ShouldReconcile()
@@ -736,7 +769,7 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
 
         if (!IsServer)
         {
-            PlayerInfo player1 = OnlineManager.Instance.playerList.Find(x => x.name == PlayerName.Value);
+            PlayerInfo player1 = OnlineManager.Instance.playerList.Find(x => x.lobbyPlayerId == PlayerLobbyId.Value);
             player1.playerObject = gameObject;
             player1.clientId = NetworkManager.Singleton.LocalClientId;
         }
@@ -776,6 +809,7 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
     }
 
 
+    private bool stopHealth = false;
 
     [ServerRpc(RequireOwnership = false)]
     public void DamageTakenServerRpc(int dmg, int shooterIndex, int playerHittedIndex)
@@ -784,6 +818,7 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
         if (life.Value <= 0)
         {
             Debug.Log("DAMAGE TO 0" + life.Value);
+            Debug.Log("Client ID" + OnlineManager.Instance.playerList[playerHittedIndex].clientId);
             //Manage player
             OnlineManager.Instance.PlayerDeath(OnlineManager.Instance.playerList[playerHittedIndex].clientId);
 
@@ -793,9 +828,9 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
         }
         else
         {
-            StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
-
-
+            //  StopAllCoroutines();            //Care with this, it stops all the Couroutines of this script!!
+            stopHealth = true;
+            // StopCoroutine(HealthByTime());
             StartCoroutine(WaitToHealth());
         }
         healthUI.TakeDamageClientRpc(life.Value);
@@ -806,17 +841,30 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
     private IEnumerator WaitToHealth()
     {
         yield return new WaitForSeconds(healthDamageWait);
+        stopHealth = false;
         StartCoroutine(HealthByTime());
     }
 
     private IEnumerator HealthByTime()
     {
+        if (stopHealth)
+        {
+            //  stopHealth = false;
+            yield break;
+        }
+
         yield return new WaitForSeconds(healthInterval);
+
+        if (stopHealth)
+        {
+            //  stopHealth = false;
+            yield break;
+        }
         life.Value += healthBySecond.Value;
 
         if (life.Value >= MaxLife)
             life.Value = MaxLife;
-        else if (life.Value < MaxLife)
+        else if (life.Value < MaxLife && !stopHealth)
             StartCoroutine(HealthByTime());
 
         healthUI.TakeDamageClientRpc(life.Value);
