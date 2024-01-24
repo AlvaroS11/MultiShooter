@@ -465,7 +465,6 @@ public class LobbyManager : MonoBehaviour {
         await JoinRelay(joinedLobby.Data[KEY_RELAY_CODE].Value);
         joined = true;
 
-        //TODO ADD IN EVENT OnJoinedLobby
         VivoxManager.Instance.StartVivoxLogin();
         VivoxManager.Instance.StartVivoxJoin();
 

@@ -291,6 +291,7 @@ public class PlayerManager : NetworkBehaviour
 
     void HandleServerTick()
     {
+        if (!IsServer) return;
         var bufferIndex = -1;
         InputPayload inputPayload = default;
         while (serverInputQueue.Count > 0)
@@ -301,7 +302,7 @@ public class PlayerManager : NetworkBehaviour
 
             //ProcessMovement is normally called if there is no lag. Else also call Extrapolation
 
-            StatePayload statePayload = ProcessMovement(inputPayload);
+            StatePayload statePayload = PredictMovePlayer(inputPayload);
             statePayload.timestamp = DateTime.Now;
             serverStateBuffer.Add(statePayload, bufferIndex);
         }
@@ -575,10 +576,7 @@ public class PlayerManager : NetworkBehaviour
         {
             tick = currentTick,
             timestamp = DateTime.Now,
-            //  networkObjectId = NetworkObjectId,
-            //inputVector = input.Move,
             inputVector = inputVector,
-            //   position = transform.position
         };
 
         clientInputBuffer.Add(inputPayload, bufferIndex);
@@ -586,8 +584,6 @@ public class PlayerManager : NetworkBehaviour
 
         SendToServerRpc(inputPayload);
 
-        if (IsServer)
-            return;
         StatePayload statePayload = ProcessMovement(inputPayload);
         clientStateBuffer.Add(statePayload, bufferIndex);
 
@@ -670,6 +666,23 @@ public class PlayerManager : NetworkBehaviour
             position = transform.position,
             inputVector = input.inputVector,
 
+        };
+    }
+
+    private StatePayload PredictMovePlayer(InputPayload input)
+    {
+        Vector3 newPos = transform.position + input.inputVector.normalized * Time.deltaTime * speed;
+
+
+        if (!firing && input.inputVector != Vector3.zero && !localFiring)
+        {
+            Quaternion newRotation = Quaternion.LookRotation(input.inputVector);
+        }
+        return new StatePayload()
+        {
+            tick = input.tick,
+            position = newPos,
+            inputVector = input.inputVector,
         };
     }
 
