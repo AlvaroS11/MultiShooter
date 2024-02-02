@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.Android;
+
 
 public class VivoxManager : MonoBehaviour
 {
@@ -38,7 +40,15 @@ public class VivoxManager : MonoBehaviour
    public void StartVivoxLogin()
     {
         //if (m_VivoxSetup.m_loginSession != null)
-          //  return;
+        //  return;
+
+#if UNITY_ANDROID
+        if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
+        {
+            Permission.RequestUserPermission(Permission.Microphone);
+        }       
+#endif
+
         m_VivoxSetup.Initialize(m_vivoxUserHandlers, OnVivoxLoginComplete);
 
         void OnVivoxLoginComplete(bool didSucceed)
