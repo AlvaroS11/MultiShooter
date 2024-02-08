@@ -51,9 +51,12 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     private TextMeshProUGUI nameText;
 
+    //[HideInInspector]
+    public NetworkVariable<bool> firing = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    public bool firing; //Server only
-    public bool localFiring; //Client prediction only
+
+  //  public bool firing; //Server only
+ //   public bool localFiring; //Client prediction only
 
 
     //public bool isHealthing;
@@ -65,7 +68,7 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField]
     private int healthInterval = 1;
 
-    //   [HideInInspector]
+    [HideInInspector]
     public NetworkVariable<int> healthBySecond = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
 
@@ -148,9 +151,10 @@ public class PlayerManager : NetworkBehaviour
     // Netcode server specific
     CircularBuffer<StatePayload> serverStateBuffer;
     Queue<InputPayload> serverInputQueue;
-
+    
     [Header("Netcode")]
     [SerializeField] float reconciliationCooldownTime = 1f;
+    [SerializeField] float extrapolationCooldownTime = 1f;
     [SerializeField] float reconciliationThreshold = 10f;
     [SerializeField] GameObject serverCube;
     [SerializeField] GameObject clientCube;
@@ -179,7 +183,7 @@ public class PlayerManager : NetworkBehaviour
         serverInputQueue = new Queue<InputPayload>();
 
         reconciliationTimer = new CountdownTimer(reconciliationCooldownTime);
-        extrapolationTimer = new CountdownTimer(extrapolationLimit);
+        extrapolationTimer = new CountdownTimer(extrapolationCooldownTime);
 
         clientNetworkTransform = GetComponent<ClientNetworkTransform>();
 
@@ -253,13 +257,8 @@ public class PlayerManager : NetworkBehaviour
         if (!IsClient || !IsOwner) return;
 #if UNITY_STANDALONE_WIN
 
-        if (Input.GetMouseButtonDown(0)&& localFiring)
-        {
-            noAmmoSound.Play();
-            Debug.Log(localFiring);
-            Debug.Log(gun.reloading);
-        }
-        else if (Input.GetMouseButtonDown(0) && !gun.reloading)
+        //Aiming
+        if (Input.GetMouseButton(1))
         {
             Vector3 dest = Input.mousePosition;
 
@@ -269,10 +268,48 @@ public class PlayerManager : NetworkBehaviour
             {
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
-                Vector3 targetDirection = moveDestination - transform.position;
-                transform.forward = targetDirection;
-                gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-                localFiring = true;
+                gun.AimWeapon(moveDestination);
+
+
+                //Aiming and shooting
+                if (Input.GetMouseButtonDown(0) && firing.Value)
+                    //noAmmoSound.Play();
+                    noAmmoSound.PlayOneShot(noAmmoSound.clip);
+                else if (Input.GetMouseButtonDown(0) && !gun.reloading)
+                {
+                    Vector3 targetDirection = moveDestination - transform.position;
+                    gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+                    //localFiring = true;
+                }
+
+            }
+            else
+                gun.StopAim();
+        }
+        else
+        {
+            gun.StopAim();
+
+            //Just shooting
+            if (Input.GetMouseButtonDown(0) && firing.Value)
+            {
+                noAmmoSound.PlayOneShot(noAmmoSound.clip);
+            }
+            else if (Input.GetMouseButtonDown(0) && !gun.reloading)
+            {
+                Vector3 dest = Input.mousePosition;
+
+                Ray ray = _mainCamera.ScreenPointToRay(dest);
+
+                if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
+                {
+                    Vector3 moveDestination = hitData.point;
+                    moveDestination.y = 0.5f;
+                    Vector3 targetDirection = moveDestination - transform.position;
+                    transform.forward = targetDirection;
+                    gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
+                    //localFiring = true;
+                }
             }
         }
 
@@ -335,6 +372,8 @@ public class PlayerManager : NetworkBehaviour
     static float CalculateLatencyInMillis(DateTime timeStamp)
     {
         ping = (DateTime.Now - timeStamp).Milliseconds;
+        if (ping < -10f)
+            Debug.LogWarning(ping);
         return ping;
 
     }
@@ -345,8 +384,7 @@ public class PlayerManager : NetworkBehaviour
         {
             pingText.text = "Ping: " + ((int)actualPing).ToString();
             previousTimeStamp = DateTime.Now;
-        }
-        ;
+        };
     }
 
 
@@ -359,9 +397,12 @@ public class PlayerManager : NetworkBehaviour
             {
                 transform.position += extrapolationState.inputVector * Time.deltaTime * speed * ping / 10000 * extrapolationMultiplier;
             }
+
         }
     }
 
+
+    StatePayload lastExtrapolationState;
 
     //Server only preprares extrapolationState to be executed in Extrapolate()
     void HandleExtrapolation(StatePayload latest, float latency)
@@ -435,7 +476,7 @@ public class PlayerManager : NetworkBehaviour
         MoveCamera();
 
         //Aiming
-        if (Input.GetMouseButton(1))
+     /*   if (Input.GetMouseButton(1))
         {
             Vector3 dest = Input.mousePosition;
 
@@ -449,13 +490,14 @@ public class PlayerManager : NetworkBehaviour
 
 
                 //Aiming and shooting
-                if (Input.GetMouseButtonDown(0)&& localFiring)
-                    noAmmoSound.Play();
+                if (Input.GetMouseButtonDown(0) && firing.Value)
+                    //noAmmoSound.Play();
+                noAmmoSound.PlayOneShot(noAmmoSound.clip);
                 else if (Input.GetMouseButtonDown(0)&& !gun.reloading)
                 {
                     Vector3 targetDirection = moveDestination - transform.position;
                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-                    localFiring = true;
+                    //localFiring = true;
                 }
 
             }
@@ -466,8 +508,10 @@ public class PlayerManager : NetworkBehaviour
             gun.StopAim();
 
         //Just shooting
-        if (Input.GetMouseButtonDown(0)&& localFiring)
-                    noAmmoSound.Play();       
+        if (Input.GetMouseButtonDown(0) && firing.Value)
+            //noAmmoSound.Play();
+            noAmmoSound.PlayOneShot(noAmmoSound.clip);
+
         else if (Input.GetMouseButtonDown(0) && !gun.reloading)
         {
             Vector3 dest = Input.mousePosition;
@@ -479,11 +523,11 @@ public class PlayerManager : NetworkBehaviour
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-                localFiring = true;
+              //  localFiring = true;
             }
         }
 
-
+        */
         return receivedInput;
 
 
@@ -533,13 +577,13 @@ public class PlayerManager : NetworkBehaviour
                 {
                     //  if (!localFiring)
                     //{
-                    if (localFiring)
+                    if (firing.Value)
                         noAmmoSound.Play();
                     Vector3 targetDirection = lastAimedPos - transform.position;
                     transform.forward = targetDirection;
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
-                    localFiring = true;
+                    //localFiring = true;
                     /*    }
                         else
                         {
@@ -617,11 +661,11 @@ public class PlayerManager : NetworkBehaviour
 
         if (positionError > reconciliationThreshold)
         {
-            ReconcileState(rewindState);
-            reconciliationTimer.Start();
+           // ReconcileState(rewindState);
+            //reconciliationTimer.Start();
         }
 
-        lastProcessedState = rewindState;
+        //lastProcessedState = rewindState;
     }
 
     void ReconcileState(StatePayload rewindState)
@@ -674,7 +718,7 @@ public class PlayerManager : NetworkBehaviour
         Vector3 newPos = transform.position + input.inputVector.normalized * Time.deltaTime * speed;
 
 
-        if (!firing && input.inputVector != Vector3.zero && !localFiring)
+        if (!firing.Value && input.inputVector != Vector3.zero)
         {
             Quaternion newRotation = Quaternion.LookRotation(input.inputVector);
         }
@@ -694,7 +738,7 @@ public class PlayerManager : NetworkBehaviour
         transform.position += input.normalized * Time.deltaTime * speed;
 
 
-        if (!firing && input != Vector3.zero && !localFiring)
+        if (!firing.Value && input != Vector3.zero)
         {
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;
@@ -707,7 +751,7 @@ public class PlayerManager : NetworkBehaviour
         //TO DO CHECKs
         transform.position = Vector3.MoveTowards(transform.position, transform.position + input, Time.deltaTime * speed);
 
-        if (!firing && input != Vector3.zero)
+        if (!firing.Value && input != Vector3.zero)
         {
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;

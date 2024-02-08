@@ -578,8 +578,8 @@ MonoBehaviour:
   PlayerInfoIndex: 0
   clientId: 0
   nameText: {fileID: 2108624803368915368}
-  firing: 0
-  localFiring: 0
+  firing:
+    m_InternalValue: 0
   healthDamageWait: 3
   healthInterval: 1
   healthBySecond:
@@ -593,11 +593,12 @@ MonoBehaviour:
   bodyAnimator: {fileID: 1466286097830897641}
   noAmmoSound: {fileID: 7013944558961957451}
   reconciliationCooldownTime: 1
-  reconciliationThreshold: 1
+  extrapolationCooldownTime: 1
+  reconciliationThreshold: 2
   serverCube: {fileID: 3089821097879417116}
   clientCube: {fileID: 2319804742516511529}
-  extrapolationLimit: 1000
-  extrapolationMinimum: 150
+  extrapolationLimit: 400
+  extrapolationMinimum: 500
   extrapolationMultiplier: 0.5
 --- !u!54 &-5298717513634452897
 Rigidbody:

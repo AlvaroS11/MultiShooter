@@ -69,11 +69,14 @@ public class GranadeLauncer : Weapon
         Vector3 bulletPos = new Vector3(transform.position.x, transform.position.y + 0.2f, transform.position.z);
         bulletGameObject = Instantiate(bullet, bulletPos, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
-        //bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
+        Vector3 targetDirection = dir - transform.position;
 
-         bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination, dir);
+        transform.forward = targetDirection;
+
+
+        bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination, dir);
         //bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
 
         base.StartCoolDownServerRpc();
@@ -129,6 +132,10 @@ public class GranadeLauncer : Weapon
         FireMobile(dir);
 
         base.StartCoolDownServerRpc();
+
+        Vector3 targetDirection = dir - transform.position;
+
+        transform.forward = targetDirection;
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
         {

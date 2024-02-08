@@ -84,7 +84,7 @@ public class Weapon : NetworkBehaviour
                 else
                 {
                     reloading = false;
-                    playerManager.localFiring = false;
+                 //   playerManager.localFiring = false;
                 }
                     
             }
@@ -118,7 +118,7 @@ public class Weapon : NetworkBehaviour
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
 
-        GetComponent<PlayerManager>().firing = true;
+        GetComponent<PlayerManager>().firing.Value = true;
         
         StartCoolDownServerRpc();
 
@@ -153,7 +153,7 @@ public class Weapon : NetworkBehaviour
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
-        GetComponent<PlayerManager>().firing = true;
+        GetComponent<PlayerManager>().firing.Value = true;
 
         StartCoolDownServerRpc();
 
@@ -190,9 +190,14 @@ public class Weapon : NetworkBehaviour
 
     public virtual IEnumerator CoolDown()
     {
+
         isReady = false;
+        PlayerManager pManager = GetComponent<PlayerManager>();
+        pManager.firing.Value = true;
         yield return new WaitForSeconds(coolDownSeconds);
         isReady = true;
+        pManager.firing.Value = false;
+
         GetComponent<PlayerManager>().bodyAnimator.SetBool("firing", false);
 
     }
@@ -207,10 +212,10 @@ public class Weapon : NetworkBehaviour
     {
         PlayerManager pManager = GetComponent<PlayerManager>();
         pManager.bodyAnimator.SetBool("firing", true);
-        yield return new WaitForSeconds(2);
-        pManager.firing = false;
+        yield return new WaitForSeconds(1);
+       // pManager.firing.Value = false;
         pManager.bodyAnimator.SetBool("firing", false);
-        pManager.localFiring = false;
+     //   pManager.localFiring = false;
     }
 
 

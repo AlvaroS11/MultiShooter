@@ -82,9 +82,8 @@ public class EndGame : NetworkBehaviour
     public void ShowEndGameFreeClientRpc(string winnerUser)
     {
         endGame.SetActive(true);
-        winnerTeamText.text = "Player " + winnerUser + "won the game!";
+        winnerTeamText.text = "Player " + winnerUser + " won the game!";
         statisticsUI.SetActive(true);
-        // backToLobbyButton.gameObject.SetActive(true);
         backToLobby.SetActive(true);
         Reload.SetActive(false);
         statisticsUI.GetComponent<StatisticsUI>().FinishGame();
@@ -95,7 +94,7 @@ public class EndGame : NetworkBehaviour
     public void ShowEndGameTeamClientRpc(int winnerTeam) 
     {
         endGame.SetActive(true);
-        winnerTeamText.text = "Team " + winnerTeam + "won the game!";
+        winnerTeamText.text = "Team " + winnerTeam + " won the game!";
         statisticsUI.SetActive(true);
         backToLobby.SetActive(true);
         Reload.SetActive(false);

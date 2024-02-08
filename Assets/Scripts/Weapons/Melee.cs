@@ -86,7 +86,7 @@ public class Melee : Weapon
 
         transform.forward = targetDirection;
 
-        GetComponent<PlayerManager>().firing = true;
+        GetComponent<PlayerManager>().firing.Value = true;
         FiringAnimClientRpc();
 
 
@@ -103,6 +103,12 @@ public class Melee : Weapon
         };
         StartReloadAnimationClientRpc(clientRpcParams);
         shotSound.Play();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public override void StartCoolDownServerRpc()
+    {
+        base.StartCoolDownServerRpc();
     }
 
 

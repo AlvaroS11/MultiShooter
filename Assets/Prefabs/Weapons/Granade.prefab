@@ -240,6 +240,8 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 9b0ac6df5029d964b9bd14ca93e976d7, type: 2}
   - {fileID: 2100000, guid: 718123f67cb4d1e41800fbb476451f48, type: 2}
   audioSource: {fileID: 2422527691441899696}
+  firstBlinkMaterial: {fileID: 0}
+  secondBlinkMaterial: {fileID: 0}
 --- !u!120 &7977168099136040373
 LineRenderer:
   serializedVersion: 2

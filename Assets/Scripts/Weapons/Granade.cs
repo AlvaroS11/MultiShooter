@@ -36,6 +36,7 @@ public class Granade : Bullet
 
     private int lineIndex = 0;
 
+    [SerializeField]
     private int segmentsIncrease;
 
     [SerializeField]
@@ -51,6 +52,9 @@ public class Granade : Bullet
 
     void Start()
     {
+        lineRenderer.enabled = false;
+        segmentsIncrease = segments / timeToExplode;
+
         if (!NetworkManager.Singleton.IsServer) return;
         StartCoroutine(WaitToDeleteServerRpc());
         obstacleLayer = LayerMask.NameToLayer("Obstacle");
@@ -59,8 +63,8 @@ public class Granade : Bullet
 
         playerManager = parent.GetComponent<PlayerManager>();
 
-        lineRenderer.enabled = false;
-        segmentsIncrease = segments / timeToExplode;
+        //lineRenderer.enabled = false;
+        //segmentsIncrease = segments / timeToExplode;
     }
 
     // Update is called once per frame
@@ -195,6 +199,7 @@ public class Granade : Bullet
 
   private void DrawExplosionArea()
     {
+        Debug.Log("drawing explosion area! ");
         float x;
         float z;
 

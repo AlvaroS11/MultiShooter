@@ -465,7 +465,7 @@ public class DeterministickLockstepPlayerManager : NetworkBehaviour
                 Vector3 moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
                 gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
-                localFiring = true;
+                //localFiring = true;
             }
         }
 
