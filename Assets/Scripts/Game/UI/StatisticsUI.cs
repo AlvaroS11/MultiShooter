@@ -49,10 +49,9 @@ public class StatisticsUI : NetworkBehaviour
         });
 
 #if UNITY_STANDALONE_WIN
-        if (IsOwner)
-            {
+
             showStatsMobile.gameObject.SetActive(false);
-            }
+
 #endif
 
         Hide();
