@@ -114,8 +114,8 @@ public class GranadeLauncer : Weapon
     public override Vector3 AimWeaponMobile(Vector3 dir)
     {
         DrawProjectionMobile(dir);
-        return dir;
 
+        return dir + transform.position;
 
     }
 
@@ -150,6 +150,7 @@ public class GranadeLauncer : Weapon
 
     private void FireMobile(Vector3 dir)
     {
+        dir = dir - transform.position;
         Vector3 bulletPos = new Vector3(transform.position.x, transform.position.y + 0.2f, transform.position.z);
 
         bulletGameObject = Instantiate(bullet, bulletPos, transform.rotation);

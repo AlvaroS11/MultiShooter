@@ -189,7 +189,7 @@ public class LobbyUI : MonoBehaviour {
 
 
 
-    public void CreatePlayersUI(Lobby lobby)
+    public void CreatePlayersUI(Lobby lobby, bool sameLobby = false)
     {
         if(lobby == null)
              lobby = LobbyManager.Instance.GetJoinedLobby();
@@ -201,6 +201,11 @@ public class LobbyUI : MonoBehaviour {
 
 
         gameModeText.text = gameMode.Replace("_", " ");
+
+        if (sameLobby)
+        {
+            VivoxManager.Instance.m_vivoxUserHandlers.Clear();
+        }
         foreach (Player player in lobby.Players)
         {
 

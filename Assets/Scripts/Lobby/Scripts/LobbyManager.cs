@@ -174,7 +174,7 @@ public class LobbyManager : MonoBehaviour {
                 AuthenticateUI.Instance.gameObject.SetActive(false);
                 LobbyListUI.Instance.gameObject.SetActive(false);
                 LobbyUI.Instance.Show();
-                LobbyUI.Instance.CreatePlayersUI(joinedLobby);
+                LobbyUI.Instance.CreatePlayersUI(joinedLobby, true);
                 LobbyUI.Instance.JoiningLobbyGameObject.SetActive(false);
                 joinedLobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
                 {

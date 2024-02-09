@@ -199,7 +199,6 @@ public class Granade : Bullet
 
   private void DrawExplosionArea()
     {
-        Debug.Log("drawing explosion area! ");
         float x;
         float z;
 

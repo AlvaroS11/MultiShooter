@@ -171,6 +171,7 @@ public class PlayerManager : NetworkBehaviour
 
     public static DateTime previousTimeStamp = DateTime.Now;
 
+    private Vector3 moveDestination = Vector3.zero;
 
     private void Awake()
     {
@@ -266,7 +267,7 @@ public class PlayerManager : NetworkBehaviour
 
             if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
             {
-                Vector3 moveDestination = hitData.point;
+                moveDestination = hitData.point;
                 moveDestination.y = 0.5f;
                 gun.AimWeapon(moveDestination);
 
@@ -280,6 +281,8 @@ public class PlayerManager : NetworkBehaviour
                     Vector3 targetDirection = moveDestination - transform.position;
                     gun.PlayerFireServerRpc(moveDestination, NetworkManager.Singleton.LocalClientId);
                     //localFiring = true;
+                    transform.forward = targetDirection;
+
                 }
 
             }
@@ -303,7 +306,7 @@ public class PlayerManager : NetworkBehaviour
 
                 if (Physics.Raycast(ray, out RaycastHit hitData, 100, floor))
                 {
-                    Vector3 moveDestination = hitData.point;
+                    moveDestination = hitData.point;
                     moveDestination.y = 0.5f;
                     Vector3 targetDirection = moveDestination - transform.position;
                     transform.forward = targetDirection;
@@ -579,16 +582,21 @@ public class PlayerManager : NetworkBehaviour
                     //{
                     if (firing.Value)
                         noAmmoSound.Play();
-                    Vector3 targetDirection = lastAimedPos - transform.position;
-                    transform.forward = targetDirection;
+                    //   Vector3 targetDirection = lastAimedPos - transform.position;
+                    // transform.forward = targetDirection;
+                    //  Debug.Log(targetDirection);
+                    //Vector3 targetDirection = shootPos - transform.position;
+                    //transform.forward = targetDirection;
+                    moveDestination = lastAimedPos;
+                    if (playerCharacterr == LobbyManager.PlayerCharacter.Ninja)
+                    {
+                        transform.forward = lastAimedPos - transform.position;
+
+                    }
+                    else
+                        transform.forward = lastAimedPos;
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
-                    //localFiring = true;
-                    /*    }
-                        else
-                        {
-                            noAmmoSound.Play();
-                        }*/
                 }
                 else
                 {
@@ -731,17 +739,29 @@ public class PlayerManager : NetworkBehaviour
     }
 
 
+    bool freezeRotation;
     private void MovePlayerPc(Vector3 input)
     {
         if (input == Vector3.zero)
             return;
         transform.position += input.normalized * Time.deltaTime * speed;
 
+        if (firing.Value && !freezeRotation)
+        {
+           // Quaternion newRotation = Quaternion.LookRotation(moveDestination);
+            //transform.rotation = newRotation;
+            transform.forward = moveDestination - transform.position;
+            freezeRotation = true;
+        }
+        else if(!firing.Value)
+            freezeRotation = false;
 
         if (!firing.Value && input != Vector3.zero)
         {
             Quaternion newRotation = Quaternion.LookRotation(input);
             transform.rotation = newRotation;
+            //freezeRotation = false;
+
         }
     }
 

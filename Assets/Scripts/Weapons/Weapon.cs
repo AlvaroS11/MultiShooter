@@ -139,9 +139,11 @@ public class Weapon : NetworkBehaviour
     [ServerRpc]
     public virtual void PlayerFireServerMobileServerRpc(Vector3 dir, ulong clientId)
     {
+        Vector3 targetDirection = dir - transform.position;
+        transform.forward = targetDirection;
+
         if (!isReady) return;
 
-        Vector3 targetDirection = dir - transform.position;
 
         transform.forward = targetDirection;
 
