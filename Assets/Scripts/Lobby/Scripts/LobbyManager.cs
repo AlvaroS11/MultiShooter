@@ -68,6 +68,28 @@ public class LobbyManager : MonoBehaviour {
         NoPred
     }
 
+    public PlayerCharacter IntToCharacter(int index)
+    {
+        switch(index)
+        {
+            case 0: return PlayerCharacter.Marine;
+            case 1: return PlayerCharacter.Ninja;
+            case 2: return PlayerCharacter.Zombie;
+            default: return PlayerCharacter.Marine;
+        }
+    }
+
+    public int CharacterToInt(PlayerCharacter index)
+    {
+        switch (index)
+        {
+            case PlayerCharacter.Marine: return 0;
+            case PlayerCharacter.Ninja: return 1;
+            case PlayerCharacter.Zombie: return 2;
+            default: return 0;
+        }
+    }
+
 
 
     private float heartbeatTimer;

@@ -532,6 +532,7 @@ public class OnlineManager : NetworkBehaviour
                 newPlayerManager.PlayerLobbyId.Value = playerInfo.lobbyPlayerId;
 
                 newPlayerManager.playerCharacterr = playerInfo.playerCharacter;
+                newPlayerManager.playerChar.Value = LobbyManager.Instance.CharacterToInt(playerInfo.playerCharacter);
                 newPlayerManager.PlayerInfoIndex = playerList.IndexOf(playerInfo);
 
                 playerList.Find(x => x.clientId == playerInfo.clientId).playerObject = newPlayerGameObject;

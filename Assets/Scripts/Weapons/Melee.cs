@@ -82,9 +82,9 @@ public class Melee : Weapon
     {
         if (!isReady) return;
 
-        Vector3 targetDirection = dir - transform.position;
+       // Vector3 targetDirection = dir - transform.position;
 
-        transform.forward = targetDirection;
+        //transform.forward = targetDirection;
 
         GetComponent<PlayerManager>().firing.Value = true;
         FiringAnimClientRpc();
@@ -121,6 +121,8 @@ public class Melee : Weapon
     [ServerRpc]
     public override void PlayerFireServerMobileServerRpc(Vector3 dir, ulong clientId)
     {
+        Vector3 targetDirection = dir - transform.position;
+        transform.forward = targetDirection;
         PlayerFireServerRpc(dir, clientId);
     }
 

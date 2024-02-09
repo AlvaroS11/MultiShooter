@@ -35,6 +35,12 @@ public class PlayerManager : NetworkBehaviour
     [HideInInspector]
     public LobbyManager.PlayerCharacter playerCharacterr;
 
+    [HideInInspector]
+    public NetworkVariable<int> playerChar = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    //0: Marine
+    //1: Ninja
+    //2: Zombie
 
     public int PlayerInfoIndex;
     public ulong clientId;
@@ -588,13 +594,14 @@ public class PlayerManager : NetworkBehaviour
                     //Vector3 targetDirection = shootPos - transform.position;
                     //transform.forward = targetDirection;
                     moveDestination = lastAimedPos;
-                    if (playerCharacterr == LobbyManager.PlayerCharacter.Ninja)
+                    if (LobbyManager.Instance.IntToCharacter(playerChar.Value)!= LobbyManager.PlayerCharacter.Marine)
                     {
                         transform.forward = lastAimedPos - transform.position;
-
                     }
                     else
+                    {
                         transform.forward = lastAimedPos;
+                    }
                     gun.PlayerFireServerMobileServerRpc(lastAimedPos, NetworkManager.Singleton.LocalClientId);
                     aiming = false;
                 }
