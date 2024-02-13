@@ -63,19 +63,14 @@ public class Granade : Bullet
 
         playerManager = parent.GetComponent<PlayerManager>();
 
-        //lineRenderer.enabled = false;
-        //segmentsIncrease = segments / timeToExplode;
     }
 
-    // Update is called once per frame
     void Update()
     {
-       /// CalculateTimeToExplode();
 
         if (IsGrounded() && !drawed)
         {
             lineRenderer.enabled = true;
-            //drawed = true;
             CalculateTimeToExplode();
         }
     }
@@ -114,7 +109,6 @@ public class Granade : Bullet
         {
             direction = direction - transform.position;
         }
-           //direction = Vector3.Normalize((Vector3)direction);
 
 
 
@@ -125,9 +119,6 @@ public class Granade : Bullet
         Grenade.freezeRotation = false;
         Grenade.transform.SetParent(null, true);
 
-        //Vector3 dir = (Vector3)(grenadeForce * direction);
-        //dir.y = granadeInclination;
-
 
         Vector3 newVel = Vector3.ClampMagnitude((Vector3)(direction / 2), grenadeForce);
 
@@ -136,7 +127,6 @@ public class Granade : Bullet
 
 
         Grenade.AddForce(newVel, ForceMode.Impulse);
-        //        Grenade.AddForce(dir, ForceMode.Impulse);
 
     }
 
@@ -176,14 +166,19 @@ public class Granade : Bullet
         foreach (Collider collider in colliders)
         {
             OnTriggerEnterServerRpc(collider, false);
-
         }
         //drawed = true;
         exploded = true;
         lineRenderer.enabled = false;
-        audioSource.Play();
+        ShootSoundClientRpc();
 
         StartCoroutine(DeleteObjectServerRcp(timeToDestroy, particle));
+    }
+
+    [ClientRpc]
+    public void ShootSoundClientRpc()
+    {
+        audioSource.Play();
     }
 
     [ServerRpc]

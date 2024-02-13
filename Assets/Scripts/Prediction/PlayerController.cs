@@ -474,7 +474,7 @@ public class PlayerController : NetworkBehaviour
 
 
 
-#elif UNITY_ANDROID  //ANDROID
+#elif UNITY_ANDROID || UNITY_IOS //ANDROID & IOS
 
         Vector3 movPos = new Vector3();
         if (joystick.Horizontal >= .2f)

@@ -72,7 +72,7 @@ public class EndGame : NetworkBehaviour
 
         Time.timeScale = 0;
         mobileUI.SetActive(false);
-#if UNITY_ANDROID
+#if UNITY_ANDROID || UNITY_IOS
         mobileUI.SetActive(false);    
 
 #endif

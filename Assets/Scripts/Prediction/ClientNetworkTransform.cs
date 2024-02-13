@@ -22,7 +22,6 @@ public class ClientNetworkTransform : NetworkTransform
     }
     void Start()
     {
-        Debug.Log(UseHalfFloatPrecision);
         playerManager = GetComponent<PlayerManager>();
     }
 

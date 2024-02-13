@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.Windows;
+using System;
 
 public class Melee : Weapon
 {
@@ -82,9 +83,11 @@ public class Melee : Weapon
     {
         if (!isReady) return;
 
-       // Vector3 targetDirection = dir - transform.position;
+        // Vector3 targetDirection = dir - transform.position;
 
         //transform.forward = targetDirection;
+        previousTimeStamp = DateTime.Now;
+        ShootIsLocked = true;
 
         GetComponent<PlayerManager>().firing.Value = true;
         FiringAnimClientRpc();
@@ -106,6 +109,8 @@ public class Melee : Weapon
         };
         StartReloadAnimationClientRpc(clientRpcParams);
         ShootSoundClientRpc();
+        ShootIsLocked = false;
+
     }
 
 

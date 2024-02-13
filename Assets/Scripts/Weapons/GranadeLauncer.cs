@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using System;
 
 public class GranadeLauncer : Weapon
 {
@@ -66,6 +67,9 @@ public class GranadeLauncer : Weapon
     public override void PlayerFireServerRpc(Vector3 dir, ulong clientId)
     {
         if (!isReady) return;
+
+        previousTimeStamp = DateTime.Now;
+        ShootIsLocked = true;
         Vector3 bulletPos = new Vector3(transform.position.x, transform.position.y + 0.2f, transform.position.z);
         bulletGameObject = Instantiate(bullet, bulletPos, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
@@ -90,6 +94,8 @@ public class GranadeLauncer : Weapon
         };
         StartReloadAnimationClientRpc(clientRpcParams);
         ShootSoundClientRpc();
+        ShootIsLocked = false;
+
     }
 
     [ServerRpc]
@@ -129,6 +135,8 @@ public class GranadeLauncer : Weapon
     {
         if (!isReady) return;
 
+        previousTimeStamp = DateTime.Now;
+        ShootIsLocked = true;
         FireMobile(dir);
 
         cooldownCoroutine = StartCoroutine(CoolDown());
@@ -146,6 +154,7 @@ public class GranadeLauncer : Weapon
         };
         StartReloadAnimationClientRpc(clientRpcParams);
         ShootSoundClientRpc();
+        ShootIsLocked = false;
     }
 
     private void FireMobile(Vector3 dir)

@@ -46,6 +46,8 @@ public class Weapon : NetworkBehaviour
 
 
     private PlayerManager playerManager;
+
+    protected bool ShootIsLocked;
     protected virtual void Start()
     {
         playerManager = GetComponent<PlayerManager>();
@@ -75,40 +77,53 @@ public class Weapon : NetworkBehaviour
     // Update is called once per frame
     protected virtual void Update()
     {
+    }
+
+    protected virtual void FixedUpdate()
+    {
         if (IsOwner)
         {
             if (reloading)
             {
                 currentReload -= Time.deltaTime;
-                if(currentReload >= 0)
+                if (currentReload >= 0)
                     reloadBar.fillAmount = 1 - (currentReload / coolDownSeconds);
                 else
                 {
                     reloading = false;
-                 //   playerManager.localFiring = false;
+                    //   playerManager.localFiring = false;
                 }
-                    
+
             }
         }
-
         if (IsServer)
         {
-            if (cooldownCoroutine != null)
-                return;
-            else if ((DateTime.Now - previousTimeStamp).Seconds > coolDownSeconds && playerManager.firing.Value == true)
+            if (((DateTime.Now - previousTimeStamp).Seconds > coolDownSeconds + 2) && (playerManager.firing.Value == true || isReady == false))
             {
-                playerManager.firing.Value = false;
-                isReady = true;
+                if (ShootIsLocked)
+                {
+                    Debug.Log(ShootIsLocked);
+                    return;
+                }
+
+                ShootIsLocked = true;
                 previousTimeStamp = DateTime.Now;
+                if (cooldownCoroutine != null)
+                    StopCoroutine(cooldownCoroutine);
+                ShootIsLocked = false;
+                cooldownCoroutine = StartCoroutine(CoolDown());
             };
         }
-       
     }
 
     [ServerRpc]
     public virtual void PlayerFireServerRpc(Vector3 dir, ulong clientId)
     {
         if (!isReady) return;
+
+        previousTimeStamp = DateTime.Now;
+        ShootIsLocked = true;
+
         StartCoroutine(FiringAnimation());
 
 
@@ -132,8 +147,8 @@ public class Weapon : NetworkBehaviour
 
 
         GetComponent<PlayerManager>().firing.Value = true;
-        
-        StartCoolDownServerRpc();
+
+        cooldownCoroutine = StartCoroutine(CoolDown());
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
         {
@@ -146,13 +161,13 @@ public class Weapon : NetworkBehaviour
 
         //shotSound.Play();
         ShootSoundClientRpc();
+        ShootIsLocked = false;
 
     }
 
     [ClientRpc]
     public void ShootSoundClientRpc()
     {
-        Debug.Log("sound shoot");
         shotSound.Play();
     }
 
@@ -161,10 +176,13 @@ public class Weapon : NetworkBehaviour
     [ServerRpc]
     public virtual void PlayerFireServerMobileServerRpc(Vector3 dir, ulong clientId)
     {
+
         Vector3 targetDirection = dir - transform.position;
         transform.forward = targetDirection;
 
         if (!isReady) return;
+        previousTimeStamp = DateTime.Now;
+        ShootIsLocked = true;
 
 
         transform.forward = targetDirection;
@@ -191,6 +209,7 @@ public class Weapon : NetworkBehaviour
         StartReloadAnimationClientRpc(clientRpcParams);
         //shotSound.Play();
         ShootSoundClientRpc();
+        ShootIsLocked = false;
 
     }
 
@@ -217,13 +236,13 @@ public class Weapon : NetworkBehaviour
     {
 
         isReady = false;
-        PlayerManager pManager = GetComponent<PlayerManager>();
-        pManager.firing.Value = true;
+        //PlayerManager pManager = GetComponent<PlayerManager>();
+        playerManager.firing.Value = true;
         yield return new WaitForSeconds(coolDownSeconds);
         isReady = true;
-        pManager.firing.Value = false;
+        playerManager.firing.Value = false;
 
-        GetComponent<PlayerManager>().bodyAnimator.SetBool("firing", false);
+        playerManager.bodyAnimator.SetBool("firing", false);
         cooldownCoroutine = null;
         previousTimeStamp = DateTime.Now;
     }

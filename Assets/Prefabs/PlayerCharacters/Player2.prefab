@@ -471,6 +471,8 @@ MonoBehaviour:
   PlayerTeam:
     m_InternalValue: 1
   playerCharacterr: 1
+  playerChar:
+    m_InternalValue: 0
   PlayerInfoIndex: 0
   clientId: 0
   nameText: {fileID: 702844340287032129}
@@ -537,7 +539,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lineRenderer: {fileID: 3818041841121219850}
   bullet: {fileID: 6207266781759429056, guid: 6f7b0e754dab7ac4da439e3a19c9370e, type: 3}
-  coolDownSeconds: 4
+  coolDownSeconds: 3
   currentReload: 0
   isReady: 0
   straightAim: 1

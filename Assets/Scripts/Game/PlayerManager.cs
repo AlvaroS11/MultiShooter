@@ -361,7 +361,7 @@ public class PlayerManager : NetworkBehaviour
         if (bufferIndex == -1) return;
         SendToClientRpc(serverStateBuffer.Get(bufferIndex));
 
-       // HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload.timestamp));
+        HandleExtrapolation(serverStateBuffer.Get(bufferIndex), NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(clientId));
     }
 
 
@@ -399,7 +399,7 @@ public class PlayerManager : NetworkBehaviour
 
     private void DisplayPing()
     {
-         if ((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
+        if ((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
          {
             float actualPing = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(clientId);
              pingText.text = "Ping: " + ((int)actualPing).ToString();
@@ -430,6 +430,7 @@ public class PlayerManager : NetworkBehaviour
 
         if (ShouldExtrapolate(latency))
         {
+            Debug.Log("EXTRAPOLATING");
             if (extrapolationState.position != default)
             {
                 latest = extrapolationState;
@@ -552,7 +553,7 @@ public class PlayerManager : NetworkBehaviour
 
 
 
-#elif UNITY_ANDROID  //ANDROID
+#elif UNITY_ANDROID || UNITY_IOS  //ANDROID & IOS
 
         Vector3 movPos = new Vector3();
         if (joystick.Horizontal >= .2f)
@@ -638,8 +639,7 @@ public class PlayerManager : NetworkBehaviour
         var currentTick = networkTimer.CurrentTick;
         var bufferIndex = currentTick % k_bufferSize;
 
-
-        
+        DisplayPing();
         Vector3 inputVector = GetInput();
         if(inputVector == Vector3.zero)
             return;
@@ -660,7 +660,6 @@ public class PlayerManager : NetworkBehaviour
         clientStateBuffer.Add(statePayload, bufferIndex);
 
         HandleServerReconciliation();
-        DisplayPing();
     }
 
     bool ShouldReconcile()
@@ -861,7 +860,7 @@ public class PlayerManager : NetworkBehaviour
 
 
 
-#if UNITY_ANDROID
+#if UNITY_ANDROID || UNITY_IOS
 
 
 

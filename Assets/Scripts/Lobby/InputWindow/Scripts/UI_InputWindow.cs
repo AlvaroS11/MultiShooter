@@ -55,11 +55,8 @@ public class UI_InputWindow : MonoBehaviour {
             onCancel();
         };
 
-#if UNITY_ANDROID
-        Debug.Log("OPEN!");
-        Debug.Log(inputField.keyboardType);
+#if UNITY_ANDROID || UNITY_IOS
         TouchScreenKeyboard.Open(default);
-       // TouchScreenKeyboard.Open("", TouchScreenKeyboardType.Default, false, false, true);
 
 
 #endif

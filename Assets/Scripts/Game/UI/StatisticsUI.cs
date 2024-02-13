@@ -78,7 +78,7 @@ public class StatisticsUI : NetworkBehaviour
         else
             Hide();
 
-#elif UNITY_ANDROID
+#elif UNITY_ANDROID || UNITY_IOS
         //add button to show/hide stats
 
 #endif
