@@ -22,6 +22,8 @@ public class PlayerInfo
     public bool isDeleted;
     public PlayerSingleStat PlayerSingleStat;
 
+    public float PlayerVolume = 0.5f;
+
 
     public void UpdateStats()
     {

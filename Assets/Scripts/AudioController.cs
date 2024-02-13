@@ -16,10 +16,8 @@ public class AudioController : MonoBehaviour
         audioMixer.SetFloat("Master", slider.value);
         PlayerPrefs.SetFloat("masterVolume", slider.value );
         PlayerPrefs.Save();
-        Debug.Log(slider.value);
         float aa = -100;
         audioMixer.GetFloat("Master", out aa);
-        Debug.Log(aa);
     }
 
     public void Start()

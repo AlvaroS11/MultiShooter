@@ -9825,6 +9825,10 @@ PrefabInstance:
       propertyPath: m_Colors.m_DisabledColor.r
       value: 0.1792453
       objectReference: {fileID: 0}
+    - target: {fileID: 5728379274339569214, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_Interactable
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6332126838142636816, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
       propertyPath: m_text
       value: A

@@ -116,6 +116,7 @@ public class StatisticsUI : NetworkBehaviour
                 if (player.lobbyPlayerId.ToSafeString() == AuthenticationService.Instance.PlayerId)
                     statPlayerSingleUI.ChangeBackground();
 
+                statPlayerSingleUI.soundBar.value = player.PlayerVolume;
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 
                 player.PlayerSingleStat = statPlayerSingleUI;

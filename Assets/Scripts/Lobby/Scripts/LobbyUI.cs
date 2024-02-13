@@ -12,6 +12,7 @@ using System.Threading;
 using Unity.Collections;
 using System.Threading.Tasks;
 using Unity.Services.Lobbies;
+using System.Linq;
 
 public class LobbyUI : MonoBehaviour {
 
@@ -40,7 +41,6 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] public GameObject JoiningLobbyGameObject;
     [SerializeField] public TextMeshProUGUI JoiningLobbyText;
     [SerializeField] public TextMeshProUGUI codeText;
-
 
 
     public bool dropDownExpanded;
@@ -242,10 +242,11 @@ public class LobbyUI : MonoBehaviour {
                 {
                     lobbyPlayerSingleUI.selectTeamDropdown.gameObject.active = false;
                 }
-
-
             }
         }
+
+        if (VivoxManager.Instance.VivoxJoined)
+            VivoxManager.Instance.AllowVolumeChange();
         EnableDisableStartButton(false);
         killsText.text = "Kills: " + OnlineManager.Instance.maxKills.Value;
     }

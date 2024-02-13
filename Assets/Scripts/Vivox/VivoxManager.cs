@@ -11,6 +11,8 @@ public class VivoxManager : MonoBehaviour
     public VivoxSetup m_VivoxSetup = new VivoxSetup();
 
     public static VivoxManager Instance;
+
+    public bool VivoxJoined;
     // Start is called before the first frame update
     void Start()
     {
@@ -35,6 +37,16 @@ public class VivoxManager : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void AllowVolumeChange()
+    {
+        Debug.Log("allow");
+        VivoxJoined = true;
+        foreach (VivoxUserHandler vivoxUserHandler in m_vivoxUserHandlers)
+        {
+            vivoxUserHandler.GetComponent<LobbyPlayerSingleUI>().soundBar.interactable = true;
+        }
     }
 
    public void StartVivoxLogin()
@@ -73,6 +85,8 @@ public class VivoxManager : MonoBehaviour
                 Debug.LogError("Vivox connection failed! Retrying in 5s...");
                 StartCoroutine(RetryConnection(StartVivoxJoin, LobbyManager.Instance.joinedLobby.Id));
             }
+            else
+                AllowVolumeChange();
         }
     }
 
@@ -93,5 +107,6 @@ public class VivoxManager : MonoBehaviour
     public void LeaveVivox()
     {
         m_VivoxSetup.LeaveLobbyChannel();
+        VivoxJoined = false;
     }
 }

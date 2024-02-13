@@ -543,8 +543,6 @@ public class OnlineManager : NetworkBehaviour
 
             StartTeamScoreClientRpc(teamNames1);
 
-            TestClientRpc(teamNames1);
-
             setPlayerLifeBarsClientRpc();
 
 
@@ -578,14 +576,6 @@ public class OnlineManager : NetworkBehaviour
         spawnPoints.Clear();
         playerManagers.Clear();
         teamScoreTexts.Clear();
-    }
-
-    [ClientRpc]
-    public void TestClientRpc(int[] testArray)
-    {
-        Debug.Log("···");
-        foreach (var test in testArray)
-            Debug.Log(test);
     }
 
     void OnServerListChanged(NetworkListEvent<int> changeEvent)

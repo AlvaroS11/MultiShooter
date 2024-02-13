@@ -62,7 +62,8 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
         soundBar.onValueChanged.AddListener((float val) =>
         {
-            ChangeVolume(val);
+            //if(VivoxManager.Instance.m_VivoxSetup.m_loginSession.State == VivoxUnity.LoginState.LoggedIn)
+                ChangeVolume(val);
         });
 
         soundButton.onClick.AddListener(() =>
@@ -176,6 +177,11 @@ public class LobbyPlayerSingleUI : MonoBehaviour {
 
         userHandler.OnVolumeSlide(soundValue);
 
+        try
+        {
+            OnlineManager.Instance.playerList.Find(x => x.lobbyPlayerId == playerId).PlayerVolume = soundValue;
+        }
+        catch { }
     }
 
     private void HandleVolume()

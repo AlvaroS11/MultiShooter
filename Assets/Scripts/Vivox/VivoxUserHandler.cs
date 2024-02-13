@@ -112,7 +112,11 @@ public class VivoxUserHandler : MonoBehaviour
                     lobbyPlayer.ChangeVolume(0);
 
             }
-        }catch(VivoxApiException e)
+
+            GetComponent<LobbyPlayerSingleUI>().soundBar.interactable = true;
+            //VivoxManager.Instance.
+        }
+        catch(VivoxApiException e)
         {
             Debug.LogError("Vivox error");
         }
@@ -173,7 +177,7 @@ public class VivoxUserHandler : MonoBehaviour
             {
                 if (m_channelSession == null)
                 {
-                    OnChannelJoined(VivoxManager.Instance.m_VivoxSetup.GetChannel());
+                   OnChannelJoined(VivoxManager.Instance.m_VivoxSetup.GetChannel());
                 }
                 return;
 

@@ -32,6 +32,7 @@ public class VivoxSetup
             if (m_loginSession.State == LoginState.LoggedIn)
             {
                 onComplete?.Invoke(true);
+//                VivoxManager.Instance.AllowVolumeChange();
                 return;
             }
 
