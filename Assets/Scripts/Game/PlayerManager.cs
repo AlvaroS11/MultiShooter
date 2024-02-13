@@ -225,7 +225,7 @@ public class PlayerManager : NetworkBehaviour
         if(IsClient && IsOwner && !IsHost)
         {
             sentMsg = DateTime.Now;
-            SendPing();
+            //SendPing();
         }
     }
 
@@ -397,17 +397,15 @@ public class PlayerManager : NetworkBehaviour
 
     }
 
-   /* static void DisplayPing(float actualPing)
+    private void DisplayPing()
     {
-        pingText.text = "Ping: " + ((int)actualPing).ToString();
-
          if ((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
          {
+            float actualPing = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(clientId);
              pingText.text = "Ping: " + ((int)actualPing).ToString();
              previousTimeStamp = DateTime.Now;
          };
-        
-    }*/
+    }
 
 
     void Extrapolate()
@@ -662,6 +660,7 @@ public class PlayerManager : NetworkBehaviour
         clientStateBuffer.Add(statePayload, bufferIndex);
 
         HandleServerReconciliation();
+        DisplayPing();
     }
 
     bool ShouldReconcile()
@@ -745,10 +744,12 @@ public class PlayerManager : NetworkBehaviour
         ping = (DateTime.UtcNow - timeStamp).Milliseconds;
         
        DisplayPing(ping);
+       Debug.Log(NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(clientId));
+        Debug.Log(ping);
        SendPing();
     }
 
-    static void DisplayPing(double actualPing)
+   static void DisplayPing(double actualPing)
     {
         pingText.text = "Ping: " + ((int)actualPing).ToString();
     }

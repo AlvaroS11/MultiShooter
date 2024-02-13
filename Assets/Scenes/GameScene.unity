@@ -3355,6 +3355,7 @@ MonoBehaviour:
   gamefinished: 0
   respawnMsg: {fileID: 42327895}
   menu: {fileID: 929324753}
+  reloadBar: {fileID: 1081331315}
 --- !u!114 &553191500
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -28,6 +28,8 @@ public class StatisticsUI : NetworkBehaviour
 
     public GameObject menu;
 
+    public GameObject reloadBar;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -39,12 +41,14 @@ public class StatisticsUI : NetworkBehaviour
                 ScrollBar.SetActive(true);
                 container.gameObject.SetActive(true);
                 menu.SetActive(true);
+                reloadBar.SetActive(false);
             }
             else
             {
                 ScrollBar.SetActive(!container.gameObject.activeSelf);
                 menu.SetActive(!menu.activeSelf);
                 container.gameObject.SetActive(!container.gameObject.activeSelf);
+                reloadBar.SetActive(!container.gameObject.activeSelf);
             }
         });
 
@@ -135,7 +139,7 @@ public class StatisticsUI : NetworkBehaviour
             container.gameObject.SetActive(false);
             ScrollBar.SetActive(false);
             menu.SetActive(false);
-
+            reloadBar.SetActive(true);
         }
     }
 
@@ -144,6 +148,7 @@ public class StatisticsUI : NetworkBehaviour
         container.gameObject.SetActive(true);
         ScrollBar.SetActive(true);
         menu.SetActive(true);
+        reloadBar.SetActive(false);
     }
 
     public void FinishGame()
