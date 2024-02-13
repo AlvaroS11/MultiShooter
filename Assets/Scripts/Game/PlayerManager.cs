@@ -2,13 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using Unity.Services.Lobbies.Models;
 using System;
 using TMPro;
-using UnityEngine.AI;
 using Unity.Collections;
-using System.Net.NetworkInformation;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -173,6 +170,8 @@ public class PlayerManager : NetworkBehaviour
 
 
     [Header("Ping")]
+    DateTime sentMsg;
+
     [SerializeField] static TextMeshProUGUI pingText;
 
     public static DateTime previousTimeStamp = DateTime.Now;
@@ -222,6 +221,12 @@ public class PlayerManager : NetworkBehaviour
     void Start()
     {
         Initialized();
+
+        if(IsClient && IsOwner && !IsHost)
+        {
+            sentMsg = DateTime.Now;
+            SendPing();
+        }
     }
 
     public override void OnNetworkDespawn()
@@ -356,7 +361,7 @@ public class PlayerManager : NetworkBehaviour
         if (bufferIndex == -1) return;
         SendToClientRpc(serverStateBuffer.Get(bufferIndex));
 
-        HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload.timestamp));
+       // HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload.timestamp));
     }
 
 
@@ -382,19 +387,27 @@ public class PlayerManager : NetworkBehaviour
     {
         ping = (DateTime.Now - timeStamp).Milliseconds;
         if (ping < -10f)
+        {
             Debug.LogWarning(ping);
+            Debug.LogWarning(timeStamp.Millisecond.ToString());
+            Debug.LogWarning(DateTime.Now.Millisecond.ToString());
+
+        }
         return ping;
 
     }
 
-    static void DisplayPing(float actualPing)
+   /* static void DisplayPing(float actualPing)
     {
-        if ((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
-        {
-            pingText.text = "Ping: " + ((int)actualPing).ToString();
-            previousTimeStamp = DateTime.Now;
-        };
-    }
+        pingText.text = "Ping: " + ((int)actualPing).ToString();
+
+         if ((DateTime.Now - previousTimeStamp).Milliseconds >= 200)
+         {
+             pingText.text = "Ping: " + ((int)actualPing).ToString();
+             previousTimeStamp = DateTime.Now;
+         };
+        
+    }*/
 
 
     void Extrapolate()
@@ -449,8 +462,8 @@ public class PlayerManager : NetworkBehaviour
     {
         if (!IsOwner) return;
         lastServerState = statePayload;
-        serverCube.transform.position = statePayload.position;
-        DisplayPing(CalculateLatencyInMillis(lastServerState.timestamp));
+      //  serverCube.transform.position = statePayload.position;
+        //DisplayPing(CalculateLatencyInMillis(lastServerState.timestamp));
     }
 
     private Vector3 GetInput()
@@ -619,7 +632,6 @@ public class PlayerManager : NetworkBehaviour
     }
 
 
-
     void HandleClientTick()
     {
         if (!IsClient || !IsOwner) return;
@@ -628,6 +640,8 @@ public class PlayerManager : NetworkBehaviour
         var currentTick = networkTimer.CurrentTick;
         var bufferIndex = currentTick % k_bufferSize;
 
+
+        
         Vector3 inputVector = GetInput();
         if(inputVector == Vector3.zero)
             return;
@@ -642,6 +656,7 @@ public class PlayerManager : NetworkBehaviour
 
 
         SendToServerRpc(inputPayload);
+
 
         StatePayload statePayload = ProcessMovement(inputPayload);
         clientStateBuffer.Add(statePayload, bufferIndex);
@@ -676,11 +691,11 @@ public class PlayerManager : NetworkBehaviour
 
         if (positionError > reconciliationThreshold)
         {
-           // ReconcileState(rewindState);
-            //reconciliationTimer.Start();
+            ReconcileState(rewindState);
+            reconciliationTimer.Start();
         }
 
-        //lastProcessedState = rewindState;
+        lastProcessedState = rewindState;
     }
 
     void ReconcileState(StatePayload rewindState)
@@ -704,9 +719,42 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
-
+    // En el cliente
+    void SendPing()
+    {
+        var pingTimestamp = DateTime.UtcNow;
+        PingToServerRpc(pingTimestamp, NetworkManager.Singleton.LocalClientId);
+    }
 
     [ServerRpc]
+    void PingToServerRpc(DateTime clientTimestamp, ulong clientId)
+    {
+        // Asegúrate de que este RPC solo se envíe al cliente que inició el ping
+        SendPongClientRpc(clientTimestamp, new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        });
+    }
+
+    [ClientRpc]
+    void SendPongClientRpc(DateTime timeStamp, ClientRpcParams rpcParams = default)
+    {
+        ping = (DateTime.UtcNow - timeStamp).Milliseconds;
+        
+       DisplayPing(ping);
+       SendPing();
+    }
+
+    static void DisplayPing(double actualPing)
+    {
+        pingText.text = "Ping: " + ((int)actualPing).ToString();
+    }
+
+
+        [ServerRpc]
     void SendToServerRpc(InputPayload input)
     {
         // clientCube.transform.position = input.position;

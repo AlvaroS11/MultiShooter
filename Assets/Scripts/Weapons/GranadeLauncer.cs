@@ -79,7 +79,7 @@ public class GranadeLauncer : Weapon
         bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination, dir);
         //bulletGameObject.GetComponent<Granade>().ReleaseGrenade(grenadeForce, granadeInclination);
 
-        base.StartCoolDownServerRpc();
+        cooldownCoroutine = StartCoroutine(CoolDown());
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
         {
@@ -89,7 +89,7 @@ public class GranadeLauncer : Weapon
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
-        shotSound.Play();
+        ShootSoundClientRpc();
     }
 
     [ServerRpc]
@@ -131,7 +131,7 @@ public class GranadeLauncer : Weapon
 
         FireMobile(dir);
 
-        base.StartCoolDownServerRpc();
+        cooldownCoroutine = StartCoroutine(CoolDown());
 
         Vector3 targetDirection = dir - transform.position;
 
@@ -145,7 +145,7 @@ public class GranadeLauncer : Weapon
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
-        shotSound.Play();
+        ShootSoundClientRpc();
     }
 
     private void FireMobile(Vector3 dir)

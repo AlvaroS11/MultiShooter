@@ -31,6 +31,8 @@ public class GameAssets : MonoBehaviour {
     [SerializeField] public GameObject messageGameObject;
     [SerializeField] public TextMeshProUGUI messageText;
 
+    [SerializeField] public GameObject teamsText;
+
 
     private void Awake() {
         Instance = this;

@@ -48,6 +48,13 @@ public class StatisticsUI : NetworkBehaviour
             }
         });
 
+        if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
+        {
+            GameAssets.Instance.teamsText.SetActive(false);
+        }
+        else
+            GameAssets.Instance.teamsText.SetActive(true);
+
 #if UNITY_STANDALONE_WIN
 
             showStatsMobile.gameObject.SetActive(false);

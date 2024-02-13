@@ -92,7 +92,10 @@ public class Melee : Weapon
 
         StartCoroutine(Fire());
 
-        StartCoolDownServerRpc();
+
+        cooldownCoroutine = StartCoroutine(CoolDown());
+
+        //StartCoolDownServerRpc();
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
         {
@@ -102,8 +105,10 @@ public class Melee : Weapon
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
-        shotSound.Play();
+        ShootSoundClientRpc();
     }
+
+
 
     [ServerRpc(RequireOwnership = false)]
     public override void StartCoolDownServerRpc()

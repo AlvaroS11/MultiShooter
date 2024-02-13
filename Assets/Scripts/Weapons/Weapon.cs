@@ -1,9 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Windows;
 using UnityEngine.UI;
+using System;
 
 
 public class Weapon : NetworkBehaviour
@@ -71,6 +70,8 @@ public class Weapon : NetworkBehaviour
         }
     }
 
+    public DateTime previousTimeStamp = DateTime.Now;
+    protected Coroutine cooldownCoroutine = null;
     // Update is called once per frame
     protected virtual void Update()
     {
@@ -88,6 +89,18 @@ public class Weapon : NetworkBehaviour
                 }
                     
             }
+        }
+
+        if (IsServer)
+        {
+            if (cooldownCoroutine != null)
+                return;
+            else if ((DateTime.Now - previousTimeStamp).Seconds > coolDownSeconds && playerManager.firing.Value == true)
+            {
+                playerManager.firing.Value = false;
+                isReady = true;
+                previousTimeStamp = DateTime.Now;
+            };
         }
        
     }
@@ -130,8 +143,17 @@ public class Weapon : NetworkBehaviour
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
-        shotSound.Play();
 
+        //shotSound.Play();
+        ShootSoundClientRpc();
+
+    }
+
+    [ClientRpc]
+    public void ShootSoundClientRpc()
+    {
+        Debug.Log("sound shoot");
+        shotSound.Play();
     }
 
 
@@ -155,9 +177,9 @@ public class Weapon : NetworkBehaviour
         bulletGameObject.transform.Rotate(90, 0, 0);
         bulletGameObject.GetComponent<NetworkObject>().Spawn();
 
-        GetComponent<PlayerManager>().firing.Value = true;
+        //GetComponent<PlayerManager>().firing.Value = true;
 
-        StartCoolDownServerRpc();
+        cooldownCoroutine = StartCoroutine(CoolDown());
 
         ClientRpcParams clientRpcParams = new ClientRpcParams
         {
@@ -167,7 +189,8 @@ public class Weapon : NetworkBehaviour
             }
         };
         StartReloadAnimationClientRpc(clientRpcParams);
-        shotSound.Play();
+        //shotSound.Play();
+        ShootSoundClientRpc();
 
     }
 
@@ -201,7 +224,8 @@ public class Weapon : NetworkBehaviour
         pManager.firing.Value = false;
 
         GetComponent<PlayerManager>().bodyAnimator.SetBool("firing", false);
-
+        cooldownCoroutine = null;
+        previousTimeStamp = DateTime.Now;
     }
 
     [ServerRpc]

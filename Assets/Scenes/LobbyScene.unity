@@ -5145,6 +5145,7 @@ MonoBehaviour:
   endGame: {fileID: 0}
   messageGameObject: {fileID: 0}
   messageText: {fileID: 0}
+  teamsText: {fileID: 0}
 --- !u!1 &1154160099
 GameObject:
   m_ObjectHideFlags: 0
@@ -9700,6 +9701,10 @@ PrefabInstance:
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1500106530522380548, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2192569187822229434, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -9804,6 +9809,22 @@ PrefabInstance:
       propertyPath: m_Colors.m_DisabledColor.r
       value: 0.1792453
       objectReference: {fileID: 0}
+    - target: {fileID: 6332126838142636816, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_text
+      value: A
+      objectReference: {fileID: 0}
+    - target: {fileID: 6332126838142636816, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_fontSize
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 6332126838142636816, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_fontStyle
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6332126838142636816, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 24
+      objectReference: {fileID: 0}
     - target: {fileID: 6614197749533440493, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
       propertyPath: m_Name
       value: PlayerSingleTemplate
@@ -9814,7 +9835,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7166706546736466818, guid: ba0bf89dd224b21469c0c4601a861420, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.000024795532
+      value: -0.0000038146973
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
