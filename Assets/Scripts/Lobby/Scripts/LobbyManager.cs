@@ -608,7 +608,6 @@ public class LobbyManager : MonoBehaviour {
 
     public async Task LeaveLobby()
     {
-        VivoxManager.Instance.VivoxJoined = false;
         if (joinedLobby != null)
         {
             try
