@@ -43,7 +43,8 @@ public class EndGame : NetworkBehaviour
         backToLobbyButton.onClick.AddListener(() =>
         {
             //Reset all in-game variables
-            Debug.Log(LobbyManager.Instance.joinedLobby.Id);
+            // Debug.Log(LobbyManager.Instance.joinedLobby.Id);
+            Debug.Log("Leaving to lobby");
             OnlineManager.Instance.playersCreated = false;
             OnlineManager.Instance.playerList.Clear();
             Time.timeScale = 1;
