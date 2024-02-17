@@ -636,6 +636,7 @@ public class LobbyManager : MonoBehaviour {
                 joinedLobby = null;
                 OnLeftLobby?.Invoke(this, EventArgs.Empty);
                 VivoxManager.Instance.LeaveVivox();
+                Debug.LogError("Leaving Lobby due to transport failure");
             }
         }
     }
