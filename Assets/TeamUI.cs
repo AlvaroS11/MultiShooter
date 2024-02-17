@@ -33,15 +33,11 @@ public class TeamUI : MonoBehaviour
         try
         {
             //  imageBackground.color = imageBackgrounds[actualTeam--];
-            Debug.Log(imageBar.color);
             imageBar.color = imageBars[actualTeam];
-            Debug.Log(actualTeam--);
-            Debug.Log(imageBar.color);
-            Debug.Log(imageBars[actualTeam]);
         }
         catch
         {
-     //       imageBackground.color = imageBackgrounds[0];
+            //       imageBackground.color = imageBackgrounds[0];
             imageBar.color = imageBars[0];
         }
         // imageBackground = imageBckg;
@@ -62,8 +58,6 @@ public class TeamUI : MonoBehaviour
         text.text = kills.ToString();
 
         float widthSize = ((float)kills / maxKills) * fullWidth;
-        Debug.Log(kills + " " + maxKills + " " + fullWidth);
-        Debug.Log(widthSize);
         rt.sizeDelta = new Vector2(widthSize, rt.sizeDelta.y);
         //rt.
     }

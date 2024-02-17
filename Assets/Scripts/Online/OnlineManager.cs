@@ -626,7 +626,6 @@ public class OnlineManager : NetworkBehaviour
         }
         else
         {
-            Debug.Log(LobbyManager.Instance.m_gameMode);
             foreach (PlayerManager playerManager in playerManagers)
             {
 

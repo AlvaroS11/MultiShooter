@@ -103,6 +103,7 @@ public class StatisticsUI : NetworkBehaviour
                 if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
                 {
                     statPlayerSingleUI.team.gameObject.active = false;
+                    statPlayerSingleUI.teamImage.gameObject.SetActive(false);
                 }
                 else
                     statPlayerSingleUI.teamImage.sprite = statPlayerSingleUI.teamImages[--player.team];
