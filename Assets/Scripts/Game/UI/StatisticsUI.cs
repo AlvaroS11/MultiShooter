@@ -100,12 +100,13 @@ public class StatisticsUI : NetworkBehaviour
                 statPlayerSingleUI.SetId(player.lobbyPlayerId.ToSafeString());
                 statPlayerSingleUI.playerNameText.text = player.name.ToSafeString();
 
-                if(LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
+                if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
                 {
                     statPlayerSingleUI.team.gameObject.active = false;
                 }
                 else
-                    statPlayerSingleUI.team.text = player.team.ToSafeString();
+                    statPlayerSingleUI.teamImage.sprite = statPlayerSingleUI.teamImages[--player.team];
+                    //statPlayerSingleUI.team.text = player.team.ToSafeString();
 
                 statPlayerSingleUI.characterImage.sprite = GameAssets.Instance.GetSprite(player.playerCharacter);
 

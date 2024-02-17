@@ -12,6 +12,7 @@ using Unity.Collections;
 using UnityEngine.Jobs;
 using Unity.VisualScripting;
 using System.Linq;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class OnlineManager : NetworkBehaviour
 {
@@ -60,6 +61,9 @@ public class OnlineManager : NetworkBehaviour
 
     [SerializeField]
     private List<TextMeshProUGUI> teamScoreTexts;
+
+    [SerializeField]
+    private List<TeamUI> teamScoreObjects;
 
     [SerializeField]
     private Transform scoreCounterPrefab;
@@ -227,6 +231,7 @@ public class OnlineManager : NetworkBehaviour
                         messageText = GameAssets.Instance.messageText;
                         messageText.text = "Waiting for players...";
                         messageGameObject.SetActive(true);
+                        VivoxManager.Instance.m_vivoxUserHandlers.Clear();
                         CreatePlayersServerRpc();
                         SetStatustClientRpc(true);
 
@@ -567,6 +572,7 @@ public class OnlineManager : NetworkBehaviour
         teamScore.Clear();
         playerManagers.Clear();
         teamScoreTexts.Clear();
+        teamScoreObjects.Clear();
     }
 
     public void ResetPreviousGame()
@@ -576,6 +582,8 @@ public class OnlineManager : NetworkBehaviour
         spawnPoints.Clear();
         playerManagers.Clear();
         teamScoreTexts.Clear();
+        teamScoreObjects.Clear();
+
     }
 
     void OnServerListChanged(NetworkListEvent<int> changeEvent)
@@ -670,17 +678,27 @@ public class OnlineManager : NetworkBehaviour
     private void StartTeamScoreClientRpc(int[] nTeams)
     {
         teamScoreTexts.Clear();
+        teamScoreObjects.Clear();
+
         Transform container = Assets.Instance.teamContainer;
         scoreCounterPrefab = Assets.Instance.scoreCounterPrefab;
 
         //while(teamNames.Count != nTeams){
         for(int i = 0; i< nTeams.Length; i++)
         {
-            Transform newCounterText = Instantiate(scoreCounterPrefab, container);
+            /*Transform newCounterText = Instantiate(scoreCounterPrefab, container);
             newCounterText.gameObject.SetActive(true);
             TextMeshProUGUI counter = newCounterText.GetComponent<TextMeshProUGUI>();
             counter.text = "Team " + nTeams[i] + ":  0";
             teamScoreTexts.Add(counter);
+            */
+            Transform newCounter = Instantiate(scoreCounterPrefab, container);
+            newCounter.gameObject.SetActive(true);
+
+            TeamUI teamUI = newCounter.GetComponent<TeamUI>();
+            teamScoreObjects.Add(teamUI);
+            teamUI.SetUp(nTeams[i], maxKills.Value);
+
         }
 
         scoreCounterPrefab.gameObject.SetActive(false);
@@ -709,7 +727,8 @@ public class OnlineManager : NetworkBehaviour
     public void ChangeScoreClientRpc(int shooter, int score, FixedString128Bytes shooterId, FixedString128Bytes hittedId )
     {
         if(LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Team_DeathMatch)
-            teamScoreTexts[shooter].text = "Team " + (teamNames[shooter]) + ": " + score;
+            teamScoreObjects[shooter].Kill();
+            //teamScoreTexts[shooter].text = "Team " + (teamNames[shooter]) + ": " + score;
 
         PlayerInfo pShooter = playerList.Find(pl => pl.lobbyPlayerId == shooterId);
         pShooter.kills += 1;

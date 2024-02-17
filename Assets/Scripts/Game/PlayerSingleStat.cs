@@ -14,7 +14,8 @@ public class PlayerSingleStat : LobbyPlayerSingleUI
 
     public Image BackgroundImage;
     public Color SelfColor;
-
+    public List<Sprite> teamImages;
+    public Image teamImage;
    /* [SerializeField] public TextMeshProUGUI playerNameText;
     [SerializeField] public Image characterImage;
     [SerializeField] public Button kickPlayerButton;
