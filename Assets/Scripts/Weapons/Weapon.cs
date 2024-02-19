@@ -48,6 +48,10 @@ public class Weapon : NetworkBehaviour
     private PlayerManager playerManager;
 
     protected bool ShootIsLocked;
+
+
+    public AudioSource audioSourceBullet;
+
     protected virtual void Start()
     {
         playerManager = GetComponent<PlayerManager>();
@@ -331,5 +335,16 @@ public class Weapon : NetworkBehaviour
     public virtual void StopAim()
     {
         lineRenderer.enabled = false;
+    }
+
+    public virtual void BulletSound()
+    {
+        BulletSoundClientRpc();
+    }
+
+    [ClientRpc]
+    public virtual void BulletSoundClientRpc()
+    {
+        audioSourceBullet.Play();
     }
 }

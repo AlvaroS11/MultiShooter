@@ -41,7 +41,6 @@ public class VivoxManager : MonoBehaviour
 
     public void AllowVolumeChange()
     {
-        Debug.Log("allow");
         VivoxJoined = true;
         foreach (VivoxUserHandler vivoxUserHandler in m_vivoxUserHandlers)
         {

@@ -42,18 +42,23 @@ public class Granade : Bullet
     [SerializeField]
     private Material[] lineMaterials;
 
-    public AudioSource audioSource;
-
 
     //To Do add blink to granade
     public Material firstBlinkMaterial;
     public Material secondBlinkMaterial;
 
+    public GranadeLauncer
+        launcer;
 
     void Start()
     {
         lineRenderer.enabled = false;
         segmentsIncrease = segments / timeToExplode;
+
+        if(parent ==  null)
+            launcer = FindAnyObjectByType<GranadeLauncer>();
+        else
+            launcer = parent.GetComponent<GranadeLauncer>();
 
         if (!NetworkManager.Singleton.IsServer) return;
         StartCoroutine(WaitToDeleteServerRpc());
@@ -62,6 +67,7 @@ public class Granade : Bullet
         bulletDmg = 20;
 
         playerManager = parent.GetComponent<PlayerManager>();
+
 
     }
 
@@ -89,8 +95,7 @@ public class Granade : Bullet
                 lineRenderer.material = lineMaterials[lineIndex];
                 lineIndex++;
             }
-                
-            
+               
         }
 
     }
@@ -152,11 +157,11 @@ public class Granade : Bullet
     {
         yield return new WaitForSeconds(timeToExplode);
 
-        Explode();
+        ExplodeServerRpc();
     }
 
     //Server only
-    private void Explode()
+    private void ExplodeServerRpc()
     {
         GameObject particle = Instantiate(ExplosionParticleSystem, transform.position, Quaternion.identity);
         particle.GetComponent<NetworkObject>().Spawn();
@@ -170,16 +175,12 @@ public class Granade : Bullet
         //drawed = true;
         exploded = true;
         lineRenderer.enabled = false;
-        ShootSoundClientRpc();
+        Debug.Log("Explode");
+        launcer.BulletSound();
 
         StartCoroutine(DeleteObjectServerRcp(timeToDestroy, particle));
     }
 
-    [ClientRpc]
-    public void ShootSoundClientRpc()
-    {
-        audioSource.Play();
-    }
 
     [ServerRpc]
     private IEnumerator DeleteObjectServerRcp(int seconds, GameObject gameObjectToDelete)

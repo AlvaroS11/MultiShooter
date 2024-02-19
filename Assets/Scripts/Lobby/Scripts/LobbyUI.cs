@@ -8,11 +8,6 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 using static LobbyManager;
-using System.Threading;
-using Unity.Collections;
-using System.Threading.Tasks;
-using Unity.Services.Lobbies;
-using System.Linq;
 
 public class LobbyUI : MonoBehaviour {
 
@@ -238,13 +233,25 @@ public class LobbyUI : MonoBehaviour {
                 Show();
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 
+                Debug.Log(gameMode);
+
                 if (gameMode == GameMode.Free_for_all.ToString())
                 {
-                    lobbyPlayerSingleUI.selectTeamDropdown.gameObject.active = false;
+                    lobbyPlayerSingleUI.selectTeamDropdown.gameObject.SetActive(false);
                 }
             }
-        }
+            else
+            {
+                if (gameMode == GameMode.Free_for_all.ToString())
+                {
+                    LobbyPlayers[player.Id].selectTeamDropdown.gameObject.SetActive(false);
+                }
+              //  LobbyPlayers[player.Id].playerNameText.text = OnlineManager.Instance.playerList.Find(x => x.lobbyPlayerId == player.Id).name.ToSafeString();
 
+            }
+        }
+        lobbyNameText.text = lobby.Name;
+        playerCountText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
         if (VivoxManager.Instance.VivoxJoined)
             VivoxManager.Instance.AllowVolumeChange();
         EnableDisableStartButton(false);

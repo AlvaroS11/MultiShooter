@@ -223,6 +223,12 @@ public class OnlineManager : NetworkBehaviour
             case SceneEventType.LoadEventCompleted:
                 {
                     //All clients have changed from scene
+                    if(!playersCreated)
+                    {
+                        VivoxManager.Instance.m_vivoxUserHandlers.Clear();
+                        VivoxManager.Instance.m_VivoxSetup.m_userHandlers.Clear();
+                    }
+
                     if (IsServer && !playersCreated)
                     {
                         Debug.Log("All clients joined");
@@ -230,7 +236,8 @@ public class OnlineManager : NetworkBehaviour
                         messageText = GameAssets.Instance.messageText;
                         messageText.text = "Waiting for players...";
                         messageGameObject.SetActive(true);
-                        VivoxManager.Instance.m_vivoxUserHandlers.Clear();
+                        //VivoxManager.Instance.m_vivoxUserHandlers.Clear();
+                        //VivoxManager.Instance.m_VivoxSetup.m_userHandlers.Clear();
                         CreatePlayersServerRpc();
                         SetStatustClientRpc(true);
 
@@ -638,8 +645,6 @@ public class OnlineManager : NetworkBehaviour
 
         if (ownTeam == -1)
             throw new Exception("FALLO EL HASH");
-
-        Debug.Log("playersLifeBar");
 
     }
 

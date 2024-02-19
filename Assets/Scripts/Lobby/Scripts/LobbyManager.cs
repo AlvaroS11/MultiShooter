@@ -134,11 +134,23 @@ public class LobbyManager : MonoBehaviour {
         HandleLobbyHeartbeat();
         HandleLobbyPolling();
 
+        //NetworkManager.Singleton.OnTransportFailure += HandleTransportFailure;
+    }
+
+    private void Start()
+    {
         NetworkManager.Singleton.OnTransportFailure += HandleTransportFailure;
+    }
+
+    private void OnApplicationPause(bool paused) {
+        // if (paused) StopStuff(); 
+        //else DoStuff(); 
+        Debug.LogError("Application Paused " + paused);
     }
 
     private void HandleTransportFailure()
     {
+        Debug.Log("Handling Transport failure");
         LeaveLobby();
     }
 

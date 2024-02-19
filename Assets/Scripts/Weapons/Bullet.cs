@@ -26,6 +26,9 @@ public class Bullet : MonoBehaviour {
     [SerializeField]
     private bool shouldFollow = false;
 
+    public AudioSource audioSource;
+
+
     private void Start()
     {
         SetUp();
@@ -93,7 +96,6 @@ public class Bullet : MonoBehaviour {
             if(playerManager == null)
                 playerManager = parent.GetComponent<PlayerManager>();
 
-            Debug.Log(LobbyManager.Instance.m_gameMode.ToString());
             if (LobbyManager.Instance.m_gameMode == LobbyManager.GameMode.Free_for_all)
             {
                 return true;
