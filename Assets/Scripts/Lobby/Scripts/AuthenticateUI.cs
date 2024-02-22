@@ -19,7 +19,7 @@ public class AuthenticateUI : MonoBehaviour {
         Debug.Log("auth");
     }
 
-    private void Hide() {
+    public void Hide() {
         gameObject.SetActive(false);
     }
 

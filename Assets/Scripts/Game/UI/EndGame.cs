@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class EndGame : NetworkBehaviour
@@ -46,9 +43,22 @@ public class EndGame : NetworkBehaviour
             // Debug.Log(LobbyManager.Instance.joinedLobby.Id);
             Debug.Log("Leaving to lobby");
             OnlineManager.Instance.playersCreated = false;
-            OnlineManager.Instance.playerList.Clear();
-            Time.timeScale = 1;
-            SceneLoader.Load(SceneLoader.Scene.LobbyScene);
+            try
+            {
+                PlayerManager disconnectedPlayer = OnlineManager.Instance.playerList.Find(x => x.playerObject.GetComponent<PlayerManager>().isOwnPlayer == true).playerObject.GetComponent<PlayerManager>();
+                disconnectedPlayer.DisconnectPlayerServerRpc(disconnectedPlayer.clientId);
+            }
+            catch
+            {
+                Debug.LogError("not found");
+
+            }
+            finally
+            {
+                OnlineManager.Instance.playerList.Clear();
+                Time.timeScale = 1;
+                SceneLoader.Load(SceneLoader.Scene.LobbyScene);
+            }
 
         });
     }

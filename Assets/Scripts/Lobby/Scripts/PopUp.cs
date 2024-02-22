@@ -18,6 +18,10 @@ public class PopUp : MonoBehaviour
 
     public static PopUp Instance;
 
+    public Transform pos1;
+    public Transform pos2;
+    public Transform pos3;
+
     public enum PopUpType
     {
         Info,
@@ -52,11 +56,33 @@ public class PopUp : MonoBehaviour
 
         public void ShowPopUp(string message, bool showButtons, PopUpType type)
     {
+        Debug.Log("show popup");
         messageText.text = message;
         gameObject.SetActive(true);
-        button1.gameObject.active = showButtons; 
-        button2.gameObject.SetActive(showButtons);
+        if (type == PopUpType.Error && showButtons == false)
+        {
+            button1.gameObject.active = false;
+
+            button2.gameObject.active = true;
+            button2.transform.position = new Vector3(pos1.position.x, button1.transform.position.y, button1.transform.position.z);
+
+            OnButton2Click += () => DefaultErrorMsg();
+            OnButton2Click -= () => DefaultErrorMsg();
+
+        }
+        else
+        {
+            button1.gameObject.active = showButtons;
+            button2.gameObject.SetActive(showButtons);
+        }
         TextColor(type);
+        Debug.Log(message);
+    }
+
+    public void DefaultErrorMsg()
+    {
+        HidePopUp();
+        PopUp.Instance.button2.transform.position = new Vector3(PopUp.Instance.pos3.position.x, PopUp.Instance.button1.transform.position.y, PopUp.Instance.button1.transform.position.z);
     }
 
     private void TextColor(PopUpType type)
@@ -77,7 +103,7 @@ public class PopUp : MonoBehaviour
 
     public void HidePopUp()
     {
-        gameObject.SetActive(false);
+        PopUp.Instance.gameObject.SetActive(false);
     }
 
     public void Button1Clicked()

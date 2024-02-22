@@ -52,7 +52,7 @@ public class PlayerManager : NetworkBehaviour
 
 
     [SerializeField]
-    private TextMeshProUGUI nameText;
+    public TextMeshProUGUI nameText;
 
     //[HideInInspector]
     public NetworkVariable<bool> firing = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -103,7 +103,12 @@ public class PlayerManager : NetworkBehaviour
 
     static float ping;
 
-    // Network variables should be value objects
+    //[HideInInspector]
+    public NetworkVariable<bool> disconnected = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<bool> inLobby = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+
     public struct InputPayload : INetworkSerializable
     {
         public int tick;
@@ -226,6 +231,37 @@ public class PlayerManager : NetworkBehaviour
         {
             sentMsg = DateTime.Now;
             //SendPing();
+        }
+
+        inLobby.OnValueChanged += HandlePlayerInLobby;
+
+        if(IsHost)
+            inLobby.Value = false;
+    }
+
+    private void OnDestroy()
+    {
+        base.OnDestroy();
+        inLobby.OnValueChanged -= HandlePlayerInLobby;
+
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void DisconnectPlayerServerRpc(ulong playerId, ServerRpcParams serverRpcParams = default) 
+    {
+        if(playerId == this.clientId)
+        {
+            inLobby.Value = true;
+        }
+
+    }
+
+    private void HandlePlayerInLobby(bool previous, bool current)
+    {
+        if(current)
+        {
+            nameText.fontStyle = TMPro.FontStyles.Italic;
+            nameText.text = PlayerName.Value.ToString() + "\nOn Lobby";
         }
     }
 
@@ -467,7 +503,7 @@ public class PlayerManager : NetworkBehaviour
 
     private Vector3 GetInput()
     {
-        if (!IsOwner || !Application.isFocused) return Vector3.zero;
+        if (!IsOwner || !Application.isFocused || disconnected.Value || inLobby.Value) return Vector3.zero;
 
 #if UNITY_STANDALONE_WIN
 

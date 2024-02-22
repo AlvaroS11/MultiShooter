@@ -25,6 +25,40 @@ public static class SceneLoader
         SceneManager.LoadScene(targetScene.ToString(), LoadSceneMode.Single);
     }
 
+    public static IEnumerator LoadAsync(Scene targetScene, string msg = null,  bool authenticate = false)
+    {
+        SceneLoader.targetScene = targetScene;
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(targetScene.ToString(), LoadSceneMode.Single);
+
+        while (!asyncOperation.isDone)
+        {
+            float progress = Mathf.Clamp01(asyncOperation.progress / 0.9f);
+            Debug.Log("Cargando escena... " + (progress * 100f).ToString("F2") + "%");
+            yield return null;
+
+        }
+        asyncOperation.allowSceneActivation = true;
+
+        if (targetScene != Scene.LobbyScene)
+            yield break;
+
+        if(!authenticate)
+        {
+            AuthenticateUI.Instance.Hide();
+        }
+        //Debug.Log("***123");
+        if(!LobbyUI.Instance.gameObject.active) 
+        {
+            Debug.Log("activating lobby list");
+            LobbyListUI.Instance.gameObject.SetActive(true);
+        }
+
+        if(msg != null)
+            PopUp.Instance.ShowPopUp(msg, false, PopUp.PopUpType.Error);
+
+
+    }
+
     public static void LoadNetwork(Scene targetScene)
     {
         Debug.Log("LOAD NETWORK!" + targetScene + " " + LoadSceneMode.Single);

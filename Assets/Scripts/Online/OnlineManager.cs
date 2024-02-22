@@ -167,6 +167,28 @@ public class OnlineManager : NetworkBehaviour
         LobbyManager.Instance.OnKickedFromLobby += StopClient;
     }
 
+   /* [ServerRpc(RequireOwnership = false)]
+    public void PingServerRpc(ServerRpcParams serverRpcParams = default)
+    {
+       var clientId = serverRpcParams.Receive.SenderClientId;
+
+       ClientRpcParams clientRpcParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams
+                    {
+                        TargetClientIds = new ulong[] { clientId }
+                    }
+                };
+
+        ReturnPingClientRpc(clientId, clientRpcParams);
+    }
+
+    [ClientRpc]
+    public void ReturnPingClientRpc(ulong clientId, ClientRpcParams clientRpcParams = default)
+    {
+        Debug.Log("Ping Succesfull");
+    }*/
+
     private void StartClient(object sender, System.EventArgs e)
     {
 
@@ -189,11 +211,6 @@ public class OnlineManager : NetworkBehaviour
         }
 
         NetworkManager.SceneManager.OnSceneEvent += SceneManager_OnSceneEvent;
-
-        if (IsClient)
-        {
-            teamNames.OnListChanged += OnClientListChanged;
-        }
     }
 
     private void SceneManager_OnSceneEvent(SceneEvent sceneEvent)
@@ -318,8 +335,12 @@ public class OnlineManager : NetworkBehaviour
                         TargetClientIds = new ulong[] { clientId }
                     }
                 };
-                ChangeTeamClientRpc(playerInfo.lobbyPlayerId, playerInfo.team, clientId, clientRpcParams);
                 ChangeCharacterClientRpc(playerInfo.lobbyPlayerId, playerInfo.playerCharacter, clientId, clientRpcParams);
+                if (LobbyManager.Instance.m_gameMode != GameMode.Free_for_all) 
+                {
+                    ChangeTeamClientRpc(playerInfo.lobbyPlayerId, playerInfo.team, clientId, clientRpcParams);
+                }
+
                 break;
 
             }
@@ -471,10 +492,11 @@ public class OnlineManager : NetworkBehaviour
     [ClientRpc]
     public void DeletePlayerLobbyIdClientRpc(string playerId)
     {
-        Debug.Log(playerList.Count);
-        playerList.Remove(playerList.Find(x => x.lobbyPlayerId.ToSafeString() == playerId));
-        LobbyUI.Instance.DeletePlayer(playerId);
-        Debug.Log(playerList.Count);
+        if (SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString())
+        {
+            playerList.Remove(playerList.Find(x => x.lobbyPlayerId.ToSafeString() == playerId));
+            LobbyUI.Instance.DeletePlayer(playerId);
+        }
 
     }
 
@@ -483,7 +505,8 @@ public class OnlineManager : NetworkBehaviour
      {
         LobbyManager.Instance.joinedLobby.Players.Remove(LobbyManager.Instance.joinedLobby.Players.Find(x => x.Id == playerId));
 
-        DeletePlayerLobbyIdClientRpc(playerId);
+       // if (SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString())
+            DeletePlayerLobbyIdClientRpc(playerId);
 
     }
 
@@ -531,7 +554,6 @@ public class OnlineManager : NetworkBehaviour
                 int ran = rand.Next(1, 2);
                 int clampledTeam = Mathf.Clamp(playerInfo.team, 0, teamScore.Count - 1)*2; //real team spawn from 1 to n of teams
                 int randomIndex = rand.Next(clampledTeam, clampledTeam+2);
-                Debug.Log(randomIndex);
                 Transform randomSpawn = spawnPoints[randomIndex];
                 GameObject newPlayerGameObject = (GameObject)Instantiate(prefabInstance, randomSpawn);
 
@@ -592,30 +614,31 @@ public class OnlineManager : NetworkBehaviour
 
     }
 
-    void OnServerListChanged(NetworkListEvent<int> changeEvent)
-    {
-        Debug.Log($"[S] The list changed and now has {teamNames.Count} elements");
-    }
-
-    void OnClientListChanged(NetworkListEvent<int> changeEvent)
-    {
-        Debug.Log($"[S] The list changed and now has {teamNames.Count} elements");
-    }
 
     //Recorre todos los jugadores
     [ClientRpc]
     public void setPlayerLifeBarsClientRpc()
     {
 
-        GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
+        // GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
+
+
         playerManagers.Clear();
 
         int ownTeam = -1;
+
+        foreach (PlayerInfo p in playerList)
+        {
+            PlayerManager playerManager = p.playerObject.GetComponent<PlayerManager>();
+            playerManagers.Add(playerManager);
+
+
+      /* 
         foreach (GameObject playerObject in playerObjects)
         {
             PlayerManager playerManager = playerObject.GetComponent<PlayerManager>();
             playerManagers.Add(playerManager);
-
+      */
             if(playerManager.isOwnPlayer)
                 ownTeam = playerManager.PlayerTeam.Value;
         }

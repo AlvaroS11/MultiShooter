@@ -280,7 +280,7 @@ MonoBehaviour:
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 1
   SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
+  DontDestroyWithOwner: 1
   AutoObjectParentSync: 1
 --- !u!114 &5184607220630417201
 MonoBehaviour:
@@ -599,6 +599,10 @@ MonoBehaviour:
   body: {fileID: 0}
   bodyAnimator: {fileID: 5660159839019381872}
   noAmmoSound: {fileID: 6633796789319545591}
+  disconnected:
+    m_InternalValue: 0
+  inLobby:
+    m_InternalValue: 0
   reconciliationCooldownTime: 1
   extrapolationCooldownTime: 1
   reconciliationThreshold: 10
@@ -810,6 +814,7 @@ MonoBehaviour:
   reloadBar: {fileID: 0}
   reloading: 0
   shotSound: {fileID: 292766679482888117}
+  audioSourceBullet: {fileID: 0}
   nBullets: 3
   timeBetweenBullets: 1
   meleeRangeMultiplier: 2
@@ -1386,6 +1391,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5637160186041061786}
     m_Modifications:
+    - target: {fileID: 2282988580162526206, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 220
+      objectReference: {fileID: 0}
+    - target: {fileID: 2282988580162526206, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: 2282988580162526206, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2739794200201521611, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 2739794200201521611, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2868855128195378256, guid: c25336098c4fd684387a6768cb2c06ae, type: 3}
       propertyPath: player
       value: 

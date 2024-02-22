@@ -28,7 +28,6 @@ public class TeamUI : MonoBehaviour
     public List<Color> imageBackgrounds;
     public void SetUp(int actualTeam, int maxKills)
     {
-        Debug.Log(actualTeam);
         actualTeam--;
         try
         {
@@ -49,7 +48,6 @@ public class TeamUI : MonoBehaviour
 
         float widthSize = 0.1f * fullWidth;
         rt.sizeDelta = new Vector2(widthSize, rt.sizeDelta.y);
-        Debug.Log(fullWidth);
     }
 
     public void Kill()

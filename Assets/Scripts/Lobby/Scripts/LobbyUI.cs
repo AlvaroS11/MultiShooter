@@ -233,8 +233,6 @@ public class LobbyUI : MonoBehaviour {
                 Show();
                 AddUserHandler(playerSingleTransform.gameObject.GetComponent<VivoxUserHandler>());
 
-                Debug.Log(gameMode);
-
                 if (gameMode == GameMode.Free_for_all.ToString())
                 {
                     lobbyPlayerSingleUI.selectTeamDropdown.gameObject.SetActive(false);

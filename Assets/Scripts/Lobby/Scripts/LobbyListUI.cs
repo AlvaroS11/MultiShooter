@@ -42,6 +42,14 @@ public class LobbyListUI : MonoBehaviour {
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnKickedFromLobby;
     }
 
+    private void OnDestroy()
+    {
+        LobbyManager.Instance.OnLobbyListChanged -= Instance.LobbyManager_OnLobbyListChanged;
+        LobbyManager.Instance.OnJoinedLobby -= LobbyManager_OnJoinedLobby;
+        LobbyManager.Instance.OnLeftLobby -= LobbyManager_OnLeftLobby;
+        LobbyManager.Instance.OnKickedFromLobby -= LobbyManager_OnKickedFromLobby;
+    }
+
     private void LeaveGame()
     {
         Application.Quit();

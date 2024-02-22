@@ -11,11 +11,10 @@ using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
-using Unity.Services.Vivox;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-using static LobbyManager;
 
 
 public class LobbyManager : MonoBehaviour {
@@ -45,6 +44,7 @@ public class LobbyManager : MonoBehaviour {
     public event EventHandler<String> OnKickPlayer;
     public event EventHandler<String> ExternalPlayerLeft;
 
+    LobbyEventCallbacks callbacks;
 
     public class LobbyEventArgs : EventArgs {
         public Lobby lobby;
@@ -140,6 +140,42 @@ public class LobbyManager : MonoBehaviour {
     private void Start()
     {
         NetworkManager.Singleton.OnTransportFailure += HandleTransportFailure;
+        callbacks  = new LobbyEventCallbacks();
+
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+    }
+
+    private async void OnClientDisconnected(ulong clientId)
+    {
+        if (clientId == NetworkManager.ServerClientId)
+        {
+            Debug.LogWarning("server shutting down");
+            await LeaveLobby("Host disconnected, leaving lobby...", true);
+        }
+           
+        if(SceneManager.GetActiveScene().name == SceneLoader.Scene.GameScene.ToString())
+        {
+            try
+            {
+                PlayerManager disconnectedPlayer = OnlineManager.Instance.playerList.Find(x => x.clientId == clientId).playerObject.GetComponent<PlayerManager>();
+                disconnectedPlayer.nameText.fontStyle = TMPro.FontStyles.Italic;
+                disconnectedPlayer.nameText.text = disconnectedPlayer.PlayerName.Value.ToSafeString() + "\nDisconnected";
+                if (IsLobbyHost())
+                {
+                    disconnectedPlayer.disconnected.Value = true;
+                }
+            }
+            catch(Exception e)
+            {
+                Debug.LogError(e);
+            }
+        }
+    }
+
+
+    private void OnServerStopped(bool obj)
+    {
+        Debug.Log("On server stopped");
     }
 
     private void OnApplicationPause(bool paused) {
@@ -222,6 +258,28 @@ public class LobbyManager : MonoBehaviour {
         }
     }
 
+    private float serverPingTimer;
+  /*  private async void HandleLobbyHeartbeat()
+    {
+        heartbeatTimer -= Time.deltaTime;
+
+        if (heartbeatTimer < 0f)
+        {
+            float heartbeatTimerMax = 15f;
+            heartbeatTimer = heartbeatTimerMax;
+            if (joinedLobby == null)
+                return;
+            if (IsLobbyHost())
+            {
+                await LobbyService.Instance.SendHeartbeatPingAsync(joinedLobby.Id);
+            }
+            else
+            {
+                OnlineManager.Instance.PingServerRpc();
+            }
+        }
+        
+    }*/
 
     private async void HandleLobbyHeartbeat() {
         if (IsLobbyHost()) {
@@ -252,7 +310,7 @@ public class LobbyManager : MonoBehaviour {
                     catch(LobbyServiceException e)
                     {
                         //The lobby has been eliminated or the Unity Services are down
-                        await LeaveLobby();
+                        await LeaveLobby("Leaving lobby due to error: " + e.Message);
                         Debug.LogWarning("Leaving lobby due to error: " + e.Message);
                         return;
                     }
@@ -618,7 +676,7 @@ public class LobbyManager : MonoBehaviour {
     }
 
 
-    public async Task LeaveLobby()
+    public async Task LeaveLobby(string errorMsg = null, bool serverShuttedDown = false)
     {
         if (joinedLobby != null)
         {
@@ -635,7 +693,7 @@ public class LobbyManager : MonoBehaviour {
                     OnlineManager.Instance.DeletePlayerLobbyIdServerRpc(AuthenticationService.Instance.PlayerId);
                     joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
                 }
-                
+
 
             }
             catch (LobbyServiceException e)
@@ -648,9 +706,33 @@ public class LobbyManager : MonoBehaviour {
                 joinedLobby = null;
                 OnLeftLobby?.Invoke(this, EventArgs.Empty);
                 VivoxManager.Instance.LeaveVivox();
-                Debug.LogError("Leaving Lobby due to transport failure");
+
+                if (SceneManager.GetActiveScene().name == SceneLoader.Scene.GameScene.ToString())
+                    StartCoroutine(SceneLoader.LoadAsync(SceneLoader.Scene.LobbyScene, errorMsg));
+
+                else if (errorMsg != null && SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString())
+                {
+                    PopUp.Instance.ShowPopUp(errorMsg, false, PopUp.PopUpType.Error);
+                }
+
+                if (serverShuttedDown)
+                {
+                    OnlineManager.Instance.playerList.Clear();
+                    OnlineManager.Instance.playersCreated = false;
+                }
+                   
+                
             }
         }
+        if (SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString())
+        {
+            if (!LobbyUI.Instance.gameObject.active)
+            {
+                Debug.Log("activating lobby list");
+                LobbyListUI.Instance.gameObject.SetActive(true);
+            }
+        }
+
     }
       
     

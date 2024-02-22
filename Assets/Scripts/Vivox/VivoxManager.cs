@@ -106,6 +106,7 @@ public class VivoxManager : MonoBehaviour
     public void LeaveVivox()
     {
         m_VivoxSetup.LeaveLobbyChannel();
+        m_vivoxUserHandlers.Clear();
         VivoxJoined = false;
     }
 }
