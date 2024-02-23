@@ -55,11 +55,13 @@ public class Bullet : MonoBehaviour {
     }
 
 
-    // Update is called once per frame
     void Update()
     {
-        if(!shouldFollow)
+        if (!shouldFollow)
+        {
             transform.Translate(Vector3.up * speed * Time.deltaTime);
+            transform.position = new Vector3(transform.position.x, 0.5f, transform.position.z);
+        }
         else
             transform.position = parent.transform.position;
     }
