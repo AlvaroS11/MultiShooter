@@ -128,7 +128,7 @@ public class Weapon : NetworkBehaviour
         previousTimeStamp = DateTime.Now;
         ShootIsLocked = true;
 
-        StartCoroutine(FiringAnimation());
+        StartCoroutine(StartFiringAnimation());
 
 
         Vector3 targetDirection = dir - transform.position;
@@ -192,7 +192,7 @@ public class Weapon : NetworkBehaviour
         transform.forward = targetDirection;
 
 
-        StartCoroutine(FiringAnimation());
+        StartCoroutine(StartFiringAnimation());
 
         bulletGameObject = Instantiate(bullet, transform.position, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
@@ -251,20 +251,25 @@ public class Weapon : NetworkBehaviour
         previousTimeStamp = DateTime.Now;
     }
 
-    [ServerRpc]
-    private void StartFiringAnimationServerRpc()
+    /* [ServerRpc]
+     private void StartFiringAnimationServerRpc()
+     {
+         StartCoroutine(FiringAnimationClientRpc());
+     }*/
+
+    public virtual IEnumerator StartFiringAnimation()
     {
-        StartCoroutine(FiringAnimation());
+        FireAnimationClientRpc(true);
+        yield return new WaitForSeconds(1);
+        // pManager.firing.Value = false;
+        FireAnimationClientRpc(false);
+        //   pManager.localFiring = false;
     }
 
-    public virtual IEnumerator FiringAnimation()
+    [ClientRpc]
+    private void FireAnimationClientRpc(bool firing)
     {
-        PlayerManager pManager = GetComponent<PlayerManager>();
-        pManager.bodyAnimator.SetBool("firing", true);
-        yield return new WaitForSeconds(1);
-       // pManager.firing.Value = false;
-        pManager.bodyAnimator.SetBool("firing", false);
-     //   pManager.localFiring = false;
+        playerManager.bodyAnimator.SetBool("firing", firing);
     }
 
 

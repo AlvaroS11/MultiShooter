@@ -70,6 +70,9 @@ public class GranadeLauncer : Weapon
 
         previousTimeStamp = DateTime.Now;
         ShootIsLocked = true;
+
+        StartCoroutine(StartFiringAnimation());
+
         Vector3 bulletPos = new Vector3(transform.position.x, transform.position.y + 0.2f, transform.position.z);
         bulletGameObject = Instantiate(bullet, bulletPos, transform.rotation);
         bulletGameObject.GetComponent<Bullet>().SetParent(gameObject);
@@ -137,6 +140,9 @@ public class GranadeLauncer : Weapon
 
         previousTimeStamp = DateTime.Now;
         ShootIsLocked = true;
+
+        StartCoroutine(StartFiringAnimation());
+
         FireMobile(dir);
 
         cooldownCoroutine = StartCoroutine(CoolDown());

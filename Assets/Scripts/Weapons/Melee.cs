@@ -15,6 +15,8 @@ public class Melee : Weapon
     [SerializeField]
     private float meleeRangeMultiplier = 2f;
 
+    [SerializeField]
+    private ParticleSystem swordParticles;
 
     protected override void Start()
     {
@@ -127,6 +129,20 @@ public class Melee : Weapon
     {
         StartCoroutine(FiringAnimation());
     }
+
+    public virtual IEnumerator FiringAnimation()
+    {
+        PlayerManager pManager = GetComponent<PlayerManager>();
+        pManager.bodyAnimator.SetBool("firing", true);
+        swordParticles.Play();
+        yield return new WaitForSeconds(1);
+        // pManager.firing.Value = false;
+        pManager.bodyAnimator.SetBool("firing", false);
+        swordParticles.Stop();
+
+        //   pManager.localFiring = false;
+    }
+
 
     [ServerRpc]
     public override void PlayerFireServerMobileServerRpc(Vector3 dir, ulong clientId)

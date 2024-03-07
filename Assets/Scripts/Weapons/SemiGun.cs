@@ -64,7 +64,7 @@ public class SemiGun : Weapon
         //Start animation and set player rotation until animation finishes
 
         GetComponent<PlayerManager>().firing.Value = true;
-        StartCoroutine(FiringAnimation());
+        StartCoroutine(StartFiringAnimation());
 
         StartWaitBulletsServerRpc();
 
