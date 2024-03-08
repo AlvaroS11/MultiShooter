@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -190,7 +191,7 @@ public class LobbyManager : MonoBehaviour {
         LeaveLobby();
     }
 
-    public async void Authenticate(string playerName) {
+    public async Task<bool> Authenticate(string playerName) {
 
         var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         var stringChars = new char[8];
@@ -217,8 +218,17 @@ public class LobbyManager : MonoBehaviour {
 
             RefreshLobbyList();
         };
-
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        try
+        {
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
+        catch (Exception e)
+        {
+            string errorMsg = "Please check your internet connection and try again";
+            PopUp.Instance.ShowPopUp(errorMsg, false, PopUp.PopUpType.Error);
+            return false;
+        }
+        return true;
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -710,9 +720,11 @@ public class LobbyManager : MonoBehaviour {
                 if (SceneManager.GetActiveScene().name == SceneLoader.Scene.GameScene.ToString())
                     StartCoroutine(SceneLoader.LoadAsync(SceneLoader.Scene.LobbyScene, errorMsg));
 
-                else if (errorMsg != null && SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString())
+                else if (SceneManager.GetActiveScene().name == SceneLoader.Scene.LobbyScene.ToString())
                 {
-                    PopUp.Instance.ShowPopUp(errorMsg, false, PopUp.PopUpType.Error);
+                    if (errorMsg == null)
+                        errorMsg = "Please check your internet connection and restart the game";     
+                   PopUp.Instance.ShowPopUp(errorMsg, false, PopUp.PopUpType.Error);
                 }
 
                 if (serverShuttedDown)
