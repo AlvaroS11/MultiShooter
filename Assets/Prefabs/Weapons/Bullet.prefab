@@ -5069,7 +5069,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   playerLayer: 0
-  bulletDmg: 20
+  bulletDmg: 25
   playerManager: {fileID: 0}
   timeToDestroy: 5
   shouldFollow: 0

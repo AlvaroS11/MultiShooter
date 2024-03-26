@@ -71,7 +71,7 @@ public class StatisticsUI : NetworkBehaviour
     void Update()
     {
 #if UNITY_STANDALONE_WIN
-        if (Input.GetKey(KeyCode.Tab))
+        if (Input.GetKey(KeyCode.Tab) || (Input.GetKey(KeyCode.Escape)))
         {
             Show();
         }
